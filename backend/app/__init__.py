@@ -43,10 +43,12 @@ def create_app():
     from .routes.admin_routes import admin_bp
     from .routes.customer_rep_routes import rep_bp
     from .routes.seller_routes import seller_bp
+    from .routes.public_routes import public_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(rep_bp, url_prefix='/rep')
     app.register_blueprint(seller_bp, url_prefix='/seller')
+    app.register_blueprint(public_bp, url_prefix='/public')
 
     return app
