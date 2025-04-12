@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Login</title>
+  <style>
+    /* Global Styles */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #FDC830, #F37335);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #333;
+    }
+    .card {
+      background-color: #fff;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px;
+      padding: 40px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #F37335;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+    input:focus {
+      border-color: #F37335;
+      outline: none;
+    }
+    button {
+      background: #F37335;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #d55a1f;
+    }
+    #message {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #D8000C;
+    }
+    p.link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    p.link a {
+      color: #F37335;
+      text-decoration: none;
+    }
+    p.link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Login</h1>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input type="email" id="email" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" required>
+
+      <button type="submit">Login</button>
+    </form>
+    
+    <p id="message"></p>
+    <p class="link">Don't have an account? <a href="registration.html">Register here</a></p>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.token) {
+          localStorage.setItem('token', data.token);
+          document.getElementById('message').textContent = 'Login successful! Welcome, ' + data.user.Username;
+          // Optionally redirect to another page:
+          // window.location.href = '/dashboard';
+        } else {
+          document.getElementById('message').textContent = data.error;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('message').textContent = 'An error occurred during login.';
+      });
+    });
+  </script>
+</body>
+</html>
