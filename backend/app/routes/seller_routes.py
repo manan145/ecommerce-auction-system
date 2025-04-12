@@ -101,47 +101,61 @@ def add_item():
     }), 201
 
 
-# # ================================
-# # View Seller's Items with Attributes
-# # ================================
-# @seller_bp.route('/my-items', methods=['GET'])
-# @jwt_required()
-# def view_my_items():
-#     """API → Seller views all items including attribute values"""
-#     current_user_id = get_jwt_identity()
-#     user = User.query.get(current_user_id)
+# ================================
+# View Seller's Items with Attributes + Auction Summary
+# ================================
+@seller_bp.route('/my-items', methods=['GET'])
+@jwt_required()
+def view_my_items():
+    """API → Seller views all items including attribute values and auction summary"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
-#     if not user or user.Role != 'seller':
-#         return jsonify({'error': 'Seller access required'}), 403
+    if not user or user.Role != 'seller':
+        return jsonify({'error': 'Seller access required'}), 403
 
-#     items = Item.query.filter_by(OwnerID=user.UserID).all()
-#     item_list = []
+    items = Item.query.filter_by(OwnerID=user.UserID).all()
+    item_list = []
 
-#     for item in items:
-#         attrs = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
-#         attribute_data = [{
-#             "attribute_id": attr.AttributeID,
-#             "name": Attribute.query.get(attr.AttributeID).Name,
-#             "value": attr.Value
-#         } for attr in attrs]
+    for item in items:
+        attrs = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
+        attribute_data = [{
+            "attribute_id": attr.AttributeID,
+            "name": Attribute.query.get(attr.AttributeID).Name,
+            "value": attr.Value
+        } for attr in attrs]
 
-#         item_list.append({
-#             "ItemID": item.ItemID,
-#             "Title": item.Title,
-#             "Description": item.Description,
-#             "Brand": item.Brand,
-#             "Model": item.Model,
-#             "Condition": item.Condition,
-#             "SubcategoryID": item.SubcategoryID,
-#             "CreatedAt": item.CreatedAt,
-#             "Attributes": attribute_data
-#         })
+        auction = Auction.query.filter_by(ItemID=item.ItemID).first()
+        auction_data = None
+        if auction:
+            auction_data = {
+                "AuctionID": auction.AuctionID,
+                "StartPrice": float(auction.StartPrice),
+                "MinIncrement": float(auction.MinIncrement),
+                "StartTime": auction.StartTime.isoformat(),
+                "EndTime": auction.EndTime.isoformat(),
+                "IsClosed": auction.IsClosed,
+                "SecretMinPrice": float(auction.SecretMinPrice)
+            }
 
-#     return jsonify({"items": item_list}), 200
+        item_list.append({
+            "ItemID": item.ItemID,
+            "Title": item.Title,
+            "Description": item.Description,
+            "Brand": item.Brand,
+            "Model": item.Model,
+            "Condition": item.Condition,
+            "SubcategoryID": item.SubcategoryID,
+            "CreatedAt": item.CreatedAt,
+            "Attributes": attribute_data,
+            "Auction": auction_data
+        })
+
+    return jsonify({"items": item_list}), 200
 
 
 # ================================
-# Update Seller's Item + Optional Attributes
+# Update Seller's Item + Optional Auction details + Optional Attributes
 # ================================
 @seller_bp.route('/update-item/<int:item_id>', methods=['PUT'])
 @jwt_required()
@@ -164,6 +178,20 @@ def update_item(item_id):
     if data.get('model'): item.Model = data['model']
     if data.get('condition'): item.Condition = data['condition']
 
+    # Optional: Update auction if provided
+    auction = Auction.query.filter_by(ItemID=item.ItemID).first()
+    if auction:
+        if data.get('start_price'): auction.StartPrice = data['start_price']
+        if data.get('min_increment'): auction.MinIncrement = data['min_increment']
+        if data.get('start_time'):
+            auction.StartTime = datetime.strptime(data['start_time'], '%Y-%m-%d %H:%M:%S')
+        if data.get('end_time'):
+            auction.EndTime = datetime.strptime(data['end_time'], '%Y-%m-%d %H:%M:%S')
+        if data.get('is_closed') is not None:  # Allow updating IsClosed
+            auction.IsClosed = data['is_closed']
+        # Note: Do NOT allow changing SecretMinPrice casually for security reasons
+
+
     attributes = data.get('attributes')
     if attributes:
         for attr in attributes:
@@ -181,8 +209,7 @@ def update_item(item_id):
             #         db.session.add(new_attr)
 
     db.session.commit()
-    return jsonify({'message': 'Item updated successfully'}), 200
-
+    return jsonify({'message': 'Item and auction updated successfully'}), 200
 
 # ================================
 # Delete Seller's Item + Attributes
@@ -207,6 +234,149 @@ def delete_item(item_id):
     db.session.commit()
 
     return jsonify({'message': 'Item and its attributes deleted successfully'}), 200
+
+# ================================
+# Accept Highest Bid Below Min Price
+# ================================
+@seller_bp.route('/accept-bid', methods=['POST'])
+@jwt_required()
+def accept_bid():
+    """API → Seller accepts the highest bid even if it is below secret minimum"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.Role != 'seller':
+        return jsonify({'error': 'Seller access required'}), 403
+
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+
+    if not auction_id:
+        return jsonify({'error': 'auction_id is required'}), 400
+
+    auction = Auction.query.get(auction_id)
+    if not auction or auction.IsClosed is False:
+        return jsonify({'error': 'Invalid or active auction'}), 400
+
+    item = Item.query.get(auction.ItemID)
+    if item.OwnerID != user.UserID:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    highest_bid = Bid.query.filter_by(AuctionID=auction.AuctionID).order_by(Bid.Amount.desc()).first()
+    if not highest_bid:
+        return jsonify({'error': 'No bids to accept'}), 400
+
+    transaction = Transaction(
+        AuctionID=auction.AuctionID,
+        BuyerID=highest_bid.BidderID,
+        Price=highest_bid.Amount,
+        TransactionDate=datetime.utcnow(),
+        Status='pending'
+    )
+    db.session.add(transaction)
+
+    notification = Notification(
+        UserID=highest_bid.BidderID,
+        Message=json.dumps({
+            "type": "payment_required",
+            "transaction_id": transaction.TransactionID,
+            "item_id": item.ItemID,
+            "price": float(highest_bid.Amount)
+        }),
+        CreatedAt=datetime.utcnow(),
+        Status='unread'
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    return jsonify({'message': 'Bid accepted and buyer notified'}), 200
+
+
+# ================================
+# Extend Auction End Time
+# ================================
+@seller_bp.route('/extend-auction', methods=['POST'])
+@jwt_required()
+def extend_auction():
+    """API → Seller extends the auction deadline for further bidding"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.Role != 'seller':
+        return jsonify({'error': 'Seller access required'}), 403
+
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+    new_end_time_str = data.get('new_end_time')
+
+    if not auction_id or not new_end_time_str:
+        return jsonify({'error': 'auction_id and new_end_time required'}), 400
+
+    auction = Auction.query.get(auction_id)
+    if not auction or auction.IsClosed is False:
+        return jsonify({'error': 'Invalid or active auction'}), 400
+
+    item = Item.query.get(auction.ItemID)
+    if item.OwnerID != user.UserID:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        new_end_time = datetime.fromisoformat(new_end_time_str)
+        if new_end_time <= datetime.utcnow():
+            return jsonify({'error': 'New end time must be in the future'}), 400
+    except ValueError:
+        return jsonify({'error': 'Invalid datetime format'}), 400
+
+    auction.EndTime = new_end_time
+    auction.IsClosed = False
+
+    # Notify all previous bidders
+    bidder_ids = db.session.query(Bid.BidderID).filter_by(AuctionID=auction.AuctionID).distinct()
+    for bidder_id, in bidder_ids:
+        notification = Notification(
+            UserID=bidder_id,
+            Message=f"Auction for item {item.Title} has been extended to {new_end_time_str}",
+            CreatedAt=datetime.utcnow(),
+            Status='unread'
+        )
+        db.session.add(notification)
+
+    db.session.commit()
+    return jsonify({'message': 'Auction extended and bidders notified'}), 200
+
+
+# ================================
+# Withdraw Item from Auction
+# ================================
+@seller_bp.route('/withdraw-item', methods=['POST'])
+@jwt_required()
+def withdraw_item():
+    """API → Seller withdraws the item from the expired auction"""
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.Role != 'seller':
+        return jsonify({'error': 'Seller access required'}), 403
+
+    data = request.get_json()
+    auction_id = data.get('auction_id')
+
+    if not auction_id:
+        return jsonify({'error': 'auction_id is required'}), 400
+
+    auction = Auction.query.get(auction_id)
+    if not auction or auction.IsClosed is False:
+        return jsonify({'error': 'Invalid or active auction'}), 400
+
+    item = Item.query.get(auction.ItemID)
+    if item.OwnerID != user.UserID:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    item.Status = 'withdrawn'
+    auction.IsClosed = True
+
+    db.session.commit()
+    return jsonify({'message': 'Item withdrawn from auction'}), 200
 
 
 # # ================================
@@ -310,4 +480,3 @@ def delete_item(item_id):
 #         "count": len(result),
 #         "results": result
 #     }), 200
-

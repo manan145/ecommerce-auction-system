@@ -1,8 +1,8 @@
-from ..models import Item, Attribute, ItemAttributeValue
+from ..models import Item, Attribute, ItemAttributeValue, Auction
 from sqlalchemy import or_, and_
 from datetime import datetime
 
-def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_desc', offset=0, limit=20):
+def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_desc', offset=0, limit=20, **kwargs):
     query = Item.query
 
     # Restrict to current user's items if requested
@@ -49,6 +49,25 @@ def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_de
                          Attribute.Name == attr_name,
                          ItemAttributeValue.Value.in_(attr_values)
                      )
+
+    # Extract auction-related filters
+    auction_filters = kwargs.get('auction_filters', {})
+    min_price = auction_filters.get('min_price')
+    max_price = auction_filters.get('max_price')
+    is_closed = auction_filters.get('is_closed')
+
+    # --- Filter by auction fields ---
+    if min_price is not None or max_price is not None or is_closed is not None:
+        query = query.join(Auction, Auction.ItemID == Item.ItemID)
+
+        if min_price is not None:
+            query = query.filter(Auction.StartPrice >= min_price)
+
+        if max_price is not None:
+            query = query.filter(Auction.StartPrice <= max_price)
+
+        if is_closed is not None:
+            query = query.filter(Auction.IsClosed == is_closed)
 
     # --- Sorting ---
     if sort_by == 'title_asc':

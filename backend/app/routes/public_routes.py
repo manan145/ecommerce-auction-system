@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from ..models import db, Category, Subcategory, Item, Attribute, ItemAttributeValue, User
+from ..models import db, Category, Subcategory, Item, Attribute, ItemAttributeValue, User, Auction
 from ..utils.filter_utils import filter_items  # Reusable filtering logic
 
 public_bp = Blueprint('public', __name__)
@@ -55,6 +55,20 @@ def list_items_by_subcategory(subcategory_id):
             "value": attr.Value
         } for attr in attrs]
 
+        auction = Auction.query.filter_by(ItemID=item.ItemID).first()
+        auction_data = None
+        if auction:
+            auction_data = {
+                "AuctionID": auction.AuctionID,
+                "StartPrice": float(auction.StartPrice),
+                "MinIncrement": float(auction.MinIncrement),
+                "StartTime": auction.StartTime.isoformat(),
+                "EndTime": auction.EndTime.isoformat(),
+                "IsClosed": auction.IsClosed
+            }
+            if user_id == item.OwnerID:  # Seller can view SecretMinPrice
+                auction_data["SecretMinPrice"] = float(auction.SecretMinPrice)
+
         result.append({
             "ItemID": item.ItemID,
             "Title": item.Title,
@@ -64,7 +78,8 @@ def list_items_by_subcategory(subcategory_id):
             "SubcategoryID": item.SubcategoryID,
             "CreatedAt": item.CreatedAt,
             "OwnerID": item.OwnerID,
-            "Attributes": attr_data
+            "Attributes": attr_data,
+            "Auction": auction_data
         })
 
     return jsonify(result), 200
@@ -86,13 +101,41 @@ def public_search_items():
     user_id = get_jwt_identity()
     only_my_items = data.get('only_my_items', False) and user_id is not None
 
+    # Extract auction-related filters
+    auction_filters = data.get('auction_filters', {})
+    min_price = auction_filters.get('min_price')
+    max_price = auction_filters.get('max_price')
+    is_closed = auction_filters.get('is_closed')
+
+    # Modify the result to include auction-related filtering
     result = filter_items(
         filters=filters,
         only_my_items=only_my_items,
         user_id=user_id,
         sort_by=sort_by,
         offset=offset,
-        limit=limit
+        limit=limit,
+        auction_filters={
+            'min_price': min_price,
+            'max_price': max_price,
+            'is_closed': is_closed
+        }
     )
+
+    # Add auction details to the result
+    for item in result:
+        auction = Auction.query.filter_by(ItemID=item["ItemID"]).first()
+        if auction:
+            auction_data = {
+                "AuctionID": auction.AuctionID,
+                "StartPrice": float(auction.StartPrice),
+                "MinIncrement": float(auction.MinIncrement),
+                "StartTime": auction.StartTime.isoformat(),
+                "EndTime": auction.EndTime.isoformat(),
+                "IsClosed": auction.IsClosed
+            }
+            if only_my_items:  # Seller can view SecretMinPrice
+                auction_data["SecretMinPrice"] = float(auction.SecretMinPrice)
+            item["Auction"] = auction_data
 
     return jsonify(result), 200
