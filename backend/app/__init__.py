@@ -65,12 +65,17 @@ def create_app():
     from .utils.close_auctions_utils import close_expired_auctions
     print("Scheduler started")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=close_expired_auctions, trigger="interval", seconds=3600)
+    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=3600)
     scheduler.start()
 
     @app.teardown_appcontext
     def shutdown_scheduler(exception=None):
-        scheduler.shutdown()
+        try:
+            if scheduler.running:
+                print("Scheduler is running — skipping shutdown from teardown to avoid thread conflict.")
+                return
+            scheduler.shutdown()
+        except Exception as e:
+            print(f"[Scheduler Shutdown Skipped] {e}")
 
     return app
-
