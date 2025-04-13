@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Profile</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 500px;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      animation: slideIn 0.5s ease-out;
+    }
+    @keyframes slideIn {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+      font-weight: 500;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #5563DE;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #5563DE;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #435ac9;
+    }
+    .message {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #d8000c;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .nav a {
+      text-decoration: none;
+      color: #5563DE;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .nav a:hover {
+      color: #435ac9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Update Profile</h1>
+    <div id="updateMessage" class="message"></div>
+    <form id="updateProfileForm">
+      <label for="updateUsername">Username:</label>
+      <input type="text" id="updateUsername" placeholder="Enter your username" required>
+      
+      <label for="updateEmail">Email:</label>
+      <input type="email" id="updateEmail" placeholder="Enter your email" required>
+      
+      <button type="submit">Update Profile</button>
+    </form>
+    <div class="nav">
+      <a href="profile.html">← Back to Profile</a>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) { window.location.href = '/login.html'; }
+ 
+ 
+    // Pre-fill the form using /profile endpoint data
+    fetch('/profile', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.error) {
+        document.getElementById('updateUsername').value = data.Username;
+        document.getElementById('updateEmail').value = data.Email;
+      }
+    })
+    .catch(error => console.error('Error fetching profile:', error));
+ 
+ 
+    // Handle form submission
+    document.getElementById('updateProfileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const updatedUsername = document.getElementById('updateUsername').value.trim();
+      const updatedEmail = document.getElementById('updateEmail').value.trim();
+ 
+ 
+      fetch('/profile/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ username: updatedUsername, email: updatedEmail })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('updateMessage').textContent = data.message || data.error;
+      })
+      .catch(error => {
+        console.error('Update Error:', error);
+        document.getElementById('updateMessage').textContent = 'An error occurred while updating.';
+      });
+    });
+  </script> 
+ 
+</body>
+</html>
