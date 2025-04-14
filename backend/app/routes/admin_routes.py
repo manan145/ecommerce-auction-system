@@ -166,21 +166,21 @@ def add_subcategory():
         return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json()
-    category_id = data.get('category_id')
+    category_name = data.get('category_name')
     name = data.get('name')
 
-    if not category_id or not name:
-        return jsonify({'error': 'Category ID and Subcategory name required'}), 400
+    if not category_name or not name:
+        return jsonify({'error': 'Category name and Subcategory name required'}), 400
 
-    category = Category.query.get(category_id)
+    category = Category.query.filter_by(Name=category_name).first()
     if not category:
         return jsonify({'error': 'Category not found'}), 404
 
-    existing = Subcategory.query.filter_by(Name=name, CategoryID=category_id).first()
+    existing = Subcategory.query.filter_by(Name=name, CategoryID=category.CategoryID).first()
     if existing:
         return jsonify({'error': 'Subcategory already exists in this category'}), 409
 
-    subcategory = Subcategory(Name=name, CategoryID=category_id)
+    subcategory = Subcategory(Name=name, CategoryID=category.CategoryID)
     db.session.add(subcategory)
     db.session.commit()
 
@@ -220,13 +220,13 @@ def add_attributes_bulk():
         return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json()
-    subcategory_id = data.get('subcategory_id')
+    subcategory_name = data.get('subcategory_name')
     attribute_names = data.get('attributes', [])
 
-    if not subcategory_id or not attribute_names:
-        return jsonify({'error': 'Subcategory ID and attribute list are required'}), 400
+    if not subcategory_name or not attribute_names:
+        return jsonify({'error': 'Subcategory name and attribute list are required'}), 400
 
-    subcategory = Subcategory.query.get(subcategory_id)
+    subcategory = Subcategory.query.filter_by(Name=subcategory_name).first()
     if not subcategory:
         return jsonify({'error': 'Subcategory not found'}), 404
 
@@ -234,9 +234,9 @@ def add_attributes_bulk():
     skipped = []
 
     for name in attribute_names:
-        existing = Attribute.query.filter_by(Name=name, SubcategoryID=subcategory_id).first()
+        existing = Attribute.query.filter_by(Name=name, SubcategoryID=subcategory.SubcategoryID).first()
         if not existing:
-            attr = Attribute(Name=name, SubcategoryID=subcategory_id)
+            attr = Attribute(Name=name, SubcategoryID=subcategory.SubcategoryID)
             db.session.add(attr)
             added.append(name)
 
@@ -245,5 +245,5 @@ def add_attributes_bulk():
     return jsonify({
         "message": "Attribute creation complete",
         "added": added,
-        "subcategory_id": subcategory_id
+        "subcategory_id": subcategory.SubcategoryID
     }), 201

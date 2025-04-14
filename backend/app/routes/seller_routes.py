@@ -25,7 +25,14 @@ def add_item():
         return jsonify({'error': 'Seller access required'}), 403
 
     data = request.get_json()
-    subcategory_id = data.get('subcategory_id')
+    subcategory_name = data.get('subcategory_name')
+    if subcategory_name:
+        subcategory = Subcategory.query.filter_by(Name=subcategory_name).first()
+        if not subcategory:
+            return jsonify({'error': 'Subcategory not found'}), 404
+        subcategory_id = subcategory.SubcategoryID
+    else:
+        subcategory_id = data.get('subcategory_id')
     title = data.get('title')
     description = data.get('description')
     brand = data.get('brand')

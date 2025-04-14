@@ -134,3 +134,17 @@ def change_password():
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully"}), 200
+
+# ========== Delete User Account ==========
+@auth_bp.route('/profile/delete', methods=['DELETE'])
+@jwt_required()
+def delete_account():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id))
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": "User account deleted successfully"}), 200

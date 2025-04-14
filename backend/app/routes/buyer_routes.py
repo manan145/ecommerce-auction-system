@@ -42,7 +42,7 @@ def place_bid():
     data = request.get_json()
     auction_id = data.get("auction_id")
     bid_amount = data.get("amount")
-    max_auto_bid = data.get("max_auto_bid") or bid_amount
+    max_auto_bid = data.get("max_auto_bid")
 
     if not auction_id or bid_amount is None:
         return jsonify({"error": "Auction ID and bid amount are required"}), 400
@@ -69,8 +69,8 @@ def place_bid():
     # -------------------------------
     # 5. Validate Max Auto Bid Input
     # -------------------------------
-    if float(max_auto_bid) < float(bid_amount):
-        return jsonify({"error": "Maximum auto bid must not be less than the bid amount"}), 400
+    # if float(max_auto_bid) < float(bid_amount):
+    #     return jsonify({"error": "Maximum auto bid must not be less than the bid amount"}), 400
 
     # -------------------------------
     # 6. Determine the Minimum Valid Bid
@@ -96,7 +96,7 @@ def place_bid():
         AuctionID=auction_id,
         BidderID=buyer.UserID,
         Amount=bid_amount,
-        MaxAutoBid=float(max_auto_bid),
+        MaxAutoBid=float(max_auto_bid) if max_auto_bid else None,  # Set to None if not provided
         BidTime=datetime.utcnow()
     )
     db.session.add(new_bid)
@@ -109,7 +109,7 @@ def place_bid():
     # 8. Automatic Bidding Logic Loop
     # -------------------------------
     # This loop attempts to trigger auto-bids from competing buyers.
-    while True:
+    while max_auto_bid and True:  # Only enter loop if max_auto_bid is set
         # Find the top competing bid from a different bidder whose max_auto_bid is high enough
         competitor = Bid.query.filter(
             Bid.AuctionID == auction_id,
