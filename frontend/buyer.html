@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Auctions</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 20px;
+      max-width: 220px;
+    }
+    .sidebar h4 {
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #0073bb;
+    }
+    .sidebar .nav-link {
+      font-size: 1.05rem;
+      color: #0073bb;
+      margin-bottom: 15px;
+    }
+    .sidebar .nav-link:hover {
+      color: #005b96;
+      text-decoration: none;
+    }
+    .content-wrapper {
+      padding: 20px;
+      background-color: #fff;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .page-header {
+      background-color: #0073bb;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 3px;
+      margin-bottom: 20px;
+    }
+    .table thead tr {
+      background-color: #f0f0f0;
+    }
+    .table td, .table th {
+      vertical-align: middle;
+    }
+    .btn-success, .btn-info, .btn-secondary {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      margin-top: 5px;
+    }
+    .modal-content {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <aside class="col-md-3 col-lg-2 sidebar">
+        <h4>Navigation</h4>
+        <nav class="nav flex-column">
+          <a class="nav-link" href="buyer.html">Active Auctions</a>
+          <a class="nav-link" href="my_bids.html">My Bids</a>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="col-md-9 col-lg-10">
+        <div class="page-header">
+          <h1 class="mb-0">Active Auctions</h1>
+        </div>
+        <div class="content-wrapper">
+          <!-- Filters -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <select id="categoryFilter" class="form-select">
+                <option value="">Select Category</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select id="subcategoryFilter" class="form-select" disabled>
+                <option value="">Select Subcategory</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-primary w-100" onclick="fetchActiveAuctions()">Apply Filter</button>
+            </div>
+          </div>
+
+          <!-- Dynamic Attribute Filters -->
+          <div id="attributeFilters" class="row mb-3"></div>
+
+          <!-- Auction Table -->
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Condition</th>
+                <th>Start Price</th>
+                <th>End Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="auctionTable">
+              <tr><td colspan="7" class="text-center">Loading auctions...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Details Modal -->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Item Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="detailsBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bid History Modal -->
+  <div class="modal fade" id="historyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Bid History</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="historyBody">
+          Loading...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const BASE_URL = "http://127.0.0.1:5000";
+
+    async function fetchCategories() {
+      const res = await fetch(`${BASE_URL}/public/browse/categories`);
+      const categories = await res.json();
+      const categorySelect = document.getElementById("categoryFilter");
+      categorySelect.innerHTML = '<option value="">Select Category</option>' +
+        categories.map(cat => `<option value="${cat.CategoryID}">${cat.Name}</option>`).join("");
+    }
+
+    document.getElementById("categoryFilter").addEventListener("change", async function () {
+      const categoryId = this.value;
+      const subcategorySelect = document.getElementById("subcategoryFilter");
+      subcategorySelect.innerHTML = '<option value="">Select Subcategory</option>';
+      subcategorySelect.disabled = true;
+      clearAttributeFilters();
+
+      if (!categoryId) return;
+
+      const res = await fetch(`${BASE_URL}/public/browse/subcategories/${categoryId}`);
+      const subcategories = await res.json();
+      subcategorySelect.innerHTML += subcategories.map(sub => `<option value="${sub.SubcategoryID}">${sub.Name}</option>`).join("");
+      subcategorySelect.disabled = false;
+    });
+
+    document.getElementById("subcategoryFilter").addEventListener("change", async function () {
+      const subcategoryId = this.value;
+      clearAttributeFilters();
+
+      if (!subcategoryId) return;
+
+      const res = await fetch(`${BASE_URL}/public/browse/attributes/${subcategoryId}`);
+      const attributes = await res.json();
+      renderAttributeFilters(attributes);
+    });
+
+    function clearAttributeFilters() {
+      document.getElementById("attributeFilters").innerHTML = "";
+    }
+
+    function renderAttributeFilters(attributes) {
+      const container = document.getElementById("attributeFilters");
+
+      attributes.forEach(attr => {
+        const col = document.createElement("div");
+        col.className = "col-md-3 mb-2";
+
+        const label = document.createElement("label");
+        label.innerText = attr.Name;
+        label.className = "form-label";
+
+        const select = document.createElement("select");
+        select.className = "form-select";
+        select.dataset.attrName = attr.Name;
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.innerText = `Any ${attr.Name}`;
+        select.appendChild(defaultOption);
+
+        fetch(`${BASE_URL}/public/browse/attribute-values/${attr.AttributeID}`)
+          .then(res => res.json())
+          .then(values => {
+            values.forEach(value => {
+              const option = document.createElement("option");
+              option.value = value;
+              option.innerText = value;
+              select.appendChild(option);
+            });
+          });
+
+        col.appendChild(label);
+        col.appendChild(select);
+        container.appendChild(col);
+      });
+    }
+    function viewHistory(auctionId) {
+    window.location.href = `bid_history.html?auctionId=${auctionId}`;
+  }
+
+    async function fetchActiveAuctions() {
+      const subcategoryId = document.getElementById("subcategoryFilter").value;
+      const attributeSelects = document.querySelectorAll("#attributeFilters select");
+
+      let filters = {};
+      if (subcategoryId) {
+        filters.SubcategoryID = [parseInt(subcategoryId)];
+      }
+      let attrFilters = {};
+      attributeSelects.forEach(select => {
+        const value = select.value;
+        if (value) {
+          attrFilters[select.dataset.attrName] = [value];
+        }
+      });
+      if (Object.keys(attrFilters).length > 0) {
+        filters.attributes = attrFilters;
+      }
+
+      const body = {
+        filters: filters,
+        auction_filters: { is_closed: false },
+        sort_by: "created_desc",
+        limit: 50
+      };
+
+      const response = await fetch(`${BASE_URL}/public/browse/search-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      const items = await response.json();
+      const table = document.getElementById("auctionTable");
+
+      if (!items.length) {
+        table.innerHTML = '<tr><td colspan="7" class="text-center">No active auctions available.</td></tr>';
+        return;
+      }
+
+      table.innerHTML = items.map(item => `
+        <tr>
+          <td>${item.Title}</td>
+          <td>${item.Brand || "N/A"}</td>
+          <td>${item.Model || "N/A"}</td>
+          <td>${item.Condition || "N/A"}</td>
+          <td>$${item.Auction?.StartPrice?.toFixed(2)}</td>
+          <td>${new Date(item.Auction?.EndTime).toLocaleString()}</td>
+         <td>
+          <input type="number" min="0" step="0.01" placeholder="Your Bid" class="form-control mb-1" id="bid-${item.Auction.AuctionID}">
+          <input type="number" min="0" step="0.01" placeholder="Max Auto-Bid" class="form-control mb-1" id="auto-${item.Auction.AuctionID}">
+          <button class="btn btn-sm btn-success mb-1" onclick="submitBid(${item.Auction.AuctionID})">Bid</button>
+          <button class="btn btn-sm btn-info mb-1" onclick='showDetails(${JSON.stringify(item)})'>Details</button>
+          <button class="btn btn-sm btn-secondary" onclick="viewHistory(${item.Auction.AuctionID})">History</button>
+        </td>
+        </tr>
+      `).join("");
+    }
+
+    async function submitBid(auctionId) {
+      const bidInput = document.getElementById(`bid-${auctionId}`);
+      const autoInput = document.getElementById(`auto-${auctionId}`);
+      const token = localStorage.getItem('token');
+
+      const bidAmount = parseFloat(bidInput.value);
+      const maxAuto = autoInput.value ? parseFloat(autoInput.value) : null;
+
+      if (!token) {
+        alert("You must be logged in to bid.");
+        return;
+      }
+
+      if (isNaN(bidAmount)) {
+        alert("Please enter a valid bid amount.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/bid`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            auction_id: auctionId,
+            amount: bidAmount,
+            max_auto_bid: maxAuto
+          })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(`✅ Bid successful! Current highest bid: $${result.final_highest_bid ?? result.highest_bid}`);
+          fetchActiveAuctions();
+        } else {
+          alert(`❌ ${result.error || "Bid failed."}`);
+        }
+      } catch (err) {
+        console.error("Error placing bid:", err);
+        alert("Error placing bid.");
+      }
+    }
+
+    function showDetails(item) {
+      const details = [
+        `<strong>Title:</strong> ${item.Title}`,
+        `<strong>Brand:</strong> ${item.Brand}`,
+        `<strong>Model:</strong> ${item.Model}`,
+        `<strong>Condition:</strong> ${item.Condition}`,
+        `<strong>Attributes:</strong>`,
+        item.Attributes.map(attr => `• ${attr.name}: ${attr.value}`).join("\n")
+      ].join("\n\n");
+
+      document.getElementById("detailsBody").innerHTML = details;
+      new bootstrap.Modal(document.getElementById("detailsModal")).show();
+    }
+
+    async function viewBidHistory(auctionId) {
+      const token = localStorage.getItem('token');
+      if (!token) return alert("You must be logged in to view history.");
+
+      const res = await fetch(`${BASE_URL}/buyer/bid-history/${auctionId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const history = await res.json();
+
+      const historyBody = document.getElementById("historyBody");
+      if (!history.length) {
+        historyBody.innerHTML = `<p class="text-muted">No bids yet for this auction.</p>`;
+      } else {
+        historyBody.innerHTML = `
+          <ul class="list-group">
+            ${history.map(bid => `
+              <li class="list-group-item d-flex justify-content-between align-items-start">
+                <div>
+                  <strong>${bid.bidder_name}</strong> bid $${parseFloat(bid.amount).toFixed(2)}
+                </div>
+                <small class="text-muted">${new Date(bid.timestamp).toLocaleString()}</small>
+              </li>
+            `).join("")}
+          </ul>
+        `;
+      }
+
+      new bootstrap.Modal(document.getElementById("historyModal")).show();
+    }
+
+    fetchCategories();
+    fetchActiveAuctions();
+  </script>
+</body>
+</html>

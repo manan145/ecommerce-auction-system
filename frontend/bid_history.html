@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bid History</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f7f7f7;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .container {
+      margin-top: 50px;
+    }
+    .table {
+      background-color: white;
+    }
+    .header {
+      background-color: #0073bb;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .btn-back {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Bid History</h2>
+    </div>
+
+    <button class="btn btn-secondary btn-back" onclick="window.history.back()">← Back</button>
+
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr>
+          <th>Bidder Name</th>
+          <th>Amount</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody">
+        <tr><td colspan="3" class="text-center">Loading history...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:5000";
+
+    async function fetchBidHistory() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const auctionId = urlParams.get("auctionId");
+      const token = localStorage.getItem("token");
+      console.log("Token:", token);
+      console.log("Auction ID:", auctionId);
+
+      if (!auctionId) {
+        alert("Missing auction ID in the URL.");
+        return;
+      }
+
+      if (!token) {
+        alert("You're not logged in. Please log in to view bid history.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/bid-history/${auctionId}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+        const tableBody = document.getElementById("historyTableBody");
+
+        if (!response.ok) {
+          tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">${data.error || "Failed to fetch bid history."}</td></tr>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="3" class="text-center">No bid history found for this auction.</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = data.map(bid => `
+          <tr>
+            <td>${bid.bidder_name}</td>
+            <td>$${parseFloat(bid.amount).toFixed(2)}</td>
+            <td>${new Date(bid.timestamp).toLocaleString()}</td>
+          </tr>
+        `).join("");
+      } catch (err) {
+        console.error("Error fetching bid history:", err);
+        document.getElementById("historyTableBody").innerHTML = `
+          <tr><td colspan="3" class="text-center text-danger">An error occurred while fetching bid history.</td></tr>
+        `;
+      }
+    }
+
+    fetchBidHistory();
+  </script>
+</body>
+</html>

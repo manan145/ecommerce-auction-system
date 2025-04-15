@@ -98,6 +98,7 @@ class Bid(db.Model):
     Amount = db.Column(db.Numeric(10, 2), nullable=False)
     BidTime = db.Column(db.DateTime, default=datetime.utcnow)
     MaxAutoBid = db.Column(db.Numeric(10, 2))
+    Bidder = db.relationship('User', backref='bids', foreign_keys=[BidderID])
 
 # ==========================
 # Transaction

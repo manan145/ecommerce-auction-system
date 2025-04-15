@@ -231,3 +231,49 @@ def make_payment():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to complete payment: {str(e)}"}), 500
+    
+@buyer_bp.route('/my-bids', methods=['GET'])
+@jwt_required()
+def get_my_bids():
+    user_id = get_jwt_identity()
+    bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc()).all()
+
+    result = []
+    for bid in bids:
+        auction = Auction.query.get(bid.AuctionID)
+        item = Item.query.get(auction.ItemID) if auction else None
+        status = "active"
+        if auction and (auction.IsClosed or datetime.utcnow() > auction.EndTime):
+            status = "closed"
+        result.append({
+            "amount": float(bid.Amount),
+            "bid_time": bid.BidTime.isoformat(),
+            "item_title": item.Title if item else "Unknown Item",
+            "status": status
+        })
+    return jsonify(result), 200
+
+from sqlalchemy.orm import joinedload
+
+
+@buyer_bp.route('/bid-history/<int:auction_id>', methods=['GET'])
+@jwt_required()
+def bid_history(auction_id):
+    current_user_id = get_jwt_identity()
+    print("JWT identity:", current_user_id)
+    # Join with User table to get bidder names
+    bids = (
+        db.session.query(Bid, User.Username)
+        .join(User, Bid.BidderID == User.UserID)
+        .filter(Bid.AuctionID == auction_id)
+        .order_by(Bid.BidTime.desc())
+        .all()
+    )
+
+    return jsonify([
+        {
+            "bidder_name": username,
+            "amount": float(bid.Amount),
+            "timestamp": bid.BidTime.isoformat()
+        } for bid, username in bids
+    ])

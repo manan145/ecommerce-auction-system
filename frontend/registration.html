@@ -121,6 +121,9 @@
       <select id="role" required>
         <option value="buyer">Buyer</option>
         <option value="seller">Seller</option>
+        <option value="admin">Admin</option>
+        <option value="customer_rep">Customer Representative</option>
+
       </select>
 
       <button type="submit">Register</button>
@@ -163,7 +166,9 @@
         return;
       }
       
-      fetch('/register', {
+      const BASE_URL = "http://127.0.0.1:5000";
+
+      fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, role })

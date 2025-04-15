@@ -88,54 +88,94 @@ def list_items_by_subcategory(subcategory_id):
 # POST /browse/search-items
 # Search all items with filters (optional seller-only toggle)
 # -----------------------------------------------
+from flask import json
 @public_bp.route('/browse/search-items', methods=['POST'])
 @jwt_required(optional=True)
 def public_search_items():
-    data = request.get_json()
-    filters = data.get('filters', {})
-    sort_by = data.get('sort_by', 'created_desc')
-    offset = int(data.get('offset', 0))
-    limit = int(data.get('limit', 20))
+    try:
+        raw_data = request.get_data(as_text=True)
+        print("📦 Raw request data:", raw_data)
 
-    # Optional seller-only view
-    user_id = get_jwt_identity()
-    only_my_items = data.get('only_my_items', False) and user_id is not None
+        data = request.get_json()
+        print("✅ Parsed data:", data)
+        print("🔎 Data type:", type(data))
 
-    # Extract auction-related filters
-    auction_filters = data.get('auction_filters', {})
-    min_price = auction_filters.get('min_price')
-    max_price = auction_filters.get('max_price')
-    is_closed = auction_filters.get('is_closed')
+        filters = data.get('filters', {})
+        sort_by = data.get('sort_by', 'created_desc')
+        offset = int(data.get('offset', 0))
+        limit = int(data.get('limit', 20))
 
-    # Modify the result to include auction-related filtering
-    result = filter_items(
-        filters=filters,
-        only_my_items=only_my_items,
-        user_id=user_id,
-        sort_by=sort_by,
-        offset=offset,
-        limit=limit,
-        auction_filters={
-            'min_price': min_price,
-            'max_price': max_price,
-            'is_closed': is_closed
-        }
-    )
+        user_id = get_jwt_identity()
+        only_my_items = data.get('only_my_items', False) and user_id is not None
 
-    # Add auction details to the result
-    for item in result:
-        auction = Auction.query.filter_by(ItemID=item["ItemID"]).first()
-        if auction:
-            auction_data = {
-                "AuctionID": auction.AuctionID,
-                "StartPrice": float(auction.StartPrice),
-                "MinIncrement": float(auction.MinIncrement),
-                "StartTime": auction.StartTime.isoformat(),
-                "EndTime": auction.EndTime.isoformat(),
-                "IsClosed": auction.IsClosed
+        auction_filters = data.get('auction_filters', {})
+        min_price = auction_filters.get('min_price')
+        max_price = auction_filters.get('max_price')
+        is_closed = auction_filters.get('is_closed')
+
+        result_data = filter_items(
+            filters=filters,
+            only_my_items=only_my_items,
+            user_id=user_id,
+            sort_by=sort_by,
+            offset=offset,
+            limit=limit,
+            auction_filters={
+                'min_price': min_price,
+                'max_price': max_price,
+                'is_closed': is_closed
             }
-            if only_my_items:  # Seller can view SecretMinPrice
-                auction_data["SecretMinPrice"] = float(auction.SecretMinPrice)
-            item["Auction"] = auction_data
+        )
+
+        items = result_data.get("results", [])
+
+        for item in items:
+            print("🧪 Item in results:", item, "| Type:", type(item))
+            if not isinstance(item, dict):
+                print("⚠️ Skipping item — not a dict.")
+                continue
+
+            auction = Auction.query.filter_by(ItemID=item["ItemID"]).first()
+            if auction:
+                auction_data = {
+                    "AuctionID": auction.AuctionID,
+                    "StartPrice": float(auction.StartPrice),
+                    "MinIncrement": float(auction.MinIncrement),
+                    "StartTime": auction.StartTime.isoformat(),
+                    "EndTime": auction.EndTime.isoformat(),
+                    "IsClosed": auction.IsClosed
+                }
+                if only_my_items:
+                    auction_data["SecretMinPrice"] = float(auction.SecretMinPrice)
+                item["Auction"] = auction_data
+
+        return jsonify(items), 200
+
+    except Exception as e:
+        print("🔥 Error in public_search_items:", str(e))
+        return jsonify({"error": "Internal server error"}), 500
+
+@public_bp.route('/browse/attributes/<int:subcategory_id>', methods=['GET'])
+def get_attributes_by_subcategory(subcategory_id):
+    attributes = Attribute.query.filter_by(SubcategoryID=subcategory_id).all()
+    
+    if not attributes:
+        return jsonify({"message": "No attributes found for this subcategory."}), 404
+
+    result = [{
+        "AttributeID": attr.AttributeID,
+        "Name": attr.Name
+    } for attr in attributes]
 
     return jsonify(result), 200
+
+@public_bp.route('/browse/attribute-values/<int:attribute_id>', methods=['GET'])
+def get_attribute_values(attribute_id):
+    values = (
+        db.session.query(ItemAttributeValue.Value)
+        .filter_by(AttributeID=attribute_id)
+        .distinct()
+        .all()
+    )
+    value_list = [v[0] for v in values]
+    return jsonify(value_list), 200

@@ -1,5 +1,5 @@
 from ..models import Item, Attribute, ItemAttributeValue, Auction
-from sqlalchemy import or_, and_
+from sqlalchemy.orm import aliased
 from datetime import datetime
 
 def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_desc', offset=0, limit=20, **kwargs):
@@ -9,14 +9,14 @@ def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_de
     if only_my_items and user_id:
         query = query.filter(Item.OwnerID == user_id)
 
-    # Valid fields from Item model that can be filtered
+    # Allowed direct Item fields for filtering
     ALLOWED_ITEM_FIELDS = ['Brand', 'Condition', 'SubcategoryID', 'Status']
 
     # --- Filter by item fields ---
     if filters:
         for field_name, values in filters.items():
             if field_name in ['attributes', 'CreatedAtFrom', 'CreatedAtTo']:
-                continue  # handle separately
+                continue  # handled separately
 
             if isinstance(values, list) and field_name in ALLOWED_ITEM_FIELDS:
                 column = getattr(Item, field_name)
@@ -31,7 +31,7 @@ def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_de
             date_from = datetime.strptime(date_from_str, '%Y-%m-%d')
             query = query.filter(Item.CreatedAt >= date_from)
         except ValueError:
-            pass  # You can log or raise error if needed
+            pass
 
     if date_to_str:
         try:
@@ -40,23 +40,25 @@ def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_de
         except ValueError:
             pass
 
-    # --- Filter by attributes ---
+    # --- Filter by attributes using aliased joins ---
     attr_filters = filters.get("attributes", {})
-    for attr_name, attr_values in attr_filters.items():
-        query = query.join(ItemAttributeValue, Item.ItemID == ItemAttributeValue.ItemID)\
-                     .join(Attribute, Attribute.AttributeID == ItemAttributeValue.AttributeID)\
-                     .filter(
-                         Attribute.Name == attr_name,
-                         ItemAttributeValue.Value.in_(attr_values)
-                     )
+    for i, (attr_name, attr_values) in enumerate(attr_filters.items()):
+        if not attr_values:
+            continue
 
-    # Extract auction-related filters
+        iav_alias = aliased(ItemAttributeValue, name=f'iav_{i}')
+        attr_alias = aliased(Attribute, name=f'attr_{i}')
+
+        query = query.join(iav_alias, iav_alias.ItemID == Item.ItemID)
+        query = query.join(attr_alias, attr_alias.AttributeID == iav_alias.AttributeID)
+        query = query.filter(attr_alias.Name == attr_name, iav_alias.Value.in_(attr_values))
+
+    # --- Filter by auction fields ---
     auction_filters = kwargs.get('auction_filters', {})
     min_price = auction_filters.get('min_price')
     max_price = auction_filters.get('max_price')
     is_closed = auction_filters.get('is_closed')
 
-    # --- Filter by auction fields ---
     if min_price is not None or max_price is not None or is_closed is not None:
         query = query.join(Auction, Auction.ItemID == Item.ItemID)
 
@@ -81,7 +83,7 @@ def filter_items(filters, only_my_items=False, user_id=None, sort_by='created_de
     query = query.offset(offset).limit(limit)
     items = query.all()
 
-    # --- Build Response ---
+    # --- Build response with attributes ---
     results = []
     for item in items:
         attributes = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
