@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Item - Seller</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 25px;
+      color: #333;
+      font-weight: 500;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #555;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #5563DE;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #5563DE;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #435ac9;
+    }
+    .message {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #d8000c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Verify Item ID</h1>
+    <div id="message" class="message"></div>
+    <form id="verifyForm">
+      <label for="itemId">Enter your Item ID:</label>
+      <input type="number" id="itemId" placeholder="Item ID" required>
+      <button type="submit">Verify</button>
+    </form>
+  </div>
+  
+  <script>
+    document.getElementById('verifyForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const itemId = document.getElementById('itemId').value;
+      
+      // Verify item existence by fetching all seller items
+      fetch('/my-items', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Check if any returned item has an ItemID matching the provided id
+        const found = data.items && data.items.find(item => item.ItemID == itemId);
+        if (found) {
+          // Redirect to the update form page with item id as a query parameter
+          window.location.href = 'update_item.html?id=' + itemId;
+        } else {
+          document.getElementById('message').textContent = 'Item not found or you are not authorized.';
+        }
+      })
+      .catch(error => {
+        console.error('Error verifying item:', error);
+        document.getElementById('message').textContent = 'Error verifying item.';
+      });
+    });
+  </script>
+</body>
+</html>

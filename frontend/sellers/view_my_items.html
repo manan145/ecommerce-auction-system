@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Items - Seller Dashboard</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .item-card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 15px;
+      background: #fafafa;
+    }
+    .item-card h2 {
+      margin-top: 0;
+      color: #5563DE;
+      font-size: 20px;
+    }
+    .item-card p {
+      margin: 5px 0;
+      color: #555;
+      font-size: 14px;
+    }
+    .attributes, .auction {
+      margin-top: 10px;
+    }
+    .attributes ul, .auction ul {
+      list-style-type: disc;
+      margin-left: 20px;
+      padding-left: 0;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .nav a {
+      text-decoration: none;
+      color: #5563DE;
+      font-weight: 500;
+      margin: 0 10px;
+      transition: color 0.3s ease;
+    }
+    .nav a:hover {
+      color: #435ac9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>My Items</h1>
+    <div id="itemsContainer">
+      <!-- Items will be populated here -->
+    </div>
+    <div class="nav">
+      <a href="index.html">← Back to Home</a>
+    </div>
+  </div>
+  
+  <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+          window.location.href = 'login.html';
+          return;
+      }
+      
+      fetch('/my-items', {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + token
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          const container = document.getElementById('itemsContainer');
+          if (data.items && data.items.length > 0) {
+              data.items.forEach(item => {
+                  // Create a card element for each item
+                  const card = document.createElement('div');
+                  card.className = 'item-card';
+                  
+                  let htmlContent = `<h2>${item.Title}</h2>`;
+                  htmlContent += `<p><strong>Brand:</strong> ${item.Brand}</p>`;
+                  htmlContent += `<p><strong>Model:</strong> ${item.Model}</p>`;
+                  htmlContent += `<p><strong>Description:</strong> ${item.Description || 'N/A'}</p>`;
+                  htmlContent += `<p><strong>Condition:</strong> ${item.Condition}</p>`;
+                  htmlContent += `<p><strong>Created At:</strong> ${new Date(item.CreatedAt).toLocaleString()}</p>`;
+                  
+                  // Display attributes if available
+                  if (item.Attributes && item.Attributes.length > 0) {
+                      htmlContent += `<div class="attributes"><strong>Attributes:</strong><ul>`;
+                      item.Attributes.forEach(attr => {
+                          htmlContent += `<li>${attr.name}: ${attr.value}</li>`;
+                      });
+                      htmlContent += `</ul></div>`;
+                  }
+                  
+                  // Display auction details if present
+                  if (item.Auction) {
+                      htmlContent += `<div class="auction"><strong>Auction Details:</strong><ul>`;
+                      htmlContent += `<li><strong>Auction ID:</strong> ${item.Auction.AuctionID}</li>`;
+                      htmlContent += `<li><strong>Start Price:</strong> $${item.Auction.StartPrice.toFixed(2)}</li>`;
+                      htmlContent += `<li><strong>Min Increment:</strong> $${item.Auction.MinIncrement.toFixed(2)}</li>`;
+                      htmlContent += `<li><strong>Reserve Price:</strong> $${item.Auction.SecretMinPrice.toFixed(2)}</li>`;
+                      htmlContent += `<li><strong>Start Time:</strong> ${new Date(item.Auction.StartTime).toLocaleString()}</li>`;
+                      htmlContent += `<li><strong>End Time:</strong> ${new Date(item.Auction.EndTime).toLocaleString()}</li>`;
+                      htmlContent += `<li><strong>Status:</strong> ${item.Auction.IsClosed ? 'Closed' : 'Active'}</li>`;
+                      htmlContent += `</ul></div>`;
+                  }
+                  
+                  card.innerHTML = htmlContent;
+                  container.appendChild(card);
+              });
+          } else {
+              container.textContent = 'No items found.';
+          }
+      })
+      .catch(error => {
+          console.error('Error fetching items:', error);
+          document.getElementById('itemsContainer').textContent = 'Error loading items.';
+      });
+    });
+  </script>
+</body>
+</html>
