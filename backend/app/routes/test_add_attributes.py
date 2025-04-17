@@ -64,13 +64,13 @@ def add_attributes_for_subcategory(name, attributes, headers):
 if __name__ == "__main__":
     try:
         token = get_admin_jwt()
-        headers = {
-            "Authorization": token,
-            "Content-Type": "application/json"
-        }
+        # headers = {
+        #     "Authorization": token,
+        #     "Content-Type": "application/json"
+        # }
 
-        for subcategory_id, attr_list in attribute_map.items():
-            add_attributes_for_subcategory(subcategory_id, attr_list, headers)
+        # for subcategory_id, attr_list in attribute_map.items():
+        #     add_attributes_for_subcategory(subcategory_id, attr_list, headers)
 
     except Exception as e:
         print("❌ Error:", e)

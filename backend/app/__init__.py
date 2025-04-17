@@ -24,7 +24,6 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
-
     # ==============================
     # Initialize Extensions
     # ==============================
