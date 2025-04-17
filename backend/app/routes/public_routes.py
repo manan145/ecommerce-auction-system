@@ -16,12 +16,12 @@ def list_categories():
     return jsonify(result), 200
 
 # -----------------------------------------------
-# GET /browse/subcategories/<category_name>
-# Returns subcategories under a category given its name
+# GET /browse/subcategories/<category_id>
+# Returns subcategories under a category given its ID
 # -----------------------------------------------
-@public_bp.route('/browse/subcategories/<string:category_name>', methods=['GET'])
-def list_subcategories(category_name):
-    category = Category.query.filter_by(Name=category_name).first()
+@public_bp.route('/browse/subcategories/<int:category_id>', methods=['GET'])
+def list_subcategories(category_id):
+    category = Category.query.get(category_id)
     if not category:
         return jsonify({"error": "Category not found"}), 404
 
@@ -30,16 +30,16 @@ def list_subcategories(category_name):
     return jsonify(result), 200
 
 # -----------------------------------------------
-# GET /browse/items/<subcategory_name>?seller_only=true
-# Returns items in a subcategory given its name, optionally filtered by current seller
+# GET /browse/items/<int:subcategory_id>?seller_only=true
+# Returns items in a subcategory given its ID, optionally filtered by current seller
 # -----------------------------------------------
-@public_bp.route('/browse/items/<string:subcategory_name>', methods=['GET'])
+@public_bp.route('/browse/items/<int:subcategory_id>', methods=['GET'])
 @jwt_required(optional=True)
-def list_items_by_subcategory(subcategory_name):
+def list_items_by_subcategory(subcategory_id):
     user_id = get_jwt_identity()
     seller_only = request.args.get('seller_only', 'false').lower() == 'true'
 
-    subcategory = Subcategory.query.filter_by(Name=subcategory_name).first()
+    subcategory = Subcategory.query.get(subcategory_id)
     if not subcategory:
         return jsonify({"error": "Subcategory not found"}), 404
 

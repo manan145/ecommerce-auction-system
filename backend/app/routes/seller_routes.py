@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import db, User, Item, Subcategory, Attribute, ItemAttributeValue, Auction, Bid, Transaction, Notification
+from ..models import db, User, Item, Subcategory, Attribute, ItemAttributeValue, Auction, Bid, Transaction, Notification, Alert
 import json
 from datetime import datetime
 
@@ -9,15 +9,38 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import func
 
 
+
 seller_bp = Blueprint('seller', __name__)
 
-# ================================
-# Add New Item + Auction + Attributes
-# ================================
+# =======================================================================  
+# Add New Item + Auction + Attributes + Notify Buyers for matching alerts
+# ========================================================================
 @seller_bp.route('/add-item', methods=['POST'])
 @jwt_required()
 def add_item():
-    """API → Seller adds new item with required attribute values + auction setup"""
+    """
+    API → Seller adds new item with required attribute values and optional auction setup.
+
+    This endpoint allows a logged-in seller to:
+    - Create a new item under a specified subcategory (subcategory_id is required)
+    - Add core item details such as brand, model, title, condition, etc.
+    - Attach dynamic attribute-value pairs to the item (e.g., RAM, Storage)
+    - Automatically associate the item with its category (derived from subcategory)
+    - (Optional) Initialize an auction if auction details are provided in the payload
+    - Automatically notify buyers whose saved alerts match this item's criteria
+
+    Validation ensures:
+    - Only authenticated sellers can use this route
+    - Attributes provided must match valid ones defined for the subcategory
+    - Required fields like title and attributes are present
+
+    If matching buyer alerts are found, structured notifications are sent in JSON format
+    for frontend parsing (e.g., item_id, item_title, attributes, etc.).
+
+    Returns:
+        201 Created with newly created item ID
+        400 Bad Request for validation errors
+    """
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
@@ -25,14 +48,7 @@ def add_item():
         return jsonify({'error': 'Seller access required'}), 403
 
     data = request.get_json()
-    subcategory_name = data.get('subcategory_name')
-    if subcategory_name:
-        subcategory = Subcategory.query.filter_by(Name=subcategory_name).first()
-        if not subcategory:
-            return jsonify({'error': 'Subcategory not found'}), 404
-        subcategory_id = subcategory.SubcategoryID
-    else:
-        subcategory_id = data.get('subcategory_id')
+    subcategory_id = data.get('subcategory_id')
     title = data.get('title')
     description = data.get('description')
     brand = data.get('brand')
@@ -99,6 +115,54 @@ def add_item():
 
         item_attr = ItemAttributeValue(ItemID=new_item.ItemID, AttributeID=attr_id, Value=value)
         db.session.add(item_attr)
+
+    # Notify buyers with matching alerts
+    subcat = Subcategory.query.get(subcategory_id)
+    alerts = Alert.query.filter_by(Subcategory=subcat.Name).all()
+
+    for alert in alerts:
+        criteria = alert.SearchCriteria
+        match = True
+
+        # Match Brand, Model, Condition
+        for field in ["Brand", "Model", "Condition"]:
+            expected = criteria.get(field)
+            if expected and getattr(new_item, field) not in expected:
+                match = False
+                break
+
+        # Match attributes
+        attr_dict = {}
+        if match:
+            item_attrs = ItemAttributeValue.query.filter_by(ItemID=new_item.ItemID).all()
+            attr_dict = {
+                Attribute.query.get(attr.AttributeID).Name: attr.Value
+                for attr in item_attrs
+            }
+
+            for attr_name, expected_values in criteria.get("attributes", {}).items():
+                if attr_dict.get(attr_name) not in expected_values:
+                    match = False
+                    break
+
+        # Create notification if match is found
+        if match:
+            notif_payload = {
+                "type": "item_alert_match",
+                "title": "🔔 New item matched your alert",
+                "item_id": new_item.ItemID,
+                "subcategory": subcat.Name,
+                "brand": new_item.Brand,
+                "model": new_item.Model,
+                "condition": new_item.Condition,
+                "attributes": attr_dict
+            }
+            notification = Notification(
+                ReceiverID=alert.UserID,
+                Message=json.dumps(notif_payload),
+                CreatedAt=datetime.utcnow()
+            )
+            db.session.add(notification)
 
     db.session.commit()
 
