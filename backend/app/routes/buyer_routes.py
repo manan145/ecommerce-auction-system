@@ -53,7 +53,7 @@ def place_bid():
     auction = Auction.query.get(auction_id)
     if not auction or auction.IsClosed:
         return jsonify({"error": "Invalid or closed auction"}), 400
-    if datetime.utcnow() > auction.EndTime:
+    if datetime.now(datetime.timezone.utc).isoformat() > auction.EndTime:
         return jsonify({"error": "Auction has ended"}), 400
 
     # -------------------------------
@@ -97,7 +97,7 @@ def place_bid():
         BidderID=buyer.UserID,
         Amount=bid_amount,
         MaxAutoBid=float(max_auto_bid) if max_auto_bid else None,  # Set to None if not provided
-        BidTime=datetime.utcnow()
+        BidTime=datetime.now(datetime.timezone.utc).isoformat()
     )
     db.session.add(new_bid)
     db.session.flush()  # Flush so we can use new_bid in auto-bid logic
@@ -130,7 +130,7 @@ def place_bid():
             BidderID=competitor.BidderID,
             Amount=next_bid_amount,
             MaxAutoBid=competitor.MaxAutoBid,
-            BidTime=datetime.utcnow()
+            BidTime=datetime.now(datetime.timezone.utc).isoformat()
         )
         db.session.add(auto_bid)
         db.session.flush()
@@ -212,7 +212,7 @@ def make_payment():
     try:
         # Update transaction
         transaction.Status = "completed"
-        transaction.TransactionDate = datetime.utcnow()
+        transaction.TransactionDate = datetime.now(datetime.timezone.utc).isoformat()
 
         # Transfer item ownership
         item.OwnerID = buyer.UserID
@@ -335,7 +335,7 @@ def get_my_bids():
         auction = Auction.query.get(bid.AuctionID)
         item = Item.query.get(auction.ItemID) if auction else None
         status = "active"
-        if auction and (auction.IsClosed or datetime.utcnow() > auction.EndTime):
+        if auction and (auction.IsClosed or datetime.now(datetime.timezone.utc).isoformat() > auction.EndTime):
             status = "closed"
         result.append({
             "amount": float(bid.Amount),

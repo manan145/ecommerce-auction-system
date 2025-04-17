@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import db, User, CustomerRep
+from ..models import db, User, CustomerRep, CustomerQuery, Notification, Auction, Bid
+from datetime import datetime
+import json
 from werkzeug.security import generate_password_hash
 import string, secrets
 
@@ -105,4 +107,108 @@ def reset_user_password():
         "temporary_password": temp_password
     }), 200
 
+# =========================
+# View all open queries
+# =========================
+@rep_bp.route('/queries', methods=['GET'])
+@jwt_required()
+def view_queries():
+    """
+    Customer rep views all open queries (latest first)
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
 
+    if not user or user.Role != 'customer_rep':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    queries = CustomerQuery.query.filter_by(Status='open')\
+        .order_by(CustomerQuery.CreatedAt.desc()).all()
+
+    return jsonify([{
+        'QueryID': q.QueryID,
+        'UserID': q.UserID,
+        'Subject': q.Subject,
+        'Message': q.Message,
+        'CreatedAt': q.CreatedAt.isoformat()
+    } for q in queries]), 200
+
+# =========================
+# Close specific query
+# =========================
+@rep_bp.route('/queries/close/<int:query_id>', methods=['PUT'])
+@jwt_required()
+def close_query(query_id):
+    """
+    Customer rep closes a query after resolution
+    """
+    rep_id = get_jwt_identity()
+    user = User.query.get(rep_id)
+
+    if not user or user.Role != 'customer_rep':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    query = CustomerQuery.query.get(query_id)
+    if not query or query.Status == 'closed':
+        return jsonify({'error': 'Invalid or already closed query'}), 404
+
+    query.Status = 'closed'
+
+    notification = Notification(
+        UserID=query.UserID,
+        Message=json.dumps({
+            "type": "query_closed",
+            "query_id": query.QueryID,
+            "subject": query.Subject,
+            "closed_by": rep_id,
+            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
+        }),
+    )
+    db.session.add(notification)
+    db.session.commit()
+    return jsonify({'message': 'Query closed successfully'}), 200
+
+# ===========================================================
+# Remove Auction
+# ===========================================================
+@rep_bp.route('/remove-auction/<int:auction_id>', methods=['DELETE'])
+@jwt_required()
+def remove_auction(auction_id):
+    """
+    API → Customer rep forcefully deletes an auction record from the database.
+
+    Returns:
+        200 OK if auction is deleted
+        404 Not Found if auction does not exist
+    """
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({'error': 'Auction not found'}), 404
+
+    db.session.delete(auction)
+    db.session.commit()
+
+    return jsonify({'message': f'Auction {auction_id} removed successfully.'}), 200
+
+
+# ===========================================================
+# Remove Bid
+# ===========================================================
+@rep_bp.route('/remove-bid/<int:bid_id>', methods=['DELETE'])
+@jwt_required()
+def remove_bid(bid_id):
+    """
+    API → Customer rep removes a specific bid by BidID.
+
+    Returns:
+        200 OK if bid is deleted
+        404 Not Found if bid does not exist
+    """
+    bid = Bid.query.get(bid_id)
+    if not bid:
+        return jsonify({'error': 'Bid not found'}), 404
+
+    db.session.delete(bid)
+    db.session.commit()
+
+    return jsonify({'message': f'Bid {bid_id} removed successfully'}), 200

@@ -83,7 +83,7 @@ def add_item():
         Brand=brand,
         Model=model,
         Condition=condition,
-        CreatedAt=datetime.utcnow()
+        CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
     )
     db.session.add(new_item)
     db.session.flush()  # Get ItemID
@@ -160,7 +160,7 @@ def add_item():
             notification = Notification(
                 ReceiverID=alert.UserID,
                 Message=json.dumps(notif_payload),
-                CreatedAt=datetime.utcnow()
+                CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
             )
             db.session.add(notification)
 
@@ -342,7 +342,7 @@ def accept_bid():
         AuctionID=auction.AuctionID,
         BuyerID=highest_bid.BidderID,
         Price=highest_bid.Amount,
-        TransactionDate=datetime.utcnow(),
+        TransactionDate=datetime.now(datetime.timezone.utc).isoformat(),
         Status='pending'
     )
     db.session.add(transaction)
@@ -355,7 +355,6 @@ def accept_bid():
             "item_id": item.ItemID,
             "price": float(highest_bid.Amount)
         }),
-        CreatedAt=datetime.utcnow(),
         Status='unread'
     )
     db.session.add(notification)
@@ -394,7 +393,7 @@ def extend_auction():
 
     try:
         new_end_time = datetime.fromisoformat(new_end_time_str)
-        if new_end_time <= datetime.utcnow():
+        if new_end_time <= datetime.now(datetime.timezone.utc).isoformat():
             return jsonify({'error': 'New end time must be in the future'}), 400
     except ValueError:
         return jsonify({'error': 'Invalid datetime format'}), 400
@@ -408,7 +407,7 @@ def extend_auction():
         notification = Notification(
             UserID=bidder_id,
             Message=f"Auction for item {item.Title} has been extended to {new_end_time_str}",
-            CreatedAt=datetime.utcnow(),
+            CreatedAt=datetime.now(datetime.timezone.utc).isoformat(),
             Status='unread'
         )
         db.session.add(notification)

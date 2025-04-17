@@ -33,7 +33,7 @@ def register():
         new_admin = Admin(
             UserID=new_user.UserID,
             AccessLevel='SuperAdmin',  
-            CreatedAt=datetime.utcnow()
+            CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
         )
         db.session.add(new_admin)
         db.session.commit()
@@ -53,7 +53,7 @@ def login():
     if user.Role == 'admin':
         admin = Admin.query.filter_by(UserID=user.UserID).first()
         if admin:
-            admin.LastLogin = datetime.utcnow()
+            admin.LastLogin = datetime.now(datetime.timezone.utc).isoformat()
             db.session.commit()
 
     access_token = create_access_token(identity=str(user.UserID))

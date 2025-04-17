@@ -198,3 +198,17 @@ class Admin(db.Model):
     AccessLevel = db.Column(db.Enum('SuperAdmin', 'Manager', 'ReadOnly'), nullable=False)
     CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
     LastLogin = db.Column(db.DateTime)
+
+# ==========================
+# Customer Query
+# ==========================
+
+class CustomerQuery(db.Model):
+    __tablename__ = 'CustomerQuery'
+
+    QueryID = db.Column(db.Integer, primary_key=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    Subject = db.Column(db.String(255), nullable=False)
+    Message = db.Column(db.Text, nullable=False)
+    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    Status = db.Column(db.Enum('open', 'closed'), default='open')

@@ -32,6 +32,9 @@ def create_app():
     jwt.init_app(app)
     CORS(app)
 
+    with app.app_context():
+        db.create_all()  # ← This will create the tables if they don’t already exist
+
     # ==============================
     # Import Models
     # ==============================
@@ -78,3 +81,49 @@ def create_app():
             print(f"[Scheduler Shutdown Skipped] {e}")
 
     return app
+
+from flask import request, jsonify
+from ..models import db, Auction, Item, Bid, User
+from flask_jwt_extended import jwt_required
+
+@rep_bp.route('/remove-auction/<int:auction_id>', methods=['DELETE'])
+@jwt_required()
+def remove_auction(auction_id):
+    """
+    API → Customer rep removes an auction and marks associated item as withdrawn.
+
+    Returns:
+        200 OK if auction is deleted
+        404 Not Found if auction does not exist
+    """
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({'error': 'Auction not found'}), 404
+
+    item = Item.query.get(auction.ItemID)
+    if item:
+        item.Status = 'withdrawn'
+
+    db.session.delete(auction)
+    db.session.commit()
+
+    return jsonify({'message': f'Auction {auction_id} removed and item marked as withdrawn'}), 200
+
+@rep_bp.route('/remove-bid/<int:bid_id>', methods=['DELETE'])
+@jwt_required()
+def remove_bid(bid_id):
+    """
+    API → Customer rep removes a specific bid by BidID.
+
+    Returns:
+        200 OK if bid is deleted
+        404 Not Found if bid does not exist
+    """
+    bid = Bid.query.get(bid_id)
+    if not bid:
+        return jsonify({'error': 'Bid not found'}), 404
+
+    db.session.delete(bid)
+    db.session.commit()
+
+    return jsonify({'message': f'Bid {bid_id} removed successfully'}), 200
