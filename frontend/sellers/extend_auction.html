@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Extend Auction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f3f7ff;
+      padding: 40px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    input[type="datetime-local"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    button {
+      background-color: #5563DE;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+    }
+    button:hover {
+      background-color: #3f4abc;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #5563DE;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Extend Auction</h2>
+    <form id="extendForm">
+      <label for="newEndTime">Select New End Time:</label>
+      <input type="datetime-local" id="newEndTime" required />
+      <button type="submit">Extend Auction</button>
+    </form>
+    <a class="back-link" href="view_my_items.html">← Back to My Items</a>
+  </div>
+
+  <script>
+    const auctionId = new URLSearchParams(window.location.search).get('auction_id');
+
+    if (!auctionId) {
+      alert("Auction ID not found in URL.");
+      window.location.href = 'view_my_items.html';
+    }
+
+    document.getElementById('extendForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const newEndTime = document.getElementById('newEndTime').value;
+      const token = localStorage.getItem('token');
+
+      if (!newEndTime || !token) {
+        alert("Missing new end time or not authenticated.");
+        return;
+      }
+
+      fetch('/extend-auction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          auction_id: parseInt(auctionId),
+          new_end_time: newEndTime
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.message) {
+          alert(data.message);
+          window.location.href = 'my_items.html';
+        } else {
+          alert("Something went wrong.");
+        }
+      })
+      .catch(err => {
+        alert("Error extending auction.");
+        console.error(err);
+      });
+    });
+  </script>
+</body>
+</html>

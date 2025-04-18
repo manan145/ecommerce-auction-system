@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Items - Seller Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(to right, #e9f0ff, #ffffff);
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 14px 16px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background-color: #5563DE;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .nav {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .nav a {
+      text-decoration: none;
+      color: #5563DE;
+      font-weight: 500;
+      border: 2px solid #5563DE;
+      padding: 8px 20px;
+      border-radius: 25px;
+      transition: all 0.3s ease;
+    }
+    .nav a:hover {
+      background-color: #5563DE;
+      color: #fff;
+    }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-top: 10px;
+    }
+
+    .dropbtn {
+      background-color: #5563DE;
+      color: white;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 160px;
+      border: 1px solid #ccc;
+      box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+      border-radius: 6px;
+      z-index: 1;
+    }
+
+    .dropdown-content button {
+      background: none;
+      color: #333;
+      padding: 10px 16px;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .dropdown-content button:hover {
+      background-color: #f1f1f1;
+    }
+
+    .dropdown.show .dropdown-content {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📦 My Items</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Brand</th>
+          <th>Model</th>
+          <th>Condition</th>
+          <th>Created At</th>
+          <th>Attributes</th>
+          <th>Auction Details</th>
+        </tr>
+      </thead>
+      <tbody id="itemsTableBody"></tbody>
+    </table>
+    <div class="nav">
+      <a href="sellers.html">← Back to Home</a>
+    </div>
+  </div>
+
+  <script>
+    function handleAcceptBid(auctionId) {
+      const token = localStorage.getItem('token');
+      fetch('/accept-bid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ auction_id: auctionId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || 'Bid accepted successfully');
+        location.reload(); // Refresh page to reflect changes
+      })
+      .catch(err => {
+        alert('Failed to accept bid.');
+        console.error(err);
+      });
+    }
+
+    function handleExtendAuction(auctionId) {
+      const newEndTime = prompt("Enter new end time (YYYY-MM-DDTHH:MM:SS):"); // ISO format
+      if (!newEndTime) return;
+
+      const token = localStorage.getItem('token');
+      fetch('/extend-auction', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ auction_id: auctionId, new_end_time: newEndTime })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || 'Auction extended successfully');
+        location.reload();
+      })
+      .catch(err => {
+        alert('Failed to extend auction.');
+        console.error(err);
+      });
+    }
+
+    function handleWithdrawItem(auctionId) {
+      if (!confirm("Are you sure you want to withdraw this item from the auction?")) return;
+
+      const token = localStorage.getItem('token');
+      fetch('/withdraw-item', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ auction_id: auctionId })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message || 'Item withdrawn successfully');
+        location.reload();
+      })
+      .catch(err => {
+        alert('Failed to withdraw item.');
+        console.error(err);
+      });
+    }
+    function toggleDropdown(event) {
+      event.stopPropagation();
+      closeAllDropdowns();
+      const dropdown = event.target.closest(".dropdown");
+      dropdown.classList.toggle("show");
+    }
+
+    function closeAllDropdowns() {
+      document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+    }
+
+    document.addEventListener('click', function () {
+      closeAllDropdowns();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      fetch('/my-items', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        const tableBody = document.getElementById('itemsTableBody');
+
+        if (data.items && data.items.length > 0) {
+          data.items.forEach((item, index) => {
+            const row = document.createElement('tr');
+
+            const attributes = item.Attributes.map(attr => `<strong>${attr.name}</strong>: ${attr.value}`).join('<br>');
+
+            let auctionHTML = 'N/A';
+            if (item.Auction) {
+              const status = item.Auction.IsClosed ? 'Closed' : 'Active';
+              auctionHTML = `
+                <strong>Start Price:</strong> $${item.Auction.StartPrice.toFixed(2)}<br>
+                <strong>Min Increment:</strong> $${item.Auction.MinIncrement.toFixed(2)}<br>
+                <strong>Reserve Price:</strong> $${item.Auction.SecretMinPrice.toFixed(2)}<br>
+                <strong>Start:</strong> ${new Date(item.Auction.StartTime).toLocaleString()}<br>
+                <strong>End:</strong> ${new Date(item.Auction.EndTime).toLocaleString()}<br>
+                <strong>Status:</strong> ${status}
+              `;
+
+              // Add Manage Auction button if auction is closed
+              if (item.Auction.IsClosed) {
+                auctionHTML += `
+                  <div class="dropdown">
+                    <button class="dropbtn" onclick="toggleDropdown(event)">Manage Auction</button>
+                    <div class="dropdown-content">
+                      <button onclick="handleAcceptBid(${item.Auction.AuctionID})">Accept Bid</button>
+                      <a href="extend_auction.html?auction_id=${item.Auction.AuctionID}" style="display:block; padding:10px 16px; font-size:0.9rem; color:#333; text-decoration:none;">Extend Auction</a>
+                      <button onclick="handleWithdrawItem(${item.Auction.AuctionID})">Withdraw Item</button>
+
+                    </div>
+                  </div>
+                `;
+              }
+            }
+
+            row.innerHTML = `
+              <td>${item.ItemID}</td>
+              <td>${item.Title}</td>
+              <td>${item.Brand}</td>
+              <td>${item.Model}</td>
+              <td>${item.Condition}</td>
+              <td>${new Date(item.CreatedAt).toLocaleString()}</td>
+              <td>${attributes}</td>
+              <td>${auctionHTML}</td>
+            `;
+
+            tableBody.appendChild(row);
+          });
+        } else {
+          const row = document.createElement('tr');
+          row.innerHTML = `<td colspan="8" style="text-align:center;">No items found.</td>`;
+          tableBody.appendChild(row);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching items:', error);
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="8" style="text-align:center; color: red;">Error loading items.</td>`;
+        document.getElementById('itemsTableBody').appendChild(row);
+      });
+    });
+  </script>
+</body>
+</html>
