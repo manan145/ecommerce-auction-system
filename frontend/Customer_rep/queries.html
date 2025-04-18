@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Queries - Rep Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 40px;
+    }
+    .container {
+      max-width: 900px;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h3 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .query-card {
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .query-card small {
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h3>Open Customer Queries</h3>
+  <div id="queriesList">
+    <!-- Queries will be loaded here -->
+  </div>
+  <div id="message"></div>
+
+  <!-- Subtle Go Back Link -->
+  <div class="text-center mt-4">
+    <a href="index.html" style="color: #6c757d; text-decoration: none;">← Back to Dashboard</a>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+
+  // Load queries
+  fetch('/rep/queries', {
+    method: 'GET',
+    headers: {
+      'Authorization': 'Bearer ' + token
+    }
+  })
+  .then(res => res.json())
+  .then(queries => {
+    const container = document.getElementById('queriesList');
+    if (queries.length === 0) {
+      container.innerHTML = '<p class="text-muted">No open queries.</p>';
+      return;
+    }
+
+    queries.forEach(q => {
+      const card = document.createElement('div');
+      card.className = 'query-card';
+      card.innerHTML = `
+        <p><strong>Subject:</strong> ${q.Subject}</p>
+        <p><strong>Message:</strong> ${q.Message}</p>
+        <small><strong>Query ID:</strong> ${q.QueryID} | <strong>User ID:</strong> ${q.UserID}</small><br>
+        <small><strong>Created At:</strong> ${new Date(q.CreatedAt).toLocaleString()}</small><br>
+        <button class="btn btn-sm btn-outline-success mt-2" onclick="closeQuery(${q.QueryID}, this)">Mark as Closed</button>
+      `;
+      container.appendChild(card);
+    });
+  });
+
+  // Close query handler
+  function closeQuery(queryId, button) {
+    button.disabled = true;
+
+    fetch(`/rep/queries/close/${queryId}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(res => {
+      if (res.status === 200) {
+        button.parentElement.remove();
+        showMessage('Query closed successfully.', 'success');
+      } else {
+        button.disabled = false;
+        showMessage(res.body.error || 'Error closing query.', 'danger');
+      }
+    })
+    .catch(() => {
+      button.disabled = false;
+      showMessage('Network error. Try again.', 'danger');
+    });
+  }
+
+  function showMessage(msg, type) {
+    document.getElementById('message').innerHTML =
+      `<div class="alert alert-${type} mt-3">${msg}</div>`;
+  }
+</script>
+
+</body>
+</html>

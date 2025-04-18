@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Bids by Auction - Rep Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      padding: 40px;
+    }
+    .container {
+      max-width: 900px;
+      background-color: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h3 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .bid-card {
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .bid-card small {
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h3>View Bids by Auction ID</h3>
+
+  <form id="bidSearchForm" class="mb-4">
+    <div class="row g-2 align-items-center">
+      <div class="col-auto">
+        <label for="auctionId" class="col-form-label">Auction ID:</label>
+      </div>
+      <div class="col-auto">
+        <input type="number" id="auctionId" class="form-control" required>
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">View Bids</button>
+      </div>
+    </div>
+  </form>
+
+  <div id="bidsList"></div>
+  <div id="message"></div>
+
+  <!-- Subtle Go Back Link -->
+  <div class="text-center mt-4">
+    <a href="index.html" style="color: #6c757d; text-decoration: none;">← Back to Dashboard</a>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+
+  document.getElementById('bidSearchForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const auctionId = document.getElementById('auctionId').value;
+
+    fetch(`/rep/bids/${auctionId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => res.json())
+    .then(bids => {
+      const list = document.getElementById('bidsList');
+      list.innerHTML = '';
+      if (bids.length === 0) {
+        list.innerHTML = '<p class="text-muted">No bids found for this auction.</p>';
+        return;
+      }
+
+      bids.forEach(b => {
+        const card = document.createElement('div');
+        card.className = 'bid-card';
+        card.innerHTML = `
+          <p><strong>Bid ID:</strong> ${b.BidID}</p>
+          <p><strong>User ID:</strong> ${b.UserID}</p>
+          <p><strong>Amount:</strong> $${b.Amount}</p>
+          <p><strong>Timestamp:</strong> ${new Date(b.Timestamp).toLocaleString()}</p>
+          <button class="btn btn-sm btn-outline-danger mt-2" onclick="removeBid(${b.BidID}, this)">Remove Bid</button>
+        `;
+        list.appendChild(card);
+      });
+    })
+    .catch(() => {
+      showMessage('Failed to fetch bids. Please check the Auction ID.', 'danger');
+    });
+  });
+
+  function removeBid(id, btn) {
+    btn.disabled = true;
+    fetch(`/rep/remove-bid/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    })
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(res => {
+      if (res.status === 200) {
+        btn.parentElement.remove();
+        showMessage(res.body.message, 'success');
+      } else {
+        btn.disabled = false;
+        showMessage(res.body.error || 'Failed to remove bid.', 'danger');
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      showMessage('Network error.', 'danger');
+    });
+  }
+
+  function showMessage(msg, type) {
+    document.getElementById('message').innerHTML =
+      `<div class="alert alert-${type} mt-3">${msg}</div>`;
+  }
+</script>
+
+</body>
+</html>
