@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+from datetime import datetime, timezone
 from ..models import db, Auction, Bid, User, Item
 from ..models import db, User, Transaction, Auction, Item, Alert
+from sqlalchemy.orm import joinedload
 
 buyer_bp = Blueprint('buyer', __name__)
 
@@ -51,9 +52,12 @@ def place_bid():
     # 3. Retrieve Auction & Validate Timing
     # -------------------------------
     auction = Auction.query.get(auction_id)
+    end_time = auction.EndTime
+    if end_time.tzinfo is None:
+        end_time = end_time.replace(tzinfo=timezone.utc)
     if not auction or auction.IsClosed:
         return jsonify({"error": "Invalid or closed auction"}), 400
-    if datetime.now(datetime.timezone.utc).isoformat() > auction.EndTime:
+    if datetime.now(timezone.utc) > end_time:
         return jsonify({"error": "Auction has ended"}), 400
 
     # -------------------------------
@@ -97,7 +101,7 @@ def place_bid():
         BidderID=buyer.UserID,
         Amount=bid_amount,
         MaxAutoBid=float(max_auto_bid) if max_auto_bid else None,  # Set to None if not provided
-        BidTime=datetime.now(datetime.timezone.utc).isoformat()
+        BidTime=datetime.now(timezone.utc)
     )
     db.session.add(new_bid)
     db.session.flush()  # Flush so we can use new_bid in auto-bid logic
@@ -130,7 +134,7 @@ def place_bid():
             BidderID=competitor.BidderID,
             Amount=next_bid_amount,
             MaxAutoBid=competitor.MaxAutoBid,
-            BidTime=datetime.now(datetime.timezone.utc).isoformat()
+            BidTime=datetime.now(timezone.utc)
         )
         db.session.add(auto_bid)
         db.session.flush()
@@ -212,7 +216,7 @@ def make_payment():
     try:
         # Update transaction
         transaction.Status = "completed"
-        transaction.TransactionDate = datetime.now(datetime.timezone.utc).isoformat()
+        transaction.TransactionDate = datetime.now(timezone.utc)
 
         # Transfer item ownership
         item.OwnerID = buyer.UserID
@@ -327,25 +331,67 @@ def view_alerts():
 @buyer_bp.route('/my-bids', methods=['GET'])
 @jwt_required()
 def get_my_bids():
-    user_id = get_jwt_identity()
-    bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc()).all()
+    from datetime import timezone
 
+    user_id = int(get_jwt_identity())  # ensure integer for comparison
+    print(f"[DEBUG] Logged in user ID: {user_id}")
+
+    now = datetime.now(timezone.utc)
+    bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc()).all()
     result = []
+
     for bid in bids:
         auction = Auction.query.get(bid.AuctionID)
-        item = Item.query.get(auction.ItemID) if auction else None
-        status = "active"
-        if auction and (auction.IsClosed or datetime.now(datetime.timezone.utc).isoformat() > auction.EndTime):
-            status = "closed"
+        if not auction:
+            continue
+
+        item = Item.query.get(auction.ItemID)
+        if not item:
+            continue
+
+        end_time = auction.EndTime
+        if end_time.tzinfo is None:
+            end_time = end_time.replace(tzinfo=timezone.utc)
+
+        is_closed = auction.IsClosed or end_time <= now
+        status = "closed" if is_closed else "active"
+
+        transaction = Transaction.query.filter_by(AuctionID=auction.AuctionID).first()
+
+        # Fix: force int comparison
+        is_winner = (
+            transaction is not None and 
+            transaction.BuyerID == user_id and 
+            is_closed
+        )
+
+        transaction_id = transaction.TransactionID if transaction else None
+        transaction_status = transaction.Status if transaction else None
+        has_paid = transaction_status == "completed" if transaction_status else False
+
+        print(f"[DEBUG] Auction {auction.AuctionID} | Transaction BuyerID: {transaction.BuyerID if transaction else 'None'} | is_winner: {is_winner}")
+
         result.append({
             "amount": float(bid.Amount),
             "bid_time": bid.BidTime.isoformat(),
-            "item_title": item.Title if item else "Unknown Item",
-            "status": status
+            "item_title": item.Title,
+            "status": status,
+            "is_closed": is_closed,
+            "auction_id": auction.AuctionID,
+            "transaction_id": transaction_id,
+            "transaction_status": transaction_status,
+            "has_paid": has_paid,
+            "is_winner": is_winner,
+            "won": is_winner,
+            "is_highest_bidder": False
         })
+
+    print("DEBUG: Final My Bids Result:")
+    for entry in result:
+        print(entry)
+
     return jsonify(result), 200
 
-from sqlalchemy.orm import joinedload
 
 # ================================================
 # API → Buyer views bid history for a specific auction
@@ -360,7 +406,7 @@ def bid_history(auction_id):
         db.session.query(Bid, User.Username)
         .join(User, Bid.BidderID == User.UserID)
         .filter(Bid.AuctionID == auction_id)
-        .order_by(Bid.BidTime.desc())
+        .order_by(Bid.BidTime.desc(), Bid.Amount.desc())
         .all()
     )
 

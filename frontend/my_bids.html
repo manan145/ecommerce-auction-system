@@ -1,4 +1,3 @@
-<!-- my_bids.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,13 +7,14 @@
 </head>
 <body class="container py-4">
   <h2 class="mb-4">My Bids</h2>
-  <table class="table table-bordered">
-    <thead>
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
       <tr>
         <th>Item</th>
         <th>Amount</th>
         <th>Time</th>
         <th>Status</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="myBidTable"></tbody>
@@ -25,21 +25,93 @@
     const token = localStorage.getItem('token');
 
     async function fetchMyBids() {
-      const response = await fetch(`${BASE_URL}/buyer/my-bids`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/my-bids`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          alert(err.error || "Failed to fetch bids.");
+          return;
         }
-      });
-      const bids = await response.json();
-      const table = document.getElementById("myBidTable");
-      table.innerHTML = bids.map(b => `
-        <tr>
-          <td>${b.item_title}</td>
-          <td>$${parseFloat(b.amount).toFixed(2)}</td>
-          <td>${new Date(b.bid_time).toLocaleString()}</td>
-          <td>${b.status}</td>
-        </tr>
-      `).join('');
+
+        const bids = await response.json();
+        const table = document.getElementById("myBidTable");
+
+        table.innerHTML = bids.map(b => {
+          const amount = `$${parseFloat(b.amount).toFixed(2)}`;
+          const bidTime = new Date(b.bid_time).toLocaleString();
+          const status = b.is_closed ? 'Closed' : 'Active';
+          let actionContent = '';
+
+          // 🔄 START: UPDATED logic for action content
+          if (!b.is_closed && b.is_highest_bidder) {
+            actionContent = `<span class="badge bg-success">You are the highest bidder</span>`;
+          } else if (b.won) {
+            // Show Congrats + Payment actions
+            actionContent = `
+              <div class="d-flex flex-column gap-1">
+                <span class="text-success fw-semibold">🎉 Congrats, you won!</span>
+                ${
+                  b.transaction_status === 'pending'
+                    ? `<button class="btn btn-sm btn-primary" onclick="makePayment(${b.transaction_id})">Pay Now</button>`
+                    : b.transaction_status === 'completed'
+                      ? `<span class="badge bg-info text-dark">Payment Completed</span>`
+                      : `<span class="badge bg-warning text-dark">Awaiting Payment Setup</span>`
+                }
+              </div>
+            `;
+          } else if (b.is_closed && !b.won) {
+            actionContent = `<span class="badge bg-secondary">Auction Ended</span>`;
+          }
+          // 🔄 END: UPDATED logic for action content
+
+          return `
+            <tr>
+              <td>${b.item_title || 'Unknown'}</td>
+              <td>${amount}</td>
+              <td>${bidTime}</td>
+              <td>${status}</td>
+              <td>${actionContent}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error("Error loading bids:", err);
+        alert("An error occurred while loading bids.");
+      }
+    }
+
+    async function makePayment(transactionId) {
+      if (!token) {
+        alert("You must be logged in to make a payment.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/make-payment`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ transaction_id: transactionId })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert("✅ Payment successful!");
+          fetchMyBids(); // refresh table
+        } else {
+          alert(`❌ ${result.error || 'Payment failed.'}`);
+        }
+      } catch (err) {
+        console.error("Payment error:", err);
+        alert("Something went wrong while making the payment.");
+      }
     }
 
     fetchMyBids();
