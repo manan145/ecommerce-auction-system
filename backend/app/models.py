@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.dialects.mysql import ENUM
 
 from . import db
@@ -15,7 +15,7 @@ class User(db.Model):
     Email = db.Column(db.String(100), unique=True, nullable=False)
     PasswordHash = db.Column(db.String(255), nullable=False)
     Role = db.Column(db.Enum('buyer', 'seller', 'customer_rep', 'admin'), nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Category & Subcategory
@@ -54,7 +54,7 @@ class Item(db.Model):
     OwnerID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID'), nullable=False)
     SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID'), nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('active', 'withdrawn', 'sold'), default='active')
 
 # ==========================
@@ -85,8 +85,8 @@ class Auction(db.Model):
     StartPrice = db.Column(db.Numeric(10, 2), nullable=False)
     MinIncrement = db.Column(db.Numeric(10, 2), nullable=False)
     SecretMinPrice = db.Column(db.Numeric(10, 2), nullable=False)
-    StartTime = db.Column(db.DateTime, nullable=False)
-    EndTime = db.Column(db.DateTime, nullable=False)
+    StartTime = db.Column(db.DateTime(timezone=True), nullable=False)
+    EndTime = db.Column(db.DateTime(timezone=True), nullable=False)
     IsClosed = db.Column(db.Boolean, default=False)
 
 class Bid(db.Model):
@@ -96,8 +96,9 @@ class Bid(db.Model):
     AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
     BidderID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Amount = db.Column(db.Numeric(10, 2), nullable=False)
-    BidTime = db.Column(db.DateTime, default=datetime.utcnow)
+    BidTime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     MaxAutoBid = db.Column(db.Numeric(10, 2))
+    Bidder = db.relationship('User', backref='bids', foreign_keys=[BidderID])
 
 # ==========================
 # Transaction
@@ -109,7 +110,7 @@ class Transaction(db.Model):
     AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
     BuyerID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Price = db.Column(db.Numeric(10, 2), nullable=False)
-    TransactionDate = db.Column(db.DateTime, default=datetime.utcnow)
+    TransactionDate = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('completed', 'pending', 'cancelled'), default='completed')
 
 # ==========================
@@ -123,7 +124,7 @@ class Feedback(db.Model):
     ToUserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Rating = db.Column(db.Integer, nullable=False)
     Comment = db.Column(db.Text)
-    Date = db.Column(db.DateTime, default=datetime.utcnow)
+    Date = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Message
@@ -135,7 +136,7 @@ class Message(db.Model):
     SenderID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     ReceiverID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Content = db.Column(db.Text, nullable=False)
-    Timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    Timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Alert
@@ -147,7 +148,7 @@ class Alert(db.Model):
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Subcategory = db.Column(db.String(50), nullable=False)
     SearchCriteria = db.Column(db.JSON, nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Watchlist
@@ -158,7 +159,7 @@ class Watchlist(db.Model):
     WatchlistID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Notification
@@ -169,7 +170,7 @@ class Notification(db.Model):
     NotificationID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Message = db.Column(db.String(255), nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('unread', 'read'), default='unread')
 
 # ==========================
@@ -181,7 +182,7 @@ class CustomerRep(db.Model):
     RepID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     AssignedBy = db.Column(db.Integer, db.ForeignKey('User.UserID'))
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Department = db.Column(db.String(50))
     Shift = db.Column(db.String(20))
     Status = db.Column(db.Enum('active', 'inactive'), default='active')
@@ -195,5 +196,5 @@ class Admin(db.Model):
     AdminID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False, unique=True)
     AccessLevel = db.Column(db.Enum('SuperAdmin', 'Manager', 'ReadOnly'), nullable=False)
-    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
-    LastLogin = db.Column(db.DateTime)
+    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    LastLogin = db.Column(db.DateTime(timezone=True))

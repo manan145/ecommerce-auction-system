@@ -24,7 +24,6 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
-
     # ==============================
     # Initialize Extensions
     # ==============================
@@ -32,6 +31,9 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     CORS(app)
+
+    with app.app_context():
+        db.create_all()  # ← This will create the tables if they don’t already exist
 
     # ==============================
     # Import Models
@@ -65,12 +67,17 @@ def create_app():
     from .utils.close_auctions_utils import close_expired_auctions
     print("Scheduler started")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=close_expired_auctions, trigger="interval", seconds=3600)
+    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=3600)
     scheduler.start()
 
     @app.teardown_appcontext
     def shutdown_scheduler(exception=None):
-        scheduler.shutdown()
+        try:
+            if scheduler.running:
+                print("Scheduler is running — skipping shutdown from teardown to avoid thread conflict.")
+                return
+            scheduler.shutdown()
+        except Exception as e:
+            print(f"[Scheduler Shutdown Skipped] {e}")
 
     return app
-

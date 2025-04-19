@@ -104,7 +104,8 @@
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       
-      fetch('/login', {
+      const BASE_URL = "http://127.0.0.1:5000"
+      fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -113,10 +114,29 @@
       .then(data => {
         if(data.token) {
           localStorage.setItem('token', data.token);
-          document.getElementById('message').textContent = 'Login successful! Welcome, ' + data.user.Username;
-          // Optionally redirect to another page:
-          // window.location.href = '/dashboard';
-        } else {
+          localStorage.setItem('user', JSON.stringify(data.user)); // Save user info if needed
+
+          const role = data.user.Role.toLowerCase(); // Ensure lowercase for consistency
+
+          // Redirect based on role
+          switch (role) {
+            case 'buyer':
+              window.location.href = 'buyer.html';
+              break;
+            case 'seller':
+              window.location.href = 'seller.html';
+              break;
+            case 'admin':
+              window.location.href = 'admin.html';
+              break;
+            case 'customer_rep':
+              window.location.href = 'customer_rep.html';
+              break;
+            default:
+              document.getElementById('message').textContent = 'Unknown role. Cannot proceed.';
+          }
+        }
+        else {
           document.getElementById('message').textContent = data.error;
         }
       })

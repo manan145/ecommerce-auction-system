@@ -2,42 +2,54 @@ import requests
 
 BASE_URL = "http://127.0.0.1:5000"
 
-# Replace with a valid JWT token for your admin user
-ADMIN_JWT = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0MzczNzk3NCwianRpIjoiZjEzY2RhNDUtYjdmNi00MWMzLWFlZGYtOWI5YWZjNjFlYzgzIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjQiLCJuYmYiOjE3NDM3Mzc5NzQsImNzcmYiOiI0MjNlNWI0ZC1hNzg0LTRlY2MtODZiMS1iNjg5MWNjMzQyNmMiLCJleHAiOjE3NDM3Mzg4NzR9.VHdT2mSBkqU5SsauL1qlojY8YuUCpSDo4I_ULaJqcIo"
-
-headers = {
-    "Authorization": ADMIN_JWT,
-    "Content-Type": "application/json"
+# Admin credentials
+admin_credentials = {
+    "email": "admin1@example.com",
+    "password": "admin123"
 }
+
+# Authenticate and get token
+def get_admin_jwt():
+    response = requests.post(f"{BASE_URL}/auth/login", json=admin_credentials)
+    if response.status_code == 200:
+        access_token = response.json().get("token")
+        print("🔑 Access Token:", access_token)  # Debugging log
+        return f"Bearer {access_token}"
+    else:
+        raise Exception(f"Login failed: {response.status_code} → {response.text}")
+
 
 # Attribute data for each subcategory
 attribute_map = {
-    1: [  # Laptops
+    "Laptops": [
         "Processor", "RAM", "Storage", "Screen Size", "Graphics Card",
         "Operating System", "Battery Life", "Weight", "Warranty"
     ],
-    2: [  # Smartphones
+    "Smartphones": [
         "Storage", "RAM", "Color", "Operating System", "Screen Size",
         "Camera", "Battery Capacity", "Network Support", "Warranty"
     ],
-    3: [  # Audio Accessories
+    "Audio Accessories": [
         "Type", "Wireless", "Noise Cancellation", "Battery Life",
         "Charging Port", "Color", "Mic Included", "Waterproof Rating", "Warranty"
     ],
-    4: [  # Monitors
+    "Monitors": [
         "Screen Size", "Resolution", "Panel Type", "Refresh Rate", "Ports",
         "Response Time", "Aspect Ratio", "Adjustable Stand", "VESA Mount Support", "Warranty"
     ]
 }
 
 
-def add_attributes_for_subcategory(subcategory_id, attributes):
-    print(f"\n🔹 Adding attributes for Subcategory ID {subcategory_id}...")
+
+
+def add_attributes_for_subcategory(name, attributes, headers):
+    print(f"\n🔹 Adding attributes for Subcategory ID {name}...")
+    print("Headers:", headers)  # Debugging log
     response = requests.post(
         f"{BASE_URL}/admin/add-attributes",
         headers=headers,
         json={
-            "subcategory_id": subcategory_id,
+            "subcategory_name": name,
             "attributes": attributes
         }
     )
@@ -50,5 +62,15 @@ def add_attributes_for_subcategory(subcategory_id, attributes):
 
 # Main script execution
 if __name__ == "__main__":
-    for subcategory_id, attr_list in attribute_map.items():
-        add_attributes_for_subcategory(subcategory_id, attr_list)
+    try:
+        token = get_admin_jwt()
+        # headers = {
+        #     "Authorization": token,
+        #     "Content-Type": "application/json"
+        # }
+
+        # for subcategory_id, attr_list in attribute_map.items():
+        #     add_attributes_for_subcategory(subcategory_id, attr_list, headers)
+
+    except Exception as e:
+        print("❌ Error:", e)
