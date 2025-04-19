@@ -212,3 +212,47 @@ def remove_bid(bid_id):
     db.session.commit()
 
     return jsonify({'message': f'Bid {bid_id} removed successfully'}), 200
+
+# ================================
+# Get Auction Details by AuctionID
+# ================================
+@rep_bp.route('/auction/<int:auction_id>', methods=['GET'])
+@jwt_required()
+def get_auction_details(auction_id):
+    """API → Customer Rep fetches auction details for verification"""
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({'error': 'Auction not found'}), 404
+
+    response = {
+        'AuctionID': auction.AuctionID,
+        'StartPrice': float(auction.StartPrice),
+        'MinIncrement': float(auction.MinIncrement),
+        'ReservePrice': float(auction.SecretMinPrice),
+        'StartDate': auction.StartTime.strftime('%Y-%m-%d %H:%M:%S'),
+        'EndDate': auction.EndTime.strftime('%Y-%m-%d %H:%M:%S'),
+        'Status': 'Closed' if auction.IsClosed else 'Open'
+    }
+
+    return jsonify(response), 200
+
+# ================================
+# Get Bids for Auction by AuctionID
+# ================================
+@rep_bp.route('/bids/<int:auction_id>', methods=['GET'])
+@jwt_required()
+def get_bids_for_auction(auction_id):
+    """API → Customer Rep fetches all bids for a given auction"""
+    bids = Bid.query.filter_by(AuctionID=auction_id).order_by(Bid.BidTime.desc()).all()
+    if not bids:
+        return jsonify({'message': 'No bids found for this auction'}), 404
+
+    bid_list = [{
+        'BidID': bid.BidID,
+        'AuctionID': bid.AuctionID,
+        'UserID': bid.BidderID,
+        'Amount': float(bid.Amount),
+        'Timestamp': bid.BidTime.strftime('%Y-%m-%d %H:%M:%S')
+    } for bid in bids]
+
+    return jsonify({'bids': bid_list}), 200
