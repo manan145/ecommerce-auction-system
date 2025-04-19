@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models import db, User, Item, Subcategory, Attribute, ItemAttributeValue, Auction, Bid, Transaction, Notification, Alert
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import joinedload
@@ -393,7 +393,7 @@ def extend_auction():
 
     try:
         new_end_time = datetime.fromisoformat(new_end_time_str)
-        if new_end_time <= datetime.now(datetime.timezone.utc).isoformat():
+        if new_end_time <= datetime.now(timezone.utc):  # Standardized time
             return jsonify({'error': 'New end time must be in the future'}), 400
     except ValueError:
         return jsonify({'error': 'Invalid datetime format'}), 400
@@ -407,7 +407,7 @@ def extend_auction():
         notification = Notification(
             UserID=bidder_id,
             Message=f"Auction for item {item.Title} has been extended to {new_end_time_str}",
-            CreatedAt=datetime.now(datetime.timezone.utc).isoformat(),
+            CreatedAt=datetime.now(timezone.utc),  # Standardized time
             Status='unread'
         )
         db.session.add(notification)
