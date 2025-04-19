@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import db, User, CustomerRep, Category, Subcategory, Attribute
+from ..models import db, User, CustomerRep, Category, Subcategory, Attribute, Transaction, Auction, Item
+from sqlalchemy.sql import func
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -166,13 +167,13 @@ def add_subcategory():
         return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json()
-    category_name = data.get('category_name')
+    category_id = data.get('category_id')
     name = data.get('name')
 
-    if not category_name or not name:
+    if not category_id or not name:
         return jsonify({'error': 'Category name and Subcategory name required'}), 400
 
-    category = Category.query.filter_by(Name=category_name).first()
+    category = Category.query.get(CategoryID=category_id)
     if not category:
         return jsonify({'error': 'Category not found'}), 404
 
@@ -204,7 +205,7 @@ def list_categories():
             "Subcategories": subcategory_list
         })
 
-    return jsonify({"categories": category_list}), 200
+    return jsonify(category_list), 200
 
 # ==========================================
 # Add Attribute to Subcategory 
@@ -220,13 +221,13 @@ def add_attributes_bulk():
         return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json()
-    subcategory_name = data.get('subcategory_name')
+    subcategory_id = data.get('subcategory_id')
     attribute_names = data.get('attributes', [])
 
-    if not subcategory_name or not attribute_names:
+    if not subcategory_id or not attribute_names:
         return jsonify({'error': 'Subcategory name and attribute list are required'}), 400
 
-    subcategory = Subcategory.query.filter_by(Name=subcategory_name).first()
+    subcategory = Subcategory.query.get(SubcategoryID=subcategory_id)
     if not subcategory:
         return jsonify({'error': 'Subcategory not found'}), 404
 
@@ -247,3 +248,120 @@ def add_attributes_bulk():
         "added": added,
         "subcategory_id": subcategory.SubcategoryID
     }), 201
+
+# ==========================================
+# Admin – Total Earnings
+# ==========================================
+@admin_bp.route('/sales-reports/total-earnings', methods=['GET'])
+@jwt_required()
+def get_total_earnings():
+    if error := admin_only():
+        return error
+
+    total = db.session.query(func.sum(Transaction.Price)).scalar() or 0
+    return jsonify({"total": float(total)}), 200
+
+# ==========================================
+# Admin – Earnings per Category (item)
+# ==========================================
+@admin_bp.route('/sales-reports/earnings-per-item', methods=['GET'])
+@jwt_required()
+def earnings_per_category():
+    if error := admin_only():
+        return error
+
+    results = db.session.query(
+        Category.Name,
+        func.sum(Transaction.Price)
+    ).join(Item, Item.CategoryID == Category.CategoryID)\
+     .join(Auction, Auction.ItemID == Item.ItemID)\
+     .join(Transaction, Transaction.AuctionID == Auction.AuctionID)\
+     .group_by(Category.CategoryID).all()
+
+    return jsonify({
+        "labels": [r[0] for r in results],
+        "values": [float(r[1]) for r in results]
+    }), 200
+
+# ==========================================
+# Admin – Earnings per Subcategory (item type)
+# ==========================================
+@admin_bp.route('/sales-reports/earnings-per-item-type', methods=['GET'])
+@jwt_required()
+def earnings_per_subcategory():
+    if error := admin_only():
+        return error
+
+    results = db.session.query(
+        Subcategory.Name,
+        func.sum(Transaction.Price)
+    ).join(Item, Item.SubcategoryID == Subcategory.SubcategoryID)\
+     .join(Auction, Auction.ItemID == Item.ItemID)\
+     .join(Transaction, Transaction.AuctionID == Auction.AuctionID)\
+     .group_by(Subcategory.SubcategoryID).all()
+
+    return jsonify({
+        "labels": [r[0] for r in results],
+        "values": [float(r[1]) for r in results]
+    }), 200
+
+# ==========================================
+# Admin – Earnings per End-User
+# ==========================================
+@admin_bp.route('/sales-reports/earnings-per-end-user', methods=['GET'])
+@jwt_required()
+def earnings_per_user():
+    if error := admin_only():
+        return error
+
+    results = db.session.query(
+        User.Username,
+        func.sum(Transaction.Price)
+    ).join(User, User.UserID == Transaction.BuyerID)\
+     .group_by(User.UserID).all()
+
+    return jsonify({
+        "labels": [r[0] for r in results],
+        "values": [float(r[1]) for r in results]
+    }), 200
+
+# ==========================================
+# Admin – Best Selling Items (by count)
+# ==========================================
+@admin_bp.route('/sales-reports/best-selling-items', methods=['GET'])
+@jwt_required()
+def best_selling_items():
+    if error := admin_only():
+        return error
+
+    results = db.session.query(
+        Item.Title,
+        func.count(Transaction.TransactionID)
+    ).join(Auction, Auction.ItemID == Item.ItemID)\
+     .join(Transaction, Transaction.AuctionID == Auction.AuctionID)\
+     .group_by(Item.ItemID).order_by(func.count(Transaction.TransactionID).desc()).limit(10).all()
+
+    return jsonify({
+        "labels": [r[0] for r in results],
+        "values": [r[1] for r in results]
+    }), 200
+
+# ==========================================
+# Admin – Best Buyers (by spend)
+# ==========================================
+@admin_bp.route('/sales-reports/best-buyers', methods=['GET'])
+@jwt_required()
+def best_buyers():
+    if error := admin_only():
+        return error
+
+    results = db.session.query(
+        User.Username,
+        func.sum(Transaction.Price)
+    ).join(User, User.UserID == Transaction.BuyerID)\
+     .group_by(User.UserID).order_by(func.sum(Transaction.Price).desc()).limit(10).all()
+
+    return jsonify({
+        "labels": [r[0] for r in results],
+        "values": [float(r[1]) for r in results]
+    }), 200
