@@ -73,15 +73,16 @@
       }
     })
     .then(res => res.json())
-    .then(bids => {
+    .then(data => {
       const list = document.getElementById('bidsList');
       list.innerHTML = '';
-      if (bids.length === 0) {
+
+      if (!data.bids || data.bids.length === 0) {
         list.innerHTML = '<p class="text-muted">No bids found for this auction.</p>';
         return;
       }
 
-      bids.forEach(b => {
+      data.bids.forEach(b => {
         const card = document.createElement('div');
         card.className = 'bid-card';
         card.innerHTML = `
