@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +11,7 @@
       background-color: #f5f5f5;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     .sidebar {
       background-color: #fff;
       border-right: 1px solid #ddd;
@@ -17,27 +19,32 @@
       padding: 20px;
       max-width: 220px;
     }
+
     .sidebar h4 {
       margin-bottom: 20px;
       font-weight: bold;
       color: #0073bb;
     }
+
     .sidebar .nav-link {
       font-size: 1.05rem;
       color: #0073bb;
       margin-bottom: 15px;
     }
+
     .sidebar .nav-link:hover {
       color: #005b96;
       text-decoration: none;
     }
+
     .content-wrapper {
       padding: 20px;
       background-color: #fff;
       margin-bottom: 20px;
       border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
     }
+
     .page-header {
       background-color: #0073bb;
       color: #fff;
@@ -45,22 +52,30 @@
       border-radius: 3px;
       margin-bottom: 20px;
     }
+
     .table thead tr {
       background-color: #f0f0f0;
     }
-    .table td, .table th {
+
+    .table td,
+    .table th {
       vertical-align: middle;
     }
-    .btn-success, .btn-info, .btn-secondary {
+
+    .btn-success,
+    .btn-info,
+    .btn-secondary {
       font-size: 0.85rem;
       padding: 4px 8px;
       margin-top: 5px;
     }
+
     .modal-content {
       white-space: pre-wrap;
     }
   </style>
 </head>
+
 <body>
   <div class="container-fluid">
     <div class="row">
@@ -113,7 +128,9 @@
               </tr>
             </thead>
             <tbody id="auctionTable">
-              <tr><td colspan="7" class="text-center">Loading auctions...</td></tr>
+              <tr>
+                <td colspan="7" class="text-center">Loading auctions...</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -229,8 +246,8 @@
       });
     }
     function viewHistory(auctionId) {
-    window.location.href = `bid_history.html?auctionId=${auctionId}`;
-  }
+      window.location.href = `bid_history.html?auctionId=${auctionId}`;
+    }
 
     async function fetchActiveAuctions() {
       const subcategoryId = document.getElementById("subcategoryFilter").value;
@@ -308,7 +325,10 @@
         alert("Please enter a valid bid amount.");
         return;
       }
-
+        if (maxAuto !== null && maxAuto < bidAmount) {
+      alert("Maximum auto bid must be greater than or equal to the bid amount.");
+      return;
+    }
       try {
         const response = await fetch(`${BASE_URL}/buyer/bid`, {
           method: 'POST',
@@ -350,38 +370,9 @@
       new bootstrap.Modal(document.getElementById("detailsModal")).show();
     }
 
-    async function viewBidHistory(auctionId) {
-      const token = localStorage.getItem('token');
-      if (!token) return alert("You must be logged in to view history.");
-
-      const res = await fetch(`${BASE_URL}/buyer/bid-history/${auctionId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const history = await res.json();
-
-      const historyBody = document.getElementById("historyBody");
-      if (!history.length) {
-        historyBody.innerHTML = `<p class="text-muted">No bids yet for this auction.</p>`;
-      } else {
-        historyBody.innerHTML = `
-          <ul class="list-group">
-            ${history.map(bid => `
-              <li class="list-group-item d-flex justify-content-between align-items-start">
-                <div>
-                  <strong>${bid.bidder_name}</strong> bid $${parseFloat(bid.amount).toFixed(2)}
-                </div>
-                <small class="text-muted">${new Date(bid.timestamp).toLocaleString()}</small>
-              </li>
-            `).join("")}
-          </ul>
-        `;
-      }
-
-      new bootstrap.Modal(document.getElementById("historyModal")).show();
-    }
-
     fetchCategories();
     fetchActiveAuctions();
   </script>
 </body>
+
 </html>
