@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from ..models import db, Auction, Bid, Transaction, Item, Notification, User
 import json
 
@@ -8,9 +8,9 @@ def close_expired_auctions(app):
     """
     with app.app_context():
         
-        print(f"[SCHEDULER] Running job at {datetime.utcnow().isoformat()}")
+        print(f"[SCHEDULER] Running job at {datetime.now(timezone.utc)}")
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         auctions = Auction.query.filter(
             Auction.IsClosed == False,

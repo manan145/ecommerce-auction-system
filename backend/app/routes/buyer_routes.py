@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timezone
 from ..models import db, Auction, Bid, User, Item
-from ..models import db, User, Transaction, Auction, Item
+from ..models import db, User, Transaction, Auction, Item, Alert
 from sqlalchemy.orm import joinedload
 
 buyer_bp = Blueprint('buyer', __name__)
@@ -43,7 +43,7 @@ def place_bid():
     data = request.get_json()
     auction_id = data.get("auction_id")
     bid_amount = data.get("amount")
-    max_auto_bid = data.get("max_auto_bid") or bid_amount
+    max_auto_bid = data.get("max_auto_bid")
 
     if not auction_id or bid_amount is None:
         return jsonify({"error": "Auction ID and bid amount are required"}), 400
@@ -73,8 +73,8 @@ def place_bid():
     # -------------------------------
     # 5. Validate Max Auto Bid Input
     # -------------------------------
-    if float(max_auto_bid) < float(bid_amount):
-        return jsonify({"error": "Maximum auto bid must not be less than the bid amount"}), 400
+    # if float(max_auto_bid) < float(bid_amount):
+    #     return jsonify({"error": "Maximum auto bid must not be less than the bid amount"}), 400
 
     # -------------------------------
     # 6. Determine the Minimum Valid Bid
@@ -100,7 +100,7 @@ def place_bid():
         AuctionID=auction_id,
         BidderID=buyer.UserID,
         Amount=bid_amount,
-        MaxAutoBid=float(max_auto_bid),
+        MaxAutoBid=float(max_auto_bid) if max_auto_bid else None,  # Set to None if not provided
         BidTime=datetime.now(timezone.utc)
     )
     db.session.add(new_bid)
@@ -113,7 +113,7 @@ def place_bid():
     # 8. Automatic Bidding Logic Loop
     # -------------------------------
     # This loop attempts to trigger auto-bids from competing buyers.
-    while True:
+    while max_auto_bid and True:  # Only enter loop if max_auto_bid is set
         # Find the top competing bid from a different bidder whose max_auto_bid is high enough
         competitor = Bid.query.filter(
             Bid.AuctionID == auction_id,
@@ -236,6 +236,98 @@ def make_payment():
         db.session.rollback()
         return jsonify({"error": f"Failed to complete payment: {str(e)}"}), 500
     
+# ================================================
+# API → Buyer creates an alert for items        
+# ================================================
+@buyer_bp.route('/create-alert', methods=['POST'])
+@jwt_required()
+def create_alert():
+    """
+    Endpoint: POST /create-alert
+
+    Description:
+    Buyers create alerts for specific item preferences. When a matching item is added to the system,
+    the buyer is notified via a structured notification message. This feature helps buyers track
+    hard-to-find or highly specific items like older models, limited editions, or items with specific attributes.
+
+    Request JSON:
+    {
+        "subcategory": "Smartphones",
+        "search_criteria": {
+            "Brand": ["Apple"],
+            "Model": ["iPhone 13"],
+            "Condition": ["New"],
+            "attributes": {
+                "Storage": ["128GB", "256GB"],
+                "Color": ["Black"]
+            }
+        }
+    }
+
+    Returns:
+        201 Created with alert ID if the alert was successfully saved.
+        4xx error if missing fields or validation fails.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.Role != 'buyer':
+        return jsonify({"error": "Only buyers can create alerts"}), 403
+
+    data = request.get_json()
+    subcategory = data.get('subcategory')
+    search_criteria = data.get('search_criteria')
+
+    if not subcategory or not search_criteria:
+        return jsonify({"error": "Subcategory and search_criteria are required"}), 400
+
+    alert = Alert(
+        UserID=user.UserID,
+        Subcategory=subcategory,
+        SearchCriteria=search_criteria
+    )
+    db.session.add(alert)
+    db.session.commit()
+
+    return jsonify({"message": "Alert created successfully", "alert_id": alert.AlertID}), 201
+
+# ================================================
+# API → Buyer views all alerts they have created
+# ================================================
+@buyer_bp.route('/my-alerts', methods=['GET'])
+@jwt_required()
+def view_alerts():
+    """
+    Endpoint: GET /my-alerts
+
+    Description:
+    Retrieves all alerts created by the currently logged-in buyer.
+    This allows the user to review their saved alert preferences,
+    such as subcategory, brand, condition, and attribute filters.
+
+    Returns:
+        200 OK with a list of all alert objects belonging to the buyer.
+        Each object includes alert ID, subcategory name, criteria, and created date.
+    """
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+
+    if not user or user.Role != 'buyer':
+        return jsonify({"error": "Only buyers can view alerts"}), 403
+
+    alerts = Alert.query.filter_by(UserID=user.UserID).all()
+    result = [{
+        "alert_id": alert.AlertID,
+        "subcategory": alert.Subcategory,
+        "search_criteria": alert.SearchCriteria,
+        "created_at": alert.CreatedAt
+    } for alert in alerts]
+
+    return jsonify(result), 200
+
+# ================================================
+# API → Buyer views their bid history       
+# ================================================
 @buyer_bp.route('/my-bids', methods=['GET'])
 @jwt_required()
 def get_my_bids():
@@ -312,7 +404,9 @@ def get_my_bids():
     return jsonify(result), 200
 
 
-
+# ================================================
+# API → Buyer views bid history for a specific auction
+# ================================================
 @buyer_bp.route('/bid-history/<int:auction_id>', methods=['GET'])
 @jwt_required()
 def bid_history(auction_id):

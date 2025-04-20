@@ -32,6 +32,9 @@ def create_app():
     jwt.init_app(app)
     CORS(app)
 
+    with app.app_context():
+        db.create_all()  # ← This will create the tables if they don’t already exist
+
     # ==============================
     # Import Models
     # ==============================

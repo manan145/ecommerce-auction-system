@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from ..models import db, User, Admin
-from datetime import datetime
+from datetime import datetime, timezone
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -33,7 +33,7 @@ def register():
         new_admin = Admin(
             UserID=new_user.UserID,
             AccessLevel='SuperAdmin',  
-            CreatedAt=datetime.utcnow()
+            CreatedAt=datetime.now(timezone.utc)
         )
         db.session.add(new_admin)
         db.session.commit()
@@ -53,7 +53,7 @@ def login():
     if user.Role == 'admin':
         admin = Admin.query.filter_by(UserID=user.UserID).first()
         if admin:
-            admin.LastLogin = datetime.utcnow()
+            admin.LastLogin = datetime.now(timezone.utc)
             db.session.commit()
 
     access_token = create_access_token(identity=str(user.UserID))
@@ -134,3 +134,17 @@ def change_password():
     db.session.commit()
 
     return jsonify({"message": "Password changed successfully"}), 200
+
+# ========== Delete User Account ==========
+@auth_bp.route('/profile/delete', methods=['DELETE'])
+@jwt_required()
+def delete_account():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(int(current_user_id))
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    db.session.delete(user)
+    db.session.commit()
+
+    return jsonify({"message": "User account deleted successfully"}), 200

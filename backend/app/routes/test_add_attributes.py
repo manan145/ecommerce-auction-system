@@ -21,33 +21,35 @@ def get_admin_jwt():
 
 # Attribute data for each subcategory
 attribute_map = {
-    1: [  # Laptops
+    "Laptops": [
         "Processor", "RAM", "Storage", "Screen Size", "Graphics Card",
         "Operating System", "Battery Life", "Weight", "Warranty"
     ],
-    2: [  # Smartphones
+    "Smartphones": [
         "Storage", "RAM", "Color", "Operating System", "Screen Size",
         "Camera", "Battery Capacity", "Network Support", "Warranty"
     ],
-    4: [  # Audio Accessories
+    "Audio Accessories": [
         "Type", "Wireless", "Noise Cancellation", "Battery Life",
         "Charging Port", "Color", "Mic Included", "Waterproof Rating", "Warranty"
     ],
-    3: [  # Monitors
+    "Monitors": [
         "Screen Size", "Resolution", "Panel Type", "Refresh Rate", "Ports",
         "Response Time", "Aspect Ratio", "Adjustable Stand", "VESA Mount Support", "Warranty"
     ]
 }
 
 
-def add_attributes_for_subcategory(subcategory_id, attributes, headers):
-    print(f"\n🔹 Adding attributes for Subcategory ID {subcategory_id}...")
+
+
+def add_attributes_for_subcategory(name, attributes, headers):
+    print(f"\n🔹 Adding attributes for Subcategory ID {name}...")
     print("Headers:", headers)  # Debugging log
     response = requests.post(
         f"{BASE_URL}/admin/add-attributes",
         headers=headers,
         json={
-            "subcategory_id": subcategory_id,
+            "subcategory_name": name,
             "attributes": attributes
         }
     )
