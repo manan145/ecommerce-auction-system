@@ -52,23 +52,16 @@
     .password-field {
       position: relative;
     }
-    toggle-password {
+    .toggle-password {
       position: absolute;
       top: 50%;
-      right: 12px;
+      right: 10px;
       transform: translateY(-50%);
-      background: none;
+      background: transparent;
       border: none;
-      color: #5563DE;
-      font-weight: bold;
       cursor: pointer;
-      padding: 0;
-      font-size: 13px;
+      font-size: 14px;
     }
-    .toggle-password:hover {
-      text-decoration: underline;
-    }
- 
     button {
       background: #5563DE;
       border: none;
@@ -142,20 +135,19 @@
 
   <script>
     // Toggle password visibility
-
     document.querySelectorAll('.toggle-password').forEach(button => {
-      button.textContent = 'Show';
-
-      button.addEventListener('click', function () {
+      button.addEventListener('click', function() {
         const targetId = this.getAttribute('data-target');
-        const input = document.getElementById(targetId);
-        
-        const isHidden = input.type === 'password';
-        input.type = isHidden ? 'text' : 'password';
-        this.textContent = isHidden ? 'Hide' : 'Show';
+        const inputField = document.getElementById(targetId);
+        if (inputField.type === "password") {
+          inputField.type = "text";
+          this.textContent = "Hide";
+        } else {
+          inputField.type = "password";
+          this.textContent = "Show";
+        }
       });
     });
-
     
     // Handle the registration form submission
     document.getElementById('registrationForm').addEventListener('submit', function(event) {
