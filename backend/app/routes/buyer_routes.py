@@ -240,16 +240,21 @@ def make_payment():
 @jwt_required()
 def get_my_bids():
     from datetime import timezone
+    from collections import defaultdict
 
     user_id = int(get_jwt_identity())  # ensure integer for comparison
-    print(f"[DEBUG] Logged in user ID: {user_id}")
-
     now = datetime.now(timezone.utc)
-    bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc()).all()
+
+    # Fetch and group all bids by this user
+    user_bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc(), Bid.Amount.desc()).all()
+    bids_by_auction = defaultdict(list)
+    for bid in user_bids:
+        bids_by_auction[bid.AuctionID].append(bid)
+
     result = []
 
-    for bid in bids:
-        auction = Auction.query.get(bid.AuctionID)
+    for auction_id, user_bids_for_auction in bids_by_auction.items():
+        auction = Auction.query.get(auction_id)
         if not auction:
             continue
 
@@ -264,35 +269,41 @@ def get_my_bids():
         is_closed = auction.IsClosed or end_time <= now
         status = "closed" if is_closed else "active"
 
-        transaction = Transaction.query.filter_by(AuctionID=auction.AuctionID).first()
-
-        # Fix: force int comparison
+        transaction = Transaction.query.filter_by(AuctionID=auction_id).first()
         is_winner = (
-            transaction is not None and 
-            transaction.BuyerID == user_id and 
+            transaction is not None and
+            transaction.BuyerID == user_id and
             is_closed
         )
-
         transaction_id = transaction.TransactionID if transaction else None
         transaction_status = transaction.Status if transaction else None
         has_paid = transaction_status == "completed" if transaction_status else False
 
-        print(f"[DEBUG] Auction {auction.AuctionID} | Transaction BuyerID: {transaction.BuyerID if transaction else 'None'} | is_winner: {is_winner}")
+        # Find the actual highest bid for the auction
+        highest_bid = (
+            Bid.query
+            .filter_by(AuctionID=auction_id)
+            .order_by(Bid.Amount.desc(), Bid.BidTime.asc())
+            .first()
+        )
+        highest_bid_id = highest_bid.BidID if highest_bid else None
 
-        result.append({
-            "amount": float(bid.Amount),
-            "bid_time": bid.BidTime.isoformat(),
-            "item_title": item.Title,
-            "status": status,
-            "is_closed": is_closed,
-            "auction_id": auction.AuctionID,
-            "transaction_id": transaction_id,
-            "transaction_status": transaction_status,
-            "has_paid": has_paid,
-            "is_winner": is_winner,
-            "won": is_winner,
-            "is_highest_bidder": False
-        })
+        # Mark only the user's highest bid (among all auction bids) as highest bidder
+        for bid in user_bids_for_auction:
+            result.append({
+                "amount": float(bid.Amount),
+                "bid_time": bid.BidTime.isoformat(),
+                "item_title": item.Title,
+                "status": status,
+                "is_closed": is_closed,
+                "auction_id": auction_id,
+                "transaction_id": transaction_id,
+                "transaction_status": transaction_status,
+                "has_paid": has_paid,
+                "is_winner": is_winner,
+                "won": is_winner,
+                "is_highest_bidder": (bid.BidID == highest_bid_id and highest_bid.BidderID == user_id and not is_closed)
+            })
 
     print("DEBUG: Final My Bids Result:")
     for entry in result:

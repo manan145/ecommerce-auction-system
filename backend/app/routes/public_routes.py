@@ -93,12 +93,8 @@ from flask import json
 @jwt_required(optional=True)
 def public_search_items():
     try:
-        raw_data = request.get_data(as_text=True)
-        print("📦 Raw request data:", raw_data)
-
         data = request.get_json()
-        print("✅ Parsed data:", data)
-        print("🔎 Data type:", type(data))
+
 
         filters = data.get('filters', {})
         sort_by = data.get('sort_by', 'created_desc')
