@@ -168,6 +168,39 @@ def close_query(query_id):
     db.session.commit()
     return jsonify({'message': 'Query closed successfully'}), 200
 
+
+# =========================
+# Reply to specific query
+# =========================
+@rep_bp.route('/queries/reply/<int:query_id>', methods=['POST'])
+@jwt_required()
+def reply_to_query(query_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user or user.Role != 'customer_rep':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    query = CustomerQuery.query.get(query_id)
+    if not query or query.Status == 'closed':
+        return jsonify({'error': 'Invalid or already closed query'}), 404
+
+    data = request.get_json()
+    response_message = data.get('message')
+
+    if not response_message:
+        return jsonify({'error': 'Reply message is required'}), 400
+
+    query.Response = response_message
+    query.ResponseAt = datetime.utcnow()
+    query.ResponseBy = user_id
+    db.session.commit()
+
+    return jsonify({'message': 'Reply sent'}), 200
+
+
+
+
 # ===========================================================
 # Remove Auction
 # ===========================================================
