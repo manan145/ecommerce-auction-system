@@ -67,7 +67,7 @@ def create_app():
     from .utils.close_auctions_utils import close_expired_auctions
     print("Scheduler started")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=3600)
+    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=60)
     scheduler.start()
 
     @app.teardown_appcontext

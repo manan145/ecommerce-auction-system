@@ -87,7 +87,7 @@
         return;
       }
 
-      fetch('/extend-auction', {
+      fetch('http://127.0.0.1:5000/seller/extend-auction', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@
       .then(data => {
         if (data.message) {
           alert(data.message);
-          window.location.href = 'my_items.html';
+          window.location.href = 'view_my_items.html';
         } else {
           alert("Something went wrong.");
         }
@@ -111,6 +111,11 @@
         alert("Error extending auction.");
         console.error(err);
       });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const now = new Date().toISOString().slice(0, 16); // Current time in ISO format (YYYY-MM-DDTHH:MM)
+      document.getElementById('newEndTime').setAttribute('min', now); // Set the min attribute
     });
   </script>
 </body>

@@ -67,14 +67,19 @@
       text-align: center;
       margin-bottom: 15px;
       font-size: 14px;
-      color: #d8000c;
+    }
+    .message.success {
+      color: #006400; /* Dark green color */
+    }
+    .message.error {
+      color: #d8000c; /* Red color */
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <button onclick="window.history.back()" style="margin-bottom: 20px; background: #ccc; color: #333; font-size: 14px; padding: 10px; border-radius: 5px; border: none; cursor: pointer;">Back</button>
     <h1>Create Auction</h1>
-    <div id="auctionMessage" class="message"></div>
     <form id="createAuctionForm">
       <!-- Basic Item Details -->
       <label for="title">Title:</label>
@@ -99,10 +104,12 @@
         <option value="Open Box">Open Box</option>
       </select>
       
-      <!-- For this implementation, we assume a single category "Electronics" -->
-      <label>Category:</label>
-      <input type="text" value="Electronics" readonly>
-      
+      <!-- Category Dropdown -->
+      <label for="category">Category:</label>
+      <select id="category" required>
+        <option value="">-- Select Category --</option>
+      </select>
+
       <!-- Subcategory Dropdown -->
       <label for="subcategory">Subcategory:</label>
       <select id="subcategory" required>
@@ -132,154 +139,140 @@
       
       <button type="submit">Create Auction</button>
     </form>
+    <div id="auctionMessage" class="message"></div>
   </div>
   
   <script>
-    // New subcategory mapping with corresponding attributes as provided
-    // Keys 1, 2, 3, 4 correspond to Laptops, Smartphones, Audio Accessories, and Monitors respectively.
-    const subcategoriesData = {
-      1: {
-        name: "Laptops",
-        attributes: [
-          "Processor", "RAM", "Storage", "Screen Size", "Graphics Card",
-          "Operating System", "Battery Life", "Weight", "Warranty"
-        ]
-      },
-      2: {
-        name: "Smartphones",
-        attributes: [
-          "Storage", "RAM", "Color", "Operating System", "Screen Size",
-          "Camera", "Battery Capacity", "Network Support", "Warranty"
-        ]
-      },
-      3: {
-        name: "Audio Accessories",
-        attributes: [
-          "Type", "Wireless", "Noise Cancellation", "Battery Life",
-          "Charging Port", "Color", "Mic Included", "Waterproof Rating", "Warranty"
-        ]
-      },
-      4: {
-        name: "Monitors",
-        attributes: [
-          "Screen Size", "Resolution", "Panel Type", "Refresh Rate", "Ports",
-          "Response Time", "Aspect Ratio", "Adjustable Stand", "VESA Mount Support", "Warranty"
-        ]
-      }
-    };
+    const BASE_URL = 'http://127.0.0.1:5000';
 
-    // Populate the subcategory dropdown using subcategoriesData
-    const subcategorySelect = document.getElementById('subcategory');
-    const attributesContainer = document.getElementById('attributesContainer');
-
-    function populateSubcategories() {
-      subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
-      Object.keys(subcategoriesData).forEach(key => {
+    async function fetchCategories() {
+      const res = await fetch(`${BASE_URL}/public/browse/categories`);
+      const categories = await res.json();
+      const categorySelect = document.getElementById('category');
+      categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+      categories.forEach(cat => {
         const option = document.createElement('option');
-        option.value = key;
-        option.textContent = subcategoriesData[key].name;
+        option.value = cat.CategoryID;
+        option.textContent = cat.Name;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    async function fetchSubcategories(categoryId) {
+      const res = await fetch(`${BASE_URL}/public/browse/subcategories/${categoryId}`);
+      const subcategories = await res.json();
+      const subcategorySelect = document.getElementById('subcategory');
+      subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+      subcategories.forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub.SubcategoryID;
+        option.textContent = sub.Name;
         subcategorySelect.appendChild(option);
       });
     }
 
-    // Display dynamic attributes based on selected subcategory
-    function showAttributes(subcatKey) {
-      attributesContainer.innerHTML = ''; // Clear existing attributes
-      if (subcatKey && subcategoriesData[subcatKey]) {
-        const attrs = subcategoriesData[subcatKey].attributes;
-        attrs.forEach(attrName => {
-          const label = document.createElement('label');
-          label.textContent = attrName + ":";
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.placeholder = `Enter ${attrName}`;
-          // Using a data attribute to hold the attribute name; in a real app, you may use an attribute ID
-          input.setAttribute('data-attribute-name', attrName);
-          attributesContainer.appendChild(label);
-          attributesContainer.appendChild(input);
-        });
-      }
+    async function fetchAttributes(subcategoryId) {
+      const res = await fetch(`${BASE_URL}/public/browse/attributes/${subcategoryId}`);
+      const attributes = await res.json();
+      const attributesContainer = document.getElementById('attributesContainer');
+      attributesContainer.innerHTML = '';
+      attributes.forEach(attr => {
+        const label = document.createElement('label');
+        label.textContent = attr.Name + ":";
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Enter ${attr.Name}`;
+        input.setAttribute('data-attribute-id', attr.AttributeID);
+        attributesContainer.appendChild(label);
+        attributesContainer.appendChild(input);
+      });
     }
 
-    // Initialize subcategory dropdown on page load
-    populateSubcategories();
-
-    subcategorySelect.addEventListener('change', function() {
-      showAttributes(this.value);
+    document.getElementById('category').addEventListener('change', function () {
+      const categoryId = this.value;
+      if (categoryId) fetchSubcategories(categoryId);
     });
 
-    // Handle form submission
-    document.getElementById('createAuctionForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+    document.getElementById('subcategory').addEventListener('change', function () {
+      const subcategoryId = this.value;
+      if (subcategoryId) fetchAttributes(subcategoryId);
+    });
 
+    document.getElementById('createAuctionForm').addEventListener('submit', function (e) {
+      e.preventDefault();
       const token = localStorage.getItem('token');
       if (!token) {
         window.location.href = 'login.html';
         return;
       }
 
-      // Gather form data
-      const title = document.getElementById('title').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const brand = document.getElementById('brand').value.trim();
-      const model = document.getElementById('model').value.trim();
-      const condition = document.getElementById('condition').value;
-      
-      // For category, we assume it's fixed as "Electronics"
-      const subcategory_id = subcategorySelect.value; // Expected to be one of 1, 2, 3, or 4
-      
-      const startPrice = document.getElementById('startPrice').value;
-      const minIncrement = document.getElementById('minIncrement').value;
-      const secretMinPrice = document.getElementById('secretMinPrice').value;
-      const startTime = document.getElementById('startTime').value.replace('T', ' ') + ":00";
-      const endTime = document.getElementById('endTime').value.replace('T', ' ') + ":00";
-
-      // Gather attribute values
-      const attributeElements = attributesContainer.querySelectorAll('input[data-attribute-name]');
-      const attributes = [];
-      attributeElements.forEach(input => {
-        const attrName = input.getAttribute('data-attribute-name');
+      // Construct the attributes array
+      const attributes = Array.from(document.querySelectorAll('#attributesContainer input')).map(input => {
+        const attributeId = input.getAttribute('data-attribute-id');
         const value = input.value.trim();
-        if (value) {
-          attributes.push({ attribute_name: attrName, value: value });
+
+        // Ensure both attribute_id and value are valid
+        if (!attributeId || value === "") {
+          document.getElementById('auctionMessage').textContent = "Please fill all attribute fields.";
+          throw new Error("Invalid attribute format: Missing attribute_id or value.");
         }
+
+        return {
+          attribute_id: parseInt(attributeId, 10),
+          value: value
+        };
       });
-      
-      // Construct payload. Note: Your seller_routes.py expects fields:
-      // subcategory_id, title, description, brand, model, condition,
-      // attributes (array), start_price, min_increment, secret_min_price, start_time, end_time.
+
+      // Construct the payload
       const payload = {
-        subcategory_id: subcategory_id,
-        title: title,
-        description: description,
-        brand: brand,
-        model: model,
-        condition: condition,
-        attributes: attributes,
-        start_price: startPrice,
-        min_increment: minIncrement,
-        secret_min_price: secretMinPrice,
-        start_time: startTime,
-        end_time: endTime
+        category_id: parseInt(document.getElementById('category').value, 10),
+        subcategory_id: parseInt(document.getElementById('subcategory').value, 10),
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        brand: document.getElementById('brand').value.trim(),
+        model: document.getElementById('model').value.trim(),
+        condition: document.getElementById('condition').value,
+        start_price: parseFloat(document.getElementById('startPrice').value),
+        min_increment: parseFloat(document.getElementById('minIncrement').value),
+        secret_min_price: parseFloat(document.getElementById('secretMinPrice').value),
+        start_time: document.getElementById('startTime').value.replace('T', ' ') + ":00",
+        end_time: document.getElementById('endTime').value.replace('T', ' ') + ":00",
+        attributes: attributes
       };
 
-      fetch('/add-item', {
+      // Send the payload to the backend
+      fetch(`${BASE_URL}/seller/add-item`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('auctionMessage').textContent = data.message || data.error;
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        document.getElementById('auctionMessage').textContent = 'An error occurred while creating the auction.';
-      });
+        .then(response => {
+          const messageElement = document.getElementById('auctionMessage');
+          if (response.status === 201) {
+            messageElement.textContent = 'Auction created successfully!';
+            messageElement.className = 'message success';
+            return response.json();
+          } else {
+            messageElement.textContent = 'Failed to create auction.';
+            messageElement.className = 'message error';
+            throw new Error('Failed to create auction.');
+          }
+        })
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          const messageElement = document.getElementById('auctionMessage');
+          messageElement.textContent = 'An error occurred while creating the auction.';
+          messageElement.className = 'message error';
+        });
     });
+
+    fetchCategories();
   </script>
 </body>
 </html>

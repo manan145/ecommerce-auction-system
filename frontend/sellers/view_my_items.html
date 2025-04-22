@@ -3,93 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <title>My Items - Seller Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <style>
     body {
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background: linear-gradient(to right, #e9f0ff, #ffffff);
+      background-color: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
       padding: 20px;
+      max-width: 220px;
     }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      background: #fff;
-      padding: 40px;
-      border-radius: 16px;
-      box-shadow: 0 12px 25px rgba(0,0,0,0.1);
+    .sidebar h4 {
+      margin-bottom: 20px;
+      font-weight: bold;
+      color: #0073bb;
     }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
-      font-size: 2rem;
+    .sidebar .nav-link {
+      font-size: 1.05rem;
+      color: #0073bb;
+      margin-bottom: 15px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 14px 16px;
-      text-align: left;
-      vertical-align: top;
-    }
-    th {
-      background-color: #5563DE;
-      color: #fff;
-    }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    .nav {
-      text-align: center;
-      margin-top: 30px;
-    }
-    .nav a {
+    .sidebar .nav-link:hover {
+      color: #005b96;
       text-decoration: none;
-      color: #5563DE;
-      font-weight: 500;
-      border: 2px solid #5563DE;
-      padding: 8px 20px;
-      border-radius: 25px;
-      transition: all 0.3s ease;
     }
-    .nav a:hover {
-      background-color: #5563DE;
+    .content-wrapper {
+      padding: 20px;
+      background-color: #fff;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    }
+    .page-header {
+      background-color: #0073bb;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 3px;
+      margin-bottom: 20px;
+    }
+    .table thead tr {
+      background-color: #f0f0f0;
+    }
+    .table td,
+    .table th {
+      vertical-align: middle;
+    }
+    /* Center and enlarge the View button in the Specifications cell */
+    td.specifications-cell {
+      text-align: center;
+      vertical-align: middle;
+    }
+    .btn-view-specs {
+      min-width: 90px;
+      min-height: 44px;
+      font-size: 1.1rem;
+      padding: 10px 0;
+      background-color: #4fc3f7;
+      color: #222;
+      border: none;
+      border-radius: 10px;
+      display: inline-block;
+      margin: 0 auto;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: background 0.2s;
+    }
+    .btn-view-specs:hover {
+      background-color: #039be5;
       color: #fff;
     }
-
-    .dropdown {
-      position: relative;
-      display: inline-block;
-      margin-top: 10px;
+    .btn-success,
+    .btn-info,
+    .btn-secondary {
+      font-size: 0.85rem;
+      padding: 4px 8px;
+      margin-top: 5px;
     }
-
+    .modal-content {
+      white-space: pre-wrap;
+    }
+    /* Dropdown for actions */
     .dropbtn {
       background-color: #5563DE;
       color: white;
-      padding: 6px 14px;
-      font-size: 0.85rem;
       border: none;
       border-radius: 6px;
+      padding: 8px 16px;
       cursor: pointer;
+      font-size: 0.9rem;
     }
-
     .dropdown-content {
       display: none;
       position: absolute;
       background-color: #fff;
       min-width: 160px;
       border: 1px solid #ccc;
-      box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
       border-radius: 6px;
       z-index: 1;
     }
-
-    .dropdown-content button {
+    .dropdown-content button, .dropdown-content a {
       background: none;
       color: #333;
       padding: 10px 16px;
@@ -98,44 +116,143 @@
       text-align: left;
       cursor: pointer;
       font-size: 0.9rem;
+      text-decoration: none;
+      display: block;
     }
-
-    .dropdown-content button:hover {
+    .dropdown-content button:hover, .dropdown-content a:hover {
       background-color: #f1f1f1;
     }
-
     .dropdown.show .dropdown-content {
       display: block;
+    }
+    .dropdown.d-inline-block {
+      position: relative;
+    }
+    .dropbtn {
+      background-color: #5563DE;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      width: 100%;
+      margin-bottom: 0;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background-color: #fff;
+      min-width: 180px;
+      border: 1px solid #ccc;
+      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      z-index: 10;
+      padding: 0;
+      margin-top: 4px;
+    }
+    .dropdown-content button, .dropdown-content a {
+      background: none;
+      color: #333;
+      padding: 12px 18px;
+      border: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      display: block;
+      border-radius: 0;
+      transition: background 0.2s;
+    }
+    .dropdown-content button:hover, .dropdown-content a:hover {
+      background-color: #f1f1f1;
+    }
+    .dropdown.show .dropdown-content {
+      display: block;
+      animation: dropdownFadeIn 0.15s;
+    }
+    @keyframes dropdownFadeIn {
+      from { opacity: 0; transform: translateY(-8px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    /* Ensure dropdown doesn't overflow table cell */
+    td .dropdown.d-inline-block {
+      width: 100%;
+    }
+    /* Make sure Manage button and dropdown align with other buttons */
+    .d-flex.flex-column.gap-1 > .dropdown.d-inline-block {
+      width: 100%;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📦 My Items</h1>
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Title</th>
-          <th>Brand</th>
-          <th>Model</th>
-          <th>Condition</th>
-          <th>Created At</th>
-          <th>Attributes</th>
-          <th>Auction Details</th>
-        </tr>
-      </thead>
-      <tbody id="itemsTableBody"></tbody>
-    </table>
-    <div class="nav">
-      <a href="sellers.html">← Back to Home</a>
+  <div class="container-fluid">
+    <div class="row">
+      <!-- Sidebar -->
+      <aside class="col-md-3 col-lg-2 sidebar">
+        <h4>Navigation</h4>
+        <nav class="nav flex-column">
+          <a class="nav-link" href="../sellers/sellers.html">Seller Home</a>
+          <a class="nav-link" href="create_auction.html">Create Auction</a>
+          <a class="nav-link active" href="view_my_items.html">My Items</a>
+          <button id="logoutBtn" class="btn btn-outline-danger mt-3 w-100">Logout</button>
+        </nav>
+      </aside>
+      <!-- Main Content -->
+      <main class="col-md-9 col-lg-10">
+        <div class="page-header">
+          <h1 class="mb-0">📦 My Items</h1>
+        </div>
+        <div class="content-wrapper">
+          <table class="table table-bordered table-striped align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Brand</th>
+                <th>Model</th>
+                <th>Condition</th>
+                <th>Created At</th>
+                <th>Specifications</th>
+                <th>Auction Details</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+          </table>
+          <div class="nav mt-4">
+            <a href="sellers.html" class="btn btn-outline-primary">← Back to Home</a>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
+  <!-- Specifications Modal -->
+  <div class="modal fade" id="specificationsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Specifications</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="specificationsContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ...existing code for dropdowns, modals, and API calls...
+    let items = [];
     function handleAcceptBid(auctionId) {
       const token = localStorage.getItem('token');
-      fetch('/accept-bid', {
+      fetch('http://127.0.0.1:5000/seller/accept-bid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +263,7 @@
       .then(res => res.json())
       .then(data => {
         alert(data.message || 'Bid accepted successfully');
-        location.reload(); // Refresh page to reflect changes
+        location.reload();
       })
       .catch(err => {
         alert('Failed to accept bid.');
@@ -155,34 +272,13 @@
     }
 
     function handleExtendAuction(auctionId) {
-      const newEndTime = prompt("Enter new end time (YYYY-MM-DDTHH:MM:SS):"); // ISO format
-      if (!newEndTime) return;
-
-      const token = localStorage.getItem('token');
-      fetch('/extend-auction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ auction_id: auctionId, new_end_time: newEndTime })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || 'Auction extended successfully');
-        location.reload();
-      })
-      .catch(err => {
-        alert('Failed to extend auction.');
-        console.error(err);
-      });
+      window.location.href = `extend_auction.html?auction_id=${auctionId}`;
     }
 
     function handleWithdrawItem(auctionId) {
       if (!confirm("Are you sure you want to withdraw this item from the auction?")) return;
-
       const token = localStorage.getItem('token');
-      fetch('/withdraw-item', {
+      fetch('http://127.0.0.1:5000/seller/withdraw-item', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -200,6 +296,7 @@
         console.error(err);
       });
     }
+
     function toggleDropdown(event) {
       event.stopPropagation();
       closeAllDropdowns();
@@ -209,6 +306,13 @@
 
     function closeAllDropdowns() {
       document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
+    }
+
+    function showSpecifications(index) {
+      const item = items[index];
+      const attributes = item.Attributes.map(attr => `<strong>${attr.name}</strong>: ${attr.value}`).join('<br>');
+      document.getElementById('specificationsContent').innerHTML = attributes;
+      new bootstrap.Modal(document.getElementById('specificationsModal')).show();
     }
 
     document.addEventListener('click', function () {
@@ -222,7 +326,7 @@
         return;
       }
 
-      fetch('/my-items', {
+      fetch('http://127.0.0.1:5000/seller/my-items', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -231,14 +335,11 @@
       })
       .then(response => response.json())
       .then(data => {
+        items = data.items || [];
         const tableBody = document.getElementById('itemsTableBody');
-
-        if (data.items && data.items.length > 0) {
-          data.items.forEach((item, index) => {
-            const row = document.createElement('tr');
-
+        if (items.length > 0) {
+          tableBody.innerHTML = items.map((item, index) => {
             const attributes = item.Attributes.map(attr => `<strong>${attr.name}</strong>: ${attr.value}`).join('<br>');
-
             let auctionHTML = 'N/A';
             if (item.Auction) {
               const status = item.Auction.IsClosed ? 'Closed' : 'Active';
@@ -248,52 +349,59 @@
                 <strong>Reserve Price:</strong> $${item.Auction.SecretMinPrice.toFixed(2)}<br>
                 <strong>Start:</strong> ${new Date(item.Auction.StartTime).toLocaleString()}<br>
                 <strong>End:</strong> ${new Date(item.Auction.EndTime).toLocaleString()}<br>
-                <strong>Status:</strong> ${status}
+                <strong>Status:</strong> ${status}<br>
               `;
-
-              // Add Manage Auction button if auction is closed
-              if (item.Auction.IsClosed) {
-                auctionHTML += `
-                  <div class="dropdown">
-                    <button class="dropbtn" onclick="toggleDropdown(event)">Manage Auction</button>
-                    <div class="dropdown-content">
-                      <button onclick="handleAcceptBid(${item.Auction.AuctionID})">Accept Bid</button>
-                      <a href="extend_auction.html?auction_id=${item.Auction.AuctionID}" style="display:block; padding:10px 16px; font-size:0.9rem; color:#333; text-decoration:none;">Extend Auction</a>
-                      <button onclick="handleWithdrawItem(${item.Auction.AuctionID})">Withdraw Item</button>
-                      <a href="view_bids.html?auction_id=${item.Auction.AuctionID}" style="display:block; padding:10px 16px; font-size:0.9rem; color:#333; text-decoration:none;">View Bids</a>
-
-                      </div>
-                  </div>
-                `;
-              }
             }
-
-            row.innerHTML = `
-              <td>${item.ItemID}</td>
-              <td>${item.Title}</td>
-              <td>${item.Brand}</td>
-              <td>${item.Model}</td>
-              <td>${item.Condition}</td>
-              <td>${new Date(item.CreatedAt).toLocaleString()}</td>
-              <td>${attributes}</td>
-              <td>${auctionHTML}</td>
+            return `
+              <tr>
+                <td>${item.ItemID}</td>
+                <td>${item.Title}</td>
+                <td>${item.Brand}</td>
+                <td>${item.Model}</td>
+                <td>${item.Condition}</td>
+                <td>${new Date(item.CreatedAt).toLocaleString()}</td>
+                <td class="specifications-cell">
+                  <button class="btn-view-specs" onclick="showSpecifications(${index})">View</button>
+                </td>
+                <td>${auctionHTML}</td>
+                <td>
+                  <span class="badge ${item.Status === 'active' ? 'bg-success' : item.Status === 'sold' ? 'bg-danger' : 'bg-warning text-dark'}">
+                    ${item.Status.charAt(0).toUpperCase() + item.Status.slice(1)}
+                  </span>
+                </td>
+                <td>
+                  <div class="d-flex flex-column gap-1">
+                    <button class="btn btn-sm btn-primary" onclick="window.location.href='update_item.html?id=${item.ItemID}'">Update</button>
+                    <button class="btn btn-sm btn-secondary" onclick="window.location.href='../bid_history.html?auctionId=${item.Auction?.AuctionID}'">Bid History</button>
+                    ${item.Auction && item.Auction.IsClosed ? `
+                      <div class="dropdown d-inline-block w-100">
+                        <button class="dropbtn w-100" onclick="toggleDropdown(event)">Manage</button>
+                        <div class="dropdown-content">
+                          <button onclick="handleAcceptBid(${item.Auction.AuctionID})">Accept Bid</button>
+                          <a href="extend_auction.html?auction_id=${item.Auction.AuctionID}">Extend Auction</a>
+                          <button onclick="handleWithdrawItem(${item.Auction.AuctionID})">Withdraw Item</button>
+                        </div>
+                      </div>
+                    ` : ''}
+                  </div>
+                </td>
+              </tr>
             `;
-
-            tableBody.appendChild(row);
-          });
+          }).join('');
         } else {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td colspan="8" style="text-align:center;">No items found.</td>`;
-          tableBody.appendChild(row);
+          tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No items found.</td></tr>';
         }
       })
-      .catch(error => {
-        console.error('Error fetching items:', error);
-        const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="8" style="text-align:center; color: red;">Error loading items.</td>`;
-        document.getElementById('itemsTableBody').appendChild(row);
+      .catch(err => {
+        document.getElementById('itemsTableBody').innerHTML = '<tr><td colspan="10" class="text-center text-danger">Failed to load items.</td></tr>';
+        console.error(err);
       });
     });
+
+    document.getElementById('logoutBtn').onclick = function() {
+      localStorage.removeItem('token');
+      window.location.href = '../login.html';
+    };
   </script>
 </body>
 </html>

@@ -37,14 +37,21 @@ def close_expired_auctions(app):
                         db.session.add(transaction)
                         db.session.flush()  # Get transaction ID
 
-                        # Notify buyer
+                        # Update item status to "sold"
+                        item = Item.query.get(auction.ItemID)
+                        item.Status = "sold"
+                        # db.session.add(item)
+
+                        # Notify buyer (winner)
                         buyer = User.query.get(highest_bid.BidderID)
                         item = Item.query.get(auction.ItemID)
                         message = json.dumps({
-                            "type": "payment_required",
-                            "transaction_id": transaction.TransactionID,
+                            "type": "auction_won",
+                            "title": "🎉 Auction Won!",
                             "item_id": item.ItemID,
-                            "price": float(transaction.Price)
+                            "item_title": item.Title,
+                            "bid_amount": float(highest_bid.Amount),
+                            "transaction_id": transaction.TransactionID
                         })
                         notification = Notification(
                             UserID=buyer.UserID,
@@ -53,26 +60,19 @@ def close_expired_auctions(app):
                             Status="unread"
                         )
                         db.session.add(notification)
-
                     else:
-                        # Highest bid < secret min price → notify seller for decision
+                        # Highest bid < secret min price → auction reserve not met
+                        auction.IsClosed = True
                         item = Item.query.get(auction.ItemID)
                         seller = User.query.get(item.OwnerID)
-
-                        # Set response deadline (24 hrs from now)
-                        response_deadline = (now + timedelta(hours=24)).isoformat()
-
-                        # Structured message for frontend
                         message = json.dumps({
-                            "type": "action_required",
-                            "action": "post_auction_decision",
-                            "auction_id": auction.AuctionID,
+                            "type": "auction_reserve_not_met",
+                            "title": "Auction Reserve Price Not Met",
                             "item_id": item.ItemID,
+                            "item_title": item.Title,
                             "highest_bid": float(highest_bid.Amount),
-                            "bidder_id": highest_bid.BidderID,
-                            "response_deadline": response_deadline
+                            "secret_min_price": float(auction.SecretMinPrice)
                         })
-
                         notification = Notification(
                             UserID=seller.UserID,
                             Message=message,
@@ -80,10 +80,24 @@ def close_expired_auctions(app):
                             Status="unread"
                         )
                         db.session.add(notification)
-
                 else:
                     # No bids, just close the auction
                     auction.IsClosed = True
+                    item = Item.query.get(auction.ItemID)
+                    seller = User.query.get(item.OwnerID)
+                    message = json.dumps({
+                        "type": "auction_no_bids",
+                        "title": "Auction Ended Without Bids",
+                        "item_id": item.ItemID,
+                        "item_title": item.Title
+                    })
+                    notification = Notification(
+                        UserID=seller.UserID,
+                        Message=message,
+                        CreatedAt=now,
+                        Status="unread"
+                    )
+                    db.session.add(notification)
 
                 db.session.commit()
 

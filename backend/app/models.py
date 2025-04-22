@@ -55,7 +55,7 @@ class Item(db.Model):
     CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID'), nullable=False)
     SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID'), nullable=False)
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    Status = db.Column(db.Enum('active', 'withdrawn', 'sold'), default='active')
+    Status = db.Column(db.Enum('active', 'withdrawn', 'sold'), default='active', nullable=False)
 
 # ==========================
 # Attribute & Item Attribute Value

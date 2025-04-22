@@ -103,7 +103,6 @@
     <nav class="nav-links">
       <a href="create_auction.html">Create Auction</a>
       <a href="view_my_items.html">View My Items</a>
-      <a href="verify_item.html">Update Items</a>
       <a href="#" id="logoutLink">Logout</a>
     </nav>
   </header>
@@ -128,7 +127,7 @@
     document.getElementById('logoutLink').addEventListener('click', function(e) {
       e.preventDefault();
       localStorage.removeItem('token');
-      window.location.href = '/ecommerce-auction-system/frontend/login.html';
+      window.location.href = '/frontend/login.html';
     });
   </script>
 </body>

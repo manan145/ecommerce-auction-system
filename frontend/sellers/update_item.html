@@ -118,16 +118,10 @@
       <label for="minIncrement">Minimum Increment ($):</label>
       <input type="number" step="0.01" id="minIncrement" placeholder="Leave blank if unchanged">
       
-      <label for="startTime">Auction Start Time:</label>
-      <input type="datetime-local" id="startTime" placeholder="Leave blank if unchanged">
-      
-      <label for="endTime">Auction End Time:</label>
-      <input type="datetime-local" id="endTime" placeholder="Leave blank if unchanged">
-      
       <button type="submit">Update Item</button>
     </form>
     <div class="nav">
-      <a href="profile.html">← Back to Profile</a>
+      <a href="view_my_items.html">← Back to my items</a>
     </div>
   </div>
   
@@ -147,7 +141,7 @@
         window.location.href = 'login.html';
       } else {
         // Fetch all items for the seller and filter for the specific item
-        fetch('/my-items', {
+        fetch('http://127.0.0.1:5000/seller/my-items', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -169,11 +163,6 @@
             if (item.Auction) {
               document.getElementById('startPrice').value = item.Auction.StartPrice || '';
               document.getElementById('minIncrement').value = item.Auction.MinIncrement || '';
-              // datetime-local inputs require format YYYY-MM-DDTHH:MM
-              // Assuming Auction.StartTime and Auction.EndTime are ISO strings,
-              // extract the first 16 characters.
-              document.getElementById('startTime').value = item.Auction.StartTime.substring(0, 16);
-              document.getElementById('endTime').value = item.Auction.EndTime.substring(0, 16);
             }
           }
         })
@@ -204,16 +193,12 @@
       // Optional Auction Updates
       const startPrice = document.getElementById('startPrice').value;
       const minIncrement = document.getElementById('minIncrement').value;
-      const startTimeVal = document.getElementById('startTime').value;
-      const endTimeVal = document.getElementById('endTime').value;
       
       const payload = { title, description, brand, model, condition };
       if (startPrice) payload.start_price = startPrice;
       if (minIncrement) payload.min_increment = minIncrement;
-      if (startTimeVal) payload.start_time = startTimeVal.replace('T', ' ') + ":00";
-      if (endTimeVal) payload.end_time = endTimeVal.replace('T', ' ') + ":00";
       
-      fetch(`/update-item/${itemId}`, {
+      fetch(`http://127.0.0.1:5000/seller/update-item/${itemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
