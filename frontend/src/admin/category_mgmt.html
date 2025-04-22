@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Category Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Category Management</h1>
+  <section>
+    <h2>Add Category</h2>
+    <form id="add-category-form">
+      <label>Category Name:
+        <input type="text" id="category-name" required>
+      </label>
+      <button type="submit">Add Category</button>
+    </form>
+  </section>
+  <section>
+    <h2>Existing Categories & Subcategories</h2>
+    <ul id="categories-list"></ul>
+  </section>
+  <section>
+    <h2>Add Subcategory</h2>
+    <form id="add-subcategory-form">
+      <label>Select Category:
+        <select id="category-select" required></select>
+      </label>
+      <label>Subcategory Name:
+        <input type="text" id="subcategory-name" required>
+      </label>
+      <button type="submit">Add Subcategory</button>
+    </form>
+  </section>
+  <section>
+    <h2>Add Attributes (bulk)</h2>
+    <form id="add-attributes-form">
+      <label>Select Subcategory:
+        <select id="subcategory-select" required></select>
+      </label>
+      <label>Attributes (comma-separated):
+        <textarea id="attributes-text" required></textarea>
+      </label>
+      <button type="submit">Add Attributes</button>
+    </form>
+  </section>
+
+  <script type="module">
+    import { apiFetch } from './utils.js';
+
+    const catForm = document.getElementById('add-category-form');
+    const subcatForm = document.getElementById('add-subcategory-form');
+    const attrForm = document.getElementById('add-attributes-form');
+    const catList = document.getElementById('categories-list');
+    const catSelect = document.getElementById('category-select');
+    const subcatSelect = document.getElementById('subcategory-select');
+
+    async function loadCategories() {
+      try {
+        const data = await apiFetch('/admin/categories');
+        catList.innerHTML = '';
+        catSelect.innerHTML = '';
+        subcatSelect.innerHTML = '';
+        data.forEach(cat => {
+          // list
+          const li = document.createElement('li');
+          li.textContent = cat.name;
+          if (cat.subcategories?.length) {
+            const ul2 = document.createElement('ul');
+            cat.subcategories.forEach(sc => {
+              const li2 = document.createElement('li');
+              li2.textContent = sc.name;
+              ul2.appendChild(li2);
+            });
+            li.appendChild(ul2);
+          }
+          catList.appendChild(li);
+          // selects
+          const optCat = document.createElement('option'); optCat.value = cat.id; optCat.textContent = cat.name;
+          catSelect.appendChild(optCat);
+        });
+        // after categories loaded, load subcategories for attributes select
+        data.forEach(cat => {
+          cat.subcategories?.forEach(sc => {
+            const opt = document.createElement('option'); opt.value = sc.id; opt.textContent = `${cat.name} > ${sc.name}`;
+            subcatSelect.appendChild(opt);
+          });
+        });
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    catForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const name = document.getElementById('category-name').value.trim();
+      try {
+        await apiFetch('/admin/add-category', { method: 'POST', body: JSON.stringify({ name }) });
+        alert('Category added');
+        catForm.reset();
+        loadCategories();
+      } catch (e) { alert(e.message); }
+    });
+
+    subcatForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const category_id = catSelect.value;
+      const name = document.getElementById('subcategory-name').value.trim();
+      try {
+        await apiFetch('/admin/add-subcategory', { method: 'POST', body: JSON.stringify({ category_id, name }) });
+        alert('Subcategory added');
+        subcatForm.reset();
+        loadCategories();
+      } catch (e) { alert(e.message); }
+    });
+
+    attrForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const subcategory_id = subcatSelect.value;
+      const attributes = document.getElementById('attributes-text').value.split(',').map(s => s.trim()).filter(Boolean);
+      try {
+        await apiFetch('/admin/add-attributes', { method: 'POST', body: JSON.stringify({ subcategory_id, attributes }) });
+        alert('Attributes added');
+        attrForm.reset();
+      } catch (e) { alert(e.message); }
+    });
+
+    loadCategories();
+  </script>
+</body>
+</html>

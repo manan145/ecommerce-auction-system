@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Reports</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Sales Reports</h1>
+  <label for="report-type">Report Type:</label>
+  <select id="report-type" required>
+    <option value="">-- Select Report --</option>
+    <option value="total-earnings">Total earnings</option>
+    <option value="earnings-per-item">Earnings per item</option>
+    <option value="earnings-per-item-type">Earnings per item type</option>
+    <option value="earnings-per-end-user">Earnings per end-user</option>
+    <option value="best-selling-items">Best-selling items</option>
+    <option value="best-buyers">Best buyers</option>
+  </select>
+  <button id="generate-report">Generate Report</button>
+  <div id="report-container"></div>
+
+  <script type="module">
+    import { apiFetch } from './utils.js';
+    const reportTypeEl = document.getElementById('report-type');
+    const reportContainer = document.getElementById('report-container');
+
+    document.getElementById('generate-report').addEventListener('click', async () => {
+      const type = reportTypeEl.value;
+      if (!type) {
+        alert('Please select a report type.');
+        return;
+      }
+      reportContainer.innerHTML = '';
+
+      if (type === 'total-earnings') {
+        // TODO: fetch real data
+        const data = { total: 12345.67 };
+        reportContainer.innerHTML = `
+          <div class="kpi-card">
+            <h2>Total Earnings</h2>
+            <p>$${data.total.toFixed(2)}</p>
+          </div>
+        `;
+      } else {
+        // TODO: fetch real data based on report type
+        const labels = ['A', 'B', 'C'];
+        const values = [10, 20, 30];
+        const canvas = document.createElement('canvas');
+        reportContainer.appendChild(canvas);
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: type.replace(/-/g, ' '),
+              data: values,
+              backgroundColor: 'rgba(75, 192, 192, 0.6)'
+            }]
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
