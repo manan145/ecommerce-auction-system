@@ -44,6 +44,7 @@ def close_expired_auctions(app):
                             "type": "payment_required",
                             "transaction_id": transaction.TransactionID,
                             "item_id": item.ItemID,
+                            "item_title": item.Title,
                             "price": float(transaction.Price)
                         })
                         notification = Notification(

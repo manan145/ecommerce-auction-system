@@ -54,6 +54,7 @@ DROP TABLE IF EXISTS `Alert`;
 CREATE TABLE `Alert` (
   `AlertID` int NOT NULL AUTO_INCREMENT,
   `UserID` int NOT NULL,
+  `Category` varchar(50) NOT NULL
   `Subcategory` varchar(50) NOT NULL,
   `SearchCriteria` json NOT NULL,
   `CreatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
