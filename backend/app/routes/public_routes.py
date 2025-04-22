@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from ..models import db, Category, Subcategory, Item, Auction, ItemAttributeValue, Attribute, CustomerQuery, Message, Notification
-from datetime import datetime
+from ..models import *
+from datetime import datetime, timedelta
+from sqlalchemy import func, or_, and_
 from ..utils.filter_utils import filter_items  # Reusable filtering logic
+from fuzzywuzzy import fuzz
+import re
 
 public_bp = Blueprint('public', __name__)
 
@@ -97,12 +100,8 @@ from flask import json
 @jwt_required(optional=True)
 def public_search_items():
     try:
-        raw_data = request.get_data(as_text=True)
-        print("📦 Raw request data:", raw_data)
-
         data = request.get_json()
-        print("✅ Parsed data:", data)
-        print("🔎 Data type:", type(data))
+
 
         filters = data.get('filters', {})
         sort_by = data.get('sort_by', 'created_desc')
@@ -134,9 +133,7 @@ def public_search_items():
         items = result_data.get("results", [])
 
         for item in items:
-            print("🧪 Item in results:", item, "| Type:", type(item))
             if not isinstance(item, dict):
-                print("⚠️ Skipping item — not a dict.")
                 continue
 
             auction = Auction.query.filter_by(ItemID=item["ItemID"]).first()
@@ -308,3 +305,137 @@ def get_last_messages_by_sender():
     } for msg in latest_messages]
 
     return jsonify(result), 200
+
+# ==========================================
+# Get Similar Auctions
+# ==========================================
+@public_bp.route('/auctions/similar/<int:auction_id>', methods=['GET'])
+@jwt_required()
+def get_smarter_similar_auctions(auction_id):
+    now = datetime.now(timezone.utc)
+    first_day_this_month = now.replace(day=1)
+    last_day_prev_month = first_day_this_month - timedelta(days=1)
+    first_day_prev_month = last_day_prev_month.replace(day=1)
+
+    # Fetch the current auction and item
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    item = Item.query.get(auction.ItemID)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    # Extract title keywords and brand for fuzzy match
+    title_keywords = [word.strip().lower() for word in item.Title.split() if len(word) > 2]
+    brand = item.Brand.lower() if item.Brand else ""
+
+    # Build keyword filters using ILIKE
+    keyword_filters = [Item.Title.ilike(f"%{kw}%") for kw in title_keywords]
+
+    # Query: same subcategory, closed, ended within last month, not the same auction
+    similar_query = (
+        db.session.query(Auction, Item)
+        .join(Item, Item.ItemID == Auction.ItemID)
+        .filter(
+            Auction.AuctionID != auction_id,
+            Auction.IsClosed == True,
+            Auction.EndTime >= first_day_prev_month,
+            Auction.EndTime <= last_day_prev_month,
+            Item.SubcategoryID == item.SubcategoryID,
+            or_(
+                func.lower(Item.Brand).ilike(f"%{brand}%"),
+                *keyword_filters
+            )
+        )
+        .order_by(Auction.EndTime.desc())
+        .limit(10)
+    )
+
+    similar_auctions = similar_query.all()
+
+    results = []
+    for auct, itm in similar_auctions:
+        final_transaction = (
+            Transaction.query
+            .filter_by(AuctionID=auct.AuctionID, Status="completed")
+            .order_by(Transaction.TransactionDate.desc())
+            .first()
+        )
+
+        results.append({
+            "item_id": itm.ItemID,
+            "title": itm.Title,
+            "brand": itm.Brand,
+            "model": itm.Model,
+            "condition": itm.Condition,
+            "final_price": float(final_transaction.Price) if final_transaction else None,
+            "end_time": auct.EndTime.isoformat() if auct.EndTime else None
+        })
+
+
+    return jsonify(results), 200
+
+@public_bp.route('/browse/item-details/<int:item_id>', methods=['GET'])
+@jwt_required()
+def get_item_details(item_id):
+    item = Item.query.get(item_id)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    attributes = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
+    attr_data = [{
+        "name": Attribute.query.get(attr.AttributeID).Name,
+        "value": attr.Value
+    } for attr in attributes]
+
+    return jsonify({
+        "ItemID": item.ItemID,
+        "Title": item.Title,
+        "Brand": item.Brand,
+        "Model": item.Model,
+        "Condition": item.Condition,
+        "Description": item.Description,
+        "Attributes": attr_data
+    }), 200
+
+@public_bp.route('/faq', methods=['GET'])
+def get_faqs():
+    faqs = FAQ.query.all()
+    faq_list = [{"id": faq.FAQID, "question": faq.Question, "answer": faq.Answer} for faq in faqs]
+    return jsonify(faq_list), 200
+
+
+
+@public_bp.route('/faq/search', methods=['GET'])
+def search_faqs():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+
+    keywords = query.lower().split()
+    faqs = FAQ.query.all()
+    results = []
+
+    for faq in faqs:
+        question = faq.Question
+        answer = faq.Answer
+        combined = f"{question} {answer}".lower()
+
+        score = fuzz.partial_ratio(query.lower(), combined)
+        if score >= 60:
+            highlighted_q = question
+            highlighted_a = answer
+            for kw in keywords:
+                pattern = re.compile(re.escape(kw), re.IGNORECASE)
+                highlighted_q = pattern.sub(r'<mark>\g<0></mark>', highlighted_q)
+                highlighted_a = pattern.sub(r'<mark>\g<0></mark>', highlighted_a)
+
+            results.append({
+                'question': highlighted_q,
+                'answer': highlighted_a,
+                'score': score
+            })
+
+    sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
+    return jsonify(sorted_results)

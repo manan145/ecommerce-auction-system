@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FAQs - BuyMe</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      width: 95%;
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-top: 0;
+    }
+
+    .search-bar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .search-bar input {
+      width: 70%;
+      padding: 10px 14px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-right: 10px;
+    }
+
+    .search-bar button {
+      padding: 10px 16px;
+      background-color: #304ffe;
+      color: #fff;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .faq-card {
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .faq-question {
+      background: #f0f4fa;
+      padding: 14px 20px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .faq-question:hover {
+      background: #e5ebf7;
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 16px 20px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .faq-card.active .faq-answer {
+      display: block;
+    }
+
+    mark {
+      background-color: #fffb00;
+      padding: 0 2px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="buyer.html">Home</a>
+      <a href="login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h2>Frequently Asked Questions</h2>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Search for a question...">
+      <button onclick="filterFAQs()">Search</button>
+    </div>
+    <div id="faqContainer"></div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+
+    async function loadFAQs() {
+      const res = await fetch(`${BASE_URL}/public/faq`);
+      const faqs = await res.json();
+      renderFAQs(faqs);
+    }
+
+    async function filterFAQs() {
+      const keyword = document.getElementById('searchInput').value.trim();
+      if (!keyword) {
+        loadFAQs();
+        return;
+      }
+
+      const res = await fetch(`${BASE_URL}/public/faq/search?q=${encodeURIComponent(keyword)}`);
+      const faqs = await res.json();
+      renderFAQs(faqs);
+    }
+
+    function renderFAQs(faqs) {
+      const container = document.getElementById('faqContainer');
+      container.innerHTML = faqs.map((faq, index) => `
+        <div class="faq-card">
+          <div class="faq-question" onclick="this.parentNode.classList.toggle('active')">
+            <strong style="margin-right: 10px;">Q${index + 1}.</strong>
+            <span>${faq.question}</span>
+          </div>
+          <div class="faq-answer">${faq.answer}</div>
+        </div>
+      `).join('');
+    }
+
+    loadFAQs();
+  </script>
+</body>
+</html>
