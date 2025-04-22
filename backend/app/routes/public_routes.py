@@ -208,101 +208,34 @@ def submit_customer_query():
     db.session.commit()
     return jsonify({'message': 'Query submitted'}), 201
 
-# ==========================================    
-# Message Sending
-# ==========================================
-@public_bp.route('/messages/send', methods=['POST'])
+@public_bp.route('/customer-query/mine', methods=['GET'])
 @jwt_required()
-def send_message():
+def get_my_queries():
     """
-    Send a message to another user (e.g., rep responding to query)
+    Returns all queries submitted by the currently logged-in user,
+    including rep responses, responder name, response time, and status.
     """
-    sender_id = get_jwt_identity()
-    data = request.get_json()
-    receiver_id = data.get('receiver_id')
-    content = data.get('content')
+    user_id = get_jwt_identity()
 
-    if not receiver_id or not content:
-        return jsonify({'error': 'Receiver ID and content required'}), 400
+    queries = db.session.query(
+        CustomerQuery,
+        User.Username.label('ResponderName')
+    ).outerjoin(User, CustomerQuery.ResponseBy == User.UserID)\
+     .filter(CustomerQuery.UserID == user_id)\
+     .order_by(CustomerQuery.CreatedAt.desc()).all()
 
-    message = Message(SenderID=sender_id, ReceiverID=receiver_id, Content=content)
-    db.session.add(message)
-
-    notification = Notification(
-        UserID=receiver_id,
-        Message=json.dumps({
-            "type": "new_message",
-            "from_user_id": sender_id,
-            "content_preview": content[:50],  # Short preview
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
-        }),
-        CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
-    )
-    db.session.add(notification)
-
-    db.session.commit()
-    return jsonify({'message': 'Message sent'}), 201
-
-# ==========================================
-# Get Message Thread
-# ==========================================
-@public_bp.route('/messages/thread/<int:user_id>', methods=['GET'])
-@jwt_required()
-def get_thread(user_id):
-    """
-    Fetch threaded conversation between current user and user_id
-    """
-    current_user_id = get_jwt_identity()
-
-    thread = Message.query.filter(
-        ((Message.SenderID == current_user_id) & (Message.ReceiverID == user_id)) |
-        ((Message.SenderID == user_id) & (Message.ReceiverID == current_user_id))
-    ).order_by(Message.Timestamp.asc()).all()
-
-    return jsonify([{
-        'SenderID': msg.SenderID,
-        'ReceiverID': msg.ReceiverID,
-        'Content': msg.Content,
-        'Timestamp': msg.Timestamp.isoformat()
-    } for msg in thread]), 200
-
-# ==========================================
-# Get Last Message from Each Sender
-# ==========================================
-@public_bp.route('/messages/last-from-each-sender', methods=['GET'])
-@jwt_required()
-def get_last_messages_by_sender():
-    """
-    API → Get the latest message from each sender to the current receiver,
-    sorted by most recent timestamp (like WhatsApp chat list).
-
-    Returns:
-        JSON list of latest messages grouped by sender, ordered by most recent first
-    """
-    current_user_id = get_jwt_identity()
-
-    from sqlalchemy import func, and_
-    
-    # Subquery: latest message timestamp per sender to this receiver
-    subquery = db.session.query(
-        Message.SenderID,
-        func.max(Message.Timestamp).label('LatestTime')
-    ).filter(Message.ReceiverID == current_user_id)\
-     .group_by(Message.SenderID).subquery()
-
-    # Join with Message to fetch the actual message contents
-    latest_messages = db.session.query(Message)\
-        .join(subquery, and_(
-            Message.SenderID == subquery.c.SenderID,
-            Message.Timestamp == subquery.c.LatestTime
-        )).order_by(Message.Timestamp.desc()).all()
-
-    result = [{
-        "SenderID": msg.SenderID,
-        "MessageID": msg.MessageID,
-        "Content": msg.Content,
-        "Timestamp": msg.Timestamp.isoformat()
-    } for msg in latest_messages]
+    result = []
+    for query, responder_name in queries:
+        result.append({
+            'QueryID': query.QueryID,
+            'Subject': query.Subject,
+            'Message': query.Message,
+            'Status': query.Status,
+            'CreatedAt': query.CreatedAt.isoformat(),
+            'Response': query.Response,
+            'ResponderName': responder_name,
+            'ResponseAt': query.ResponseAt.isoformat() if query.ResponseAt else None
+        })
 
     return jsonify(result), 200
 
