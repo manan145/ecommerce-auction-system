@@ -321,14 +321,18 @@ def accept_bid():
     if not user or user.Role != 'seller':
         return jsonify({'error': 'Seller access required'}), 403
 
+    print("🔧 /accept-bid called")
     data = request.get_json()
+    print("📥 Data received:", data)
     auction_id = data.get('auction_id')
 
     if not auction_id:
+        print("DEBUG: Missing auction_id in request")
         return jsonify({'error': 'auction_id is required'}), 400
 
     auction = Auction.query.get(auction_id)
     if not auction or auction.IsClosed is False:
+        print(f"DEBUG: Auction issue → Exists: {bool(auction)}, IsClosed: {getattr(auction, 'IsClosed', None)}")
         return jsonify({'error': 'Invalid or active auction'}), 400
 
     item = Item.query.get(auction.ItemID)
@@ -337,6 +341,7 @@ def accept_bid():
 
     highest_bid = Bid.query.filter_by(AuctionID=auction.AuctionID).order_by(Bid.Amount.desc()).first()
     if not highest_bid:
+        print("DEBUG: No bids found for this auction")
         return jsonify({'error': 'No bids to accept'}), 400
 
     transaction = Transaction(
@@ -347,6 +352,9 @@ def accept_bid():
         Status='pending'
     )
     db.session.add(transaction)
+
+    # Set item status as sold
+    item.Status = 'sold'
 
     notification = Notification(
         UserID=highest_bid.BidderID,

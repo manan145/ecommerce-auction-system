@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Notifications - BuyMe</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248, 0.85), rgba(217,226,236, 0.85)),
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  
+    .header .logo {
+      color: #fff;
+      text-decoration: none;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .nav-links a {
+      color: #fff;
+      margin-left: 20px;
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .container-fluid { display: flex; padding: 0; }
+    .sidebar {
+        background-color: #fff;
+        border-right: 1px solid #ddd;
+        min-height: 100vh;
+        padding: 30px 20px;
+        max-width: 220px;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+    .sidebar h4 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 12px;
+      text-decoration: none;
+      display: block;
+      transition: color 0.2s;
+    }
+    .sidebar .nav-link:hover {
+      color: #1c35d5;
+    }
+    main {
+      flex: 1;
+      padding: 30px 40px;
+    }
+    .page-header {
+      background: #304ffe;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    }
+    .toggle-header {
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: #5468dc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f5f7ff;
+      padding: 10px 16px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .toggle-header:hover {
+      background: #fafdfcf6;
+    }
+    .toggle-header i {
+      transition: transform 0.3s;
+    }
+    .toggle-header.collapsed i {
+      transform: rotate(-90deg);
+    }
+    .notification-card {
+      background: #fff;
+      border-left: 4px solid #304ffe;
+      padding: 20px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+    .notification-card strong {
+      font-weight: 500;
+    }
+    .notification-card em {
+      font-size: 0.875rem;
+      color: #555;
+    }
+    .btn-sm {
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="buyer.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container-fluid">
+    <aside class="sidebar">
+      <h4>Navigation</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="my_bids.html">My Bids</a>
+        <a class="nav-link" href="questions.html">FAQs</a>
+        <a class="nav-link" href="create_alerts.html">Create Alerts</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="page-header">Your Notifications</div>
+
+      <div>
+        <div class="toggle-header" onclick="toggleSection('unreadSection', this)">
+          <span>🔔 Unread Notifications</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div id="unreadSection"></div>
+      </div>
+
+      <div style="margin-top: 30px;">
+        <div class="toggle-header collapsed" onclick="toggleSection('readSection', this)">
+          <span>📭 Read Notifications</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div id="readSection" style="display: none;"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.0.1:5000";
+
+    function toggleSection(id, header) {
+      const section = document.getElementById(id);
+      const isVisible = section.style.display !== 'none';
+      section.style.display = isVisible ? 'none' : 'block';
+      header.classList.toggle('collapsed', isVisible);
+    }
+
+    async function fetchAndRenderNotifications(status, containerId) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/buyer/notifications/${status}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const notifications = await res.json();
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+
+      notifications.forEach(n => {
+        const div = document.createElement("div");
+        div.className = "notification-card";
+        const d = n.data;
+
+        if (n.type === "item_alert_match") {
+          div.innerHTML = `
+            <strong>🔔 ${n.title}</strong><br>
+            📦 <strong>Item:</strong> ${d.item_title ?? d.model}<br>
+            🏷️ <strong>Brand:</strong> ${d.brand}<br>
+            🧾 <strong>Subcategory:</strong> ${d.subcategory}<br>
+            ⚙️ <strong>Condition:</strong> ${d.condition}<br>
+            <em>⏰ Posted on: ${new Date(n.created_at).toLocaleString()}</em><br>
+            ${status === 'unread' ? `<button class="btn btn-sm btn-outline-primary mt-2" onclick="markAsRead(${n.notification_id}, this)">Mark as Read</button>` : ''}
+          `;
+        } else if (n.type === "payment_required") {
+          div.innerHTML = `
+            <strong style="font-size: 1.2rem; color: #222;">💰 Payment Required</strong><br>
+            📄 <strong>Transaction ID:</strong> ${d.transaction_id}<br>
+            📦 <strong>Item:</strong> ${d.item_title ?? 'N/A'}<br>
+            💵 <strong>Amount:</strong> $${d.price}<br>
+            <em>⏰ Sent on: ${new Date(n.created_at).toLocaleString()}</em><br>
+            ${status === 'unread' ? `<button class="btn btn-sm btn-outline-primary mt-2" onclick="markAsRead(${n.notification_id}, this)">Mark as Read</button>` : ''}
+          `;
+        } 
+
+        else {
+          div.innerHTML = `
+            <strong>🔔 Notification</strong><br>
+            <em>${new Date(n.created_at).toLocaleString()}</em><br>
+            ${status === 'unread' ? `<button class="btn btn-sm btn-outline-primary mt-2" onclick="markAsRead(${n.notification_id}, this)">Mark as Read</button>` : ''}
+          `;
+        }
+
+        container.appendChild(div);
+      });
+    }
+
+    async function markAsRead(notificationId, button) {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/buyer/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        fetchAndRenderNotifications('unread', 'unreadSection');
+        fetchAndRenderNotifications('read', 'readSection');
+      } else {
+        alert("Failed to mark as read.");
+      }
+    }
+
+    // Initial Load
+    fetchAndRenderNotifications('unread', 'unreadSection');
+    fetchAndRenderNotifications('read', 'readSection');
+  </script>
+</body>
+</html>

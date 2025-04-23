@@ -42,24 +42,40 @@ def close_expired_auctions(app):
                         item.Status = "sold"
                         # db.session.add(item)
 
-                        # Notify buyer (winner)
+                        # Notify buyer (winner of the auction to make payment)
+                        notification = Notification(
+                            UserID=highest_bid.BidderID,
+                            Message=json.dumps({
+                                "type": "payment_required",
+                                "transaction_id": transaction.TransactionID,
+                                "item_id": item.ItemID,
+                                "item_title": item.Title,
+                                "price": float(highest_bid.Amount)
+                            }),
+                            Status='unread'
+                        )
+                        db.session.add(notification)
+
+                        # Notify seller (item sold)
+                        seller = User.query.get(item.OwnerID)
                         buyer = User.query.get(highest_bid.BidderID)
-                        item = Item.query.get(auction.ItemID)
-                        message = json.dumps({
-                            "type": "auction_won",
-                            "title": "🎉 Auction Won!",
+                        seller_message = json.dumps({
+                            "type": "item_sold",
+                            "title": "Your Item Was Sold!",
                             "item_id": item.ItemID,
                             "item_title": item.Title,
-                            "bid_amount": float(highest_bid.Amount),
+                            "sold_price": float(highest_bid.Amount),
+                            "buyer_id": buyer.UserID,
+                            "buyer_name": buyer.Name if hasattr(buyer, "Name") else "",
                             "transaction_id": transaction.TransactionID
                         })
-                        notification = Notification(
-                            UserID=buyer.UserID,
-                            Message=message,
+                        seller_notification = Notification(
+                            UserID=seller.UserID,
+                            Message=seller_message,
                             CreatedAt=now,
                             Status="unread"
                         )
-                        db.session.add(notification)
+                        db.session.add(seller_notification)
                     else:
                         # Highest bid < secret min price → auction reserve not met
                         auction.IsClosed = True

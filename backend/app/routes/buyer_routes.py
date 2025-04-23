@@ -219,10 +219,6 @@ def make_payment():
         transaction.Status = "completed"
         transaction.TransactionDate = datetime.now(timezone.utc)
 
-        # Transfer item ownership
-        item.OwnerID = buyer.UserID
-        item.Status = "sold"
-
         db.session.commit()
 
         return jsonify({
