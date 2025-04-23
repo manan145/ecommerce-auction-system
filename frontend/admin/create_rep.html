@@ -99,6 +99,22 @@
     button:hover {
       background-color: #253fd3;
     }
+    .btn-back {
+  background-color: #304ffe;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.btn-back:hover {
+  background-color: #253fd3;
+  transform: translateY(-2px);
+}
   </style>
 </head>
 <body>
@@ -112,6 +128,7 @@
 
   <div class="container">
     <h1>Create Customer Representative</h1>
+    <button class="btn-back" onclick="window.history.back()">← Back</button>
     <form id="create-rep-form">
       <label>
         Username:
@@ -137,16 +154,20 @@
         </select>
       </label>
       <button type="submit">Create Rep</button>
+      <div id="resultMessage" style="text-align: center; font-weight: 500; margin-top: 10px;"></div>
     </form>
   </div>
 
   <script>
     const form = document.getElementById('create-rep-form');
     const token = localStorage.getItem('token');
-
+    const resultMessage = document.getElementById('resultMessage');
+  
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
+      resultMessage.textContent = "";
+      resultMessage.style.color = "";
+  
       const body = {
         username: document.getElementById('username').value.trim(),
         email: document.getElementById('email').value.trim(),
@@ -154,12 +175,13 @@
         department: document.getElementById('department').value.trim(),
         shift: document.getElementById('shift').value
       };
-
+  
       if (!token) {
-        alert('Unauthorized. Please log in again.');
+        resultMessage.textContent = 'Unauthorized. Please log in again.';
+        resultMessage.style.color = 'red';
         return;
       }
-
+  
       try {
         const response = await fetch('http://127.0.0.1:5000/admin/create-rep', {
           method: 'POST',
@@ -169,19 +191,23 @@
           },
           body: JSON.stringify(body)
         });
-
+  
         const data = await response.json();
         if (response.ok) {
-          alert('✅ Customer Representative created successfully!');
+          resultMessage.textContent = '✅ Customer Representative created successfully!';
+          resultMessage.style.color = 'green';
           form.reset();
         } else {
-          alert(`❌ ${data.error || 'Creation failed.'}`);
+          resultMessage.textContent = `❌ ${data.error || 'Creation failed.'}`;
+          resultMessage.style.color = 'red';
         }
       } catch (err) {
-        alert('❌ Failed to create representative. Check console for details.');
         console.error(err);
+        resultMessage.textContent = '❌ Failed to create representative.';
+        resultMessage.style.color = 'red';
       }
     });
   </script>
+  
 </body>
 </html>
