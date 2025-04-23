@@ -41,7 +41,7 @@
   const token = localStorage.getItem('token');
 
   // Load queries
-  fetch('/rep/queries', {
+  fetch('http://127.0.0.1:5000/rep/queries', {
     method: 'GET',
     headers: { 'Authorization': 'Bearer ' + token }
   })
@@ -86,7 +86,7 @@
 
     btn.disabled = true;
 
-    fetch(`/rep/queries/reply/${queryId}`, {
+    fetch(`http://127.0.0.1:5000/rep/queries/reply/${queryId}`, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
@@ -116,7 +116,7 @@
   function closeQuery(queryId, button) {
     button.disabled = true;
 
-    fetch(`/rep/queries/close/${queryId}`, {
+    fetch(`http://127.0.0.1:5000/rep/queries/close/${queryId}`, {
       method: 'PUT',
       headers: { 'Authorization': 'Bearer ' + token }
     })

@@ -291,3 +291,51 @@ def get_bids_for_auction(auction_id):
     } for bid in bids]
 
     return jsonify({'bids': bid_list}), 200
+
+# =========================
+# GET user by email
+# =========================
+
+@rep_bp.route('/user')
+@jwt_required()
+def get_user_by_email():
+    email = request.args.get('email')
+    user = User.query.filter_by(Email=email).first()
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+    return jsonify({
+        'UserID': user.UserID,
+        'Username': user.Username,
+        'Email': user.Email
+    }), 200
+
+
+# ======================
+# PUT update user
+#=======================
+
+@rep_bp.route('/user/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def update_user_info(user_id):
+    user = User.query.get(user_id)
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+    data = request.get_json()
+    user.Username = data.get('username', user.Username)
+    user.Email = data.get('email', user.Email)
+    db.session.commit()
+    return jsonify({'message': 'User info updated successfully'}), 200
+
+# ==================
+# DELETE user
+# ==================
+
+@rep_bp.route('/user/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully'}), 200

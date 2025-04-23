@@ -58,7 +58,7 @@
     e.preventDefault();
     const email = document.getElementById('email').value;
 
-    fetch(`/rep/user?email=${encodeURIComponent(email)}`, {
+    fetch(`http://127.0.0.1:5000/rep/user?email=${encodeURIComponent(email)}`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
@@ -82,7 +82,7 @@
       email: document.getElementById('userEmail').value
     };
 
-    fetch(`/rep/user/${currentUserId}`, {
+    fetch(`http://127.0.0.1:5000/rep/user/${currentUserId}`, {
       method: 'PUT',
       headers: {
         'Authorization': 'Bearer ' + token,
@@ -99,7 +99,7 @@
   function deleteUser() {
     if (!confirm("Are you sure you want to delete this account?")) return;
 
-    fetch(`/rep/user/${currentUserId}`, {
+    fetch(`http://127.0.0.1:5000/rep/user/${currentUserId}`, {
       method: 'DELETE',
       headers: { 'Authorization': 'Bearer ' + token }
     })

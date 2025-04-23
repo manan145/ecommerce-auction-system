@@ -56,7 +56,7 @@
 
     const token = localStorage.getItem('token');
 
-    fetch('/rep/update-profile', {
+    fetch('http://127.0.0.1:5000/rep/update-profile', {
       method: 'PUT',
       headers: {
         'Authorization': 'Bearer ' + token,
