@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Customer Rep - BuyMe Admin</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('../360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+      color: #304ffe;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-weight: 500;
+    }
+
+    input, select {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: #304ffe;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    button:hover {
+      background-color: #253fd3;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe - Admin</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1>Create Customer Representative</h1>
+    <form id="create-rep-form">
+      <label>
+        Username:
+        <input type="text" id="username" required>
+      </label>
+      <label>
+        Email:
+        <input type="email" id="email" required>
+      </label>
+      <label>
+        Password:
+        <input type="password" id="password" required minlength="6">
+      </label>
+      <label>
+        Department:
+        <input type="text" id="department" required>
+      </label>
+      <label>
+        Shift:
+        <select id="shift" required>
+          <option value="day">Day</option>
+          <option value="night">Night</option>
+        </select>
+      </label>
+      <button type="submit">Create Rep</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('create-rep-form');
+    const token = localStorage.getItem('token');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const body = {
+        username: document.getElementById('username').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value,
+        department: document.getElementById('department').value.trim(),
+        shift: document.getElementById('shift').value
+      };
+
+      if (!token) {
+        alert('Unauthorized. Please log in again.');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/admin/create-rep', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          alert('✅ Customer Representative created successfully!');
+          form.reset();
+        } else {
+          alert(`❌ ${data.error || 'Creation failed.'}`);
+        }
+      } catch (err) {
+        alert('❌ Failed to create representative. Check console for details.');
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>List Customer Reps</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Customer Reps</h1>
+  <button id="create-rep-btn">Create New Rep</button>
+  <table id="reps-table">
+    <thead>
+      <tr><th>RepID</th><th>Username</th><th>Email</th><th>Department</th><th>Shift</th><th>Status</th><th>Edit</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script type="module">
+    import { apiFetch } from './utils.js';
+    const tableBody = document.querySelector('#reps-table tbody');
+    document.getElementById('create-rep-btn').addEventListener('click', () => {
+      window.location = 'create_rep.html';
+    });
+    async function loadReps() {
+      try {
+        const reps = await apiFetch('/admin/customer-reps');
+        tableBody.innerHTML = '';
+        reps.forEach(rep => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${rep.rep_id}</td>
+            <td>${rep.username}</td>
+            <td>${rep.email}</td>
+            <td>${rep.department}</td>
+            <td>${rep.shift}</td>
+            <td>${rep.status}</td>
+          `;
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.addEventListener('click', () => {
+            window.location = `update_rep.html?rep_id=${rep.rep_id}`;
+          });
+          const td = document.createElement('td');
+          td.appendChild(editBtn);
+          tr.appendChild(td);
+          tableBody.appendChild(tr);
+        });
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+    loadReps();
+  </script>
+</body>
+</html>

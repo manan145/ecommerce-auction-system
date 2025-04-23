@@ -115,18 +115,6 @@ class Transaction(db.Model):
 
 
 # ==========================
-# Message
-# ==========================
-class Message(db.Model):
-    __tablename__ = 'Message'
-
-    MessageID = db.Column(db.Integer, primary_key=True)
-    SenderID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    ReceiverID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    Content = db.Column(db.Text, nullable=False)
-    Timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-
-# ==========================
 # Alert
 # ==========================
 class Alert(db.Model):
@@ -187,6 +175,9 @@ class CustomerQuery(db.Model):
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Subject = db.Column(db.String(100), nullable=False)
     Message = db.Column(db.Text, nullable=False)
+    Response = db.Column(db.Text)
+    ResponseBy = db.Column(db.Integer, db.ForeignKey('User.UserID'))
+    ResponseAt = db.Column(db.DateTime(timezone=True))   
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('open', 'closed'), default='open')
 
@@ -197,3 +188,4 @@ class FAQ(db.Model):
     FAQID = db.Column(db.Integer, primary_key=True)
     Question = db.Column(db.Text, nullable=False)
     Answer = db.Column(db.Text, nullable=False)
+
