@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..models import db, User, CustomerRep, CustomerQuery, Notification, Auction, Bid
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from werkzeug.security import generate_password_hash
 import string, secrets
@@ -100,13 +100,21 @@ def reset_user_password():
 
     # Update password
     target_user.PasswordHash = generate_password_hash(temp_password)
+
+    # Add notification
+    notification = Notification(
+        UserID=target_user.UserID,
+        Message=f"Your password has been reset. Temporary password: {temp_password}",
+        Status='unread'
+    )
+    db.session.add(notification)  # ← This line was missing
+
     db.session.commit()
 
     return jsonify({
         "message": f"Temporary password generated for user '{target_user.Username}'",
         "temporary_password": temp_password
     }), 200
-
 # =========================
 # View all open queries
 # =========================
@@ -161,7 +169,7 @@ def close_query(query_id):
             "query_id": query.QueryID,
             "subject": query.Subject,
             "closed_by": rep_id,
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }),
     )
     db.session.add(notification)
