@@ -83,48 +83,27 @@ def get_all_customer_reps():
     return jsonify(rep_list), 200
 
 # ===========================================
-# Admin – Update Customer Representative profile
+# Admin – Delete Customer Representative profile
 # ===========================================
-@admin_bp.route('/update-rep', methods=['PUT'])
+@admin_bp.route('/delete-rep/<int:rep_id>', methods=['DELETE'])
 @jwt_required()
-def update_customer_rep():
+def delete_customer_rep(rep_id):
     current_user_id = get_jwt_identity()
     user = User.query.get(int(current_user_id))
     if not user or user.Role != 'admin':
         return jsonify({'error': 'Admin access required'}), 403
 
-    data = request.get_json()
-    rep_id = data.get('rep_id')
-    if not rep_id:
-        return jsonify({'error': 'rep_id is required'}), 400
-
     rep = CustomerRep.query.get(rep_id)
     if not rep:
-        return jsonify({'error': 'Customer Representative not found'}), 404
+        return jsonify({'error': 'Customer Rep not found'}), 404
 
-    # ====== Allow updates ======
-    updated = False
-
-    if data.get('department'):
-        rep.Department = data['department']
-        updated = True
-
-    if data.get('shift'):
-        rep.Shift = data['shift']
-        updated = True
-
-    if data.get('status'):
-        if data['status'] not in ['active', 'inactive']:
-            return jsonify({'error': 'Invalid status'}), 400
-        rep.Status = data['status']
-        updated = True
-
-    if not updated:
-        return jsonify({'message': 'No updatable fields provided'}), 400
-
+    user_account = User.query.get(rep.UserID)
+    db.session.delete(rep)
+    db.session.delete(user_account)
     db.session.commit()
 
-    return jsonify({"message": "Customer Representative updated successfully"}), 200
+    return jsonify({'message': 'Customer Rep deleted successfully'}), 200
+
 
 
 #============================
@@ -173,7 +152,7 @@ def add_subcategory():
     if not category_id or not name:
         return jsonify({'error': 'Category name and Subcategory name required'}), 400
 
-    category = Category.query.get(CategoryID=category_id)
+    category = Category.query.get(category_id)
     if not category:
         return jsonify({'error': 'Category not found'}), 404
 
@@ -227,7 +206,7 @@ def add_attributes_bulk():
     if not subcategory_id or not attribute_names:
         return jsonify({'error': 'Subcategory name and attribute list are required'}), 400
 
-    subcategory = Subcategory.query.get(SubcategoryID=subcategory_id)
+    subcategory = Subcategory.query.get(subcategory_id)
     if not subcategory:
         return jsonify({'error': 'Subcategory not found'}), 404
 

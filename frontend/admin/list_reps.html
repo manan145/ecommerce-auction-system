@@ -1,114 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>List Customer Reps</title>
+  <meta charset="UTF-8" />
+  <title>Customer Reps - BuyMe Admin</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #f0f4fa;
-      padding: 40px;
+    * {
+      box-sizing: border-box;
     }
 
-    h1 {
-      text-align: center;
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('../360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      text-decoration: none;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .container-fluid {
+      display: flex;
+    }
+
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h4 {
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 20px;
       color: #304ffe;
     }
 
-    #create-rep-btn {
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 15px;
+      text-decoration: none;
       display: block;
-      margin: 20px auto;
-      background-color: #304ffe;
-      color: white;
-      padding: 10px 20px;
-      font-weight: bold;
-      border: none;
+      padding: 6px 10px;
       border-radius: 6px;
-      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: rgba(48, 79, 254, 0.1);
+    }
+
+    main {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .content-wrapper {
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .content-wrapper h2 {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-bottom: 25px;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background-color: white;
-      border-radius: 8px;
-      overflow: hidden;
     }
 
     th, td {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: left;
     }
 
     th {
-      background-color: #304ffe;
-      color: white;
+      background-color: #f0f4fa;
     }
 
     tr:hover {
-      background-color: #f5f8ff;
+      background-color: #f9fbff;
     }
 
-    button.edit-btn {
+    .btn-sm {
       padding: 6px 12px;
-      background-color: #17a2b8;
-      color: white;
-      border: none;
+      font-size: 0.875rem;
       border-radius: 4px;
+      border: none;
       cursor: pointer;
+      background-color: #dc3545;
+      color: white;
+      transition: background 0.3s ease;
     }
 
-    button.edit-btn:hover {
-      background-color: #138496;
+    .btn-sm:hover {
+      background-color: #c82333;
     }
   </style>
 </head>
 <body>
-  <h1>Customer Representatives</h1>
-  <button id="create-rep-btn">Create New Rep</button>
+  <header class="header">
+    <div class="logo">BuyMe - Admin</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
 
-  <table id="reps-table">
-    <thead>
-      <tr>
-        <th>RepID</th>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Department</th>
-        <th>Shift</th>
-        <th>Status</th>
-        <th>Edit</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="container-fluid">
+    <aside class="sidebar">
+      <h4>Admin Panel</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="create_rep.html">Create Representative</a>
+        <a class="nav-link" href="list_reps.html">Manage Representatives</a>
+        <a class="nav-link" href="category_mgmt.html">Category Management</a>
+        <a class="nav-link" href="sales_reports.html">Sales Reports</a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="content-wrapper">
+        <h2>Customer Representatives</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rep ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Department</th>
+              <th>Shift</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="repsBody">
+            <tr><td colspan="7" class="text-center">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
 
   <script>
     const BASE_URL = 'http://127.0.0.1:5000';
     const token = localStorage.getItem('token');
-    const tableBody = document.querySelector('#reps-table tbody');
-
-    document.getElementById('create-rep-btn').addEventListener('click', () => {
-      window.location = 'create_rep.html';
-    });
 
     async function loadReps() {
       try {
         const res = await fetch(`${BASE_URL}/admin/customer-reps`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
+        const data = await res.json();
+        const tbody = document.getElementById('repsBody');
+        tbody.innerHTML = '';
 
-        const reps = await res.json();
-        if (!res.ok) throw new Error(reps.error || 'Failed to fetch reps');
-
-        tableBody.innerHTML = '';
-        reps.forEach(rep => {
+        data.forEach(rep => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td>${rep.RepID}</td>
@@ -117,23 +212,29 @@
             <td>${rep.Department}</td>
             <td>${rep.Shift}</td>
             <td>${rep.Status}</td>
+            <td><button class="btn-sm" onclick="deleteRep(${rep.RepID})">Delete</button></td>
           `;
-
-          const editBtn = document.createElement('button');
-          editBtn.classList.add('edit-btn');
-          editBtn.textContent = 'Edit';
-          editBtn.addEventListener('click', () => {
-            window.location = `update_rep.html?rep_id=${rep.RepID}`;
-          });
-
-          const td = document.createElement('td');
-          td.appendChild(editBtn);
-          tr.appendChild(td);
-          tableBody.appendChild(tr);
+          tbody.appendChild(tr);
         });
-
       } catch (err) {
-        alert(`❌ ${err.message}`);
+        console.error(err);
+        document.getElementById('repsBody').innerHTML = `<tr><td colspan="7" class="text-danger text-center">Failed to load representatives.</td></tr>`;
+      }
+    }
+
+    async function deleteRep(repId) {
+      if (!confirm("Are you sure you want to delete this representative?")) return;
+
+      const res = await fetch(`${BASE_URL}/admin/delete-rep/${repId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        loadReps();
+      } else {
+        alert(result.error || "Deletion failed.");
       }
     }
 

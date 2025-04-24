@@ -1,69 +1,343 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sales Reports</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <title>Sales Report - BuyMe Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('../360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      text-decoration: none;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .container-fluid {
+      display: flex;
+      padding: 0;
+    }
+
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar h4 {
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      margin-bottom: 20px;
+      color: #304ffe;
+    }
+
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 15px;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.3s;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: rgba(48, 79, 254, 0.1);
+    }
+
+    main {
+      flex: 1;
+      padding: 30px;
+    }
+
+    .scorecard {
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+      font-weight: 500;
+    }
+
+    .chart-section {
+      background: #fff;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+
+    canvas.pie-chart {
+      max-width: 400px !important;
+      max-height: 400px !important;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .chart-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    #reportTable {
+      max-width: 600px;
+      margin: 20px auto 0;
+      font-size: 14px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f5f5f5;
+    }
+
+    #exportBtn {
+      display: block;
+      margin: 20px auto 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Sales Reports</h1>
-  <label for="report-type">Report Type:</label>
-  <select id="report-type" required>
-    <option value="">-- Select Report --</option>
-    <option value="total-earnings">Total earnings</option>
-    <option value="earnings-per-item">Earnings per item</option>
-    <option value="earnings-per-item-type">Earnings per item type</option>
-    <option value="earnings-per-end-user">Earnings per end-user</option>
-    <option value="best-selling-items">Best-selling items</option>
-    <option value="best-buyers">Best buyers</option>
-  </select>
-  <button id="generate-report">Generate Report</button>
-  <div id="report-container"></div>
+  <header class="header">
+    <div class="logo">BuyMe - Admin</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
 
-  <script type="module">
-    import { apiFetch } from './utils.js';
-    const reportTypeEl = document.getElementById('report-type');
-    const reportContainer = document.getElementById('report-container');
+  <div class="container-fluid">
+    <aside class="sidebar">
+      <h4>Admin Panel</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="create_rep.html">Create Representative</a>
+        <a class="nav-link" href="list_reps.html">Manage Representatives</a>
+        <a class="nav-link" href="category_mgmt.html">Category Management</a>
+        <a class="nav-link" href="sales_report.html">Sales Reports</a>
+      </nav>
+    </aside>
 
-    document.getElementById('generate-report').addEventListener('click', async () => {
-      const type = reportTypeEl.value;
-      if (!type) {
-        alert('Please select a report type.');
-        return;
+    <main>
+      <div class="scorecard">
+        <h5>Total Earnings</h5>
+        <div id="totalEarnings">Loading...</div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label"><strong>Display Report:</strong></label>
+        <select id="reportSelector" class="form-select" style="max-width: 300px;">
+          <option value="">-- Select Report Type --</option>
+          <option value="category">Earnings by Item (Category)</option>
+          <option value="subcategory">Earnings by Subcategory</option>
+          <option value="user">Earnings by End-User</option>
+          <option value="items">Best-Selling Items</option>
+          <option value="buyers">Top Buyers</option>
+        </select>
+      </div>
+
+      <div id="chartContainer" class="chart-section" style="display:none;">
+        <h5 id="chartTitle" class="text-center"></h5>
+        <div class="chart-wrapper">
+          <canvas id="reportChart"></canvas>
+        </div>
+        <button id="exportBtn" class="btn btn-outline-primary">Export Table to CSV</button>
+        <table id="reportTable" class="table table-bordered mt-3">
+          <thead>
+            <tr><th>Label</th><th>Value</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+    const token = localStorage.getItem('token');
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    const routeMap = {
+      category: {
+        endpoint: 'earnings-per-item',
+        title: 'Earnings by Item (Category)',
+        type: 'pie',
+        tableHeaders: ['Category', 'Earnings']
+      },
+      subcategory: {
+        endpoint: 'earnings-per-item-type',
+        title: 'Earnings by Subcategory',
+        type: 'bar',
+        tableHeaders: ['Subcategory', 'Earnings']
+      },
+      user: {
+        endpoint: 'earnings-per-end-user',
+        title: 'Earnings by End-User',
+        type: 'bar',
+        horizontal: true,
+        tableHeaders: ['Username', 'Spend']
+      },
+      items: {
+        endpoint: 'best-selling-items',
+        title: 'Best-Selling Items',
+        type: 'bar',
+        tableHeaders: ['Item Name', 'Units Sold']
+      },
+      buyers: {
+        endpoint: 'best-buyers',
+        title: 'Top Buyers',
+        type: 'bar',
+        tableHeaders: ['Buyer', 'Spend']
       }
-      reportContainer.innerHTML = '';
+    };
 
-      if (type === 'total-earnings') {
-        // TODO: fetch real data
-        const data = { total: 12345.67 };
-        reportContainer.innerHTML = `
-          <div class="kpi-card">
-            <h2>Total Earnings</h2>
-            <p>$${data.total.toFixed(2)}</p>
-          </div>
-        `;
-      } else {
-        // TODO: fetch real data based on report type
-        const labels = ['A', 'B', 'C'];
-        const values = [10, 20, 30];
-        const canvas = document.createElement('canvas');
-        reportContainer.appendChild(canvas);
-        new Chart(canvas, {
-          type: 'bar',
-          data: {
-            labels,
-            datasets: [{
-              label: type.replace(/-/g, ' '),
-              data: values,
-              backgroundColor: 'rgba(75, 192, 192, 0.6)'
-            }]
-          }
-        });
-      }
+    let chartInstance;
+
+    async function fetchTotalEarnings() {
+      const res = await fetch(`${BASE_URL}/admin/sales-reports/total-earnings`, { headers });
+      const data = await res.json();
+      document.getElementById("totalEarnings").textContent = `$${data.total.toFixed(2)}`;
+    }
+
+    async function renderChart(reportType) {
+      if (!reportType) return;
+
+      const config = routeMap[reportType];
+      const res = await fetch(`${BASE_URL}/admin/sales-reports/${config.endpoint}`, { headers });
+      const data = await res.json();
+
+      document.getElementById("chartTitle").textContent = config.title;
+      document.getElementById("chartContainer").style.display = 'block';
+
+      if (chartInstance) chartInstance.destroy();
+
+      const canvas = document.getElementById("reportChart");
+      canvas.style.display = 'block';
+      canvas.classList.remove('pie-chart');
+      if (config.type === 'pie') canvas.classList.add('pie-chart');
+
+      const ctx = canvas.getContext("2d");
+      const blueShades = ['#bbdefb', '#90caf9', '#64b5f6', '#42a5f5', '#2196f3', '#1e88e5', '#1976d2', '#1565c0', '#0d47a1'];
+      const backgroundColor = data.labels.map((_, i) => blueShades[i % blueShades.length]);
+
+      chartInstance = new Chart(ctx, {
+        type: config.type,
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: config.title,
+            data: data.values,
+            backgroundColor: backgroundColor,
+            borderColor: '#0d47a1',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          indexAxis: config.horizontal ? 'y' : 'x',
+          plugins: {
+            legend: { display: config.type === 'pie' }
+          },
+          scales: config.type !== 'pie' ? {
+            y: { beginAtZero: true }
+          } : {}
+        }
+      });
+
+      const tableHead = document.querySelector("#reportTable thead tr");
+      const tbody = document.querySelector("#reportTable tbody");
+
+      tableHead.innerHTML = `<th>${config.tableHeaders[0]}</th><th>${config.tableHeaders[1]}</th>`;
+      tbody.innerHTML = '';
+
+      const isCount = config.title === 'Best-Selling Items' || config.title === 'Top Buyers';
+      data.labels.forEach((label, i) => {
+        const value = isCount ? data.values[i] : `$${data.values[i].toLocaleString()}`;
+        tbody.innerHTML += `<tr><td>${label}</td><td>${value}</td></tr>`;
+      });
+    }
+
+    document.getElementById("reportSelector").addEventListener("change", (e) => {
+      const value = e.target.value;
+      if (value) renderChart(value);
     });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const rows = Array.from(document.querySelectorAll("#reportTable tr"));
+      const csv = rows.map(row => {
+        return Array.from(row.children).map(cell => `"${cell.innerText}"`).join(",");
+      }).join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "sales_report.csv";
+      link.click();
+    });
+
+    fetchTotalEarnings();
   </script>
 </body>
 </html>
