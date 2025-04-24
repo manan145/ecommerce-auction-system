@@ -61,17 +61,22 @@
     fetch(`http://127.0.0.1:5000/rep/user?email=${encodeURIComponent(email)}`, {
       headers: { 'Authorization': 'Bearer ' + token }
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Only buyer or seller accounts can be managed.');
+      return res.json();
+    })
     .then(user => {
       currentUserId = user.UserID;
       document.getElementById('username').value = user.Username;
       document.getElementById('userEmail').value = user.Email;
       document.getElementById('userForm').classList.remove('d-none');
-      showMessage('', ''); // Clear previous
+      showMessage('', '');
     })
-    .catch(() => {
-      showMessage('User not found.', 'danger');
+    .catch(err => {
+      showMessage(err.message || 'User not found.', 'danger');
       document.getElementById('userForm').classList.add('d-none');
+      document.getElementById('username').value = '';
+      document.getElementById('userEmail').value = '';
     });
   });
 
@@ -107,6 +112,8 @@
     .then(res => {
       showMessage(res.message || 'User deleted.', 'success');
       document.getElementById('userForm').classList.add('d-none');
+      document.getElementById('username').value = '';
+      document.getElementById('userEmail').value = '';
     })
     .catch(() => showMessage('Failed to delete user.', 'danger'));
   }

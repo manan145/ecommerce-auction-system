@@ -217,21 +217,18 @@ def reply_to_query(query_id):
 @rep_bp.route('/remove-auction/<int:auction_id>', methods=['DELETE'])
 @jwt_required()
 def remove_auction(auction_id):
-    """
-    API → Customer rep forcefully deletes an auction record from the database.
-
-    Returns:
-        200 OK if auction is deleted
-        404 Not Found if auction does not exist
-    """
     auction = Auction.query.get(auction_id)
     if not auction:
         return jsonify({'error': 'Auction not found'}), 404
+
+    # Delete all bids related to the auction first
+    Bid.query.filter_by(AuctionID=auction_id).delete()
 
     db.session.delete(auction)
     db.session.commit()
 
     return jsonify({'message': f'Auction {auction_id} removed successfully.'}), 200
+
 
 
 # ===========================================================
