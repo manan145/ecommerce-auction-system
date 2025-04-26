@@ -121,16 +121,16 @@
           // Redirect based on role
           switch (role) {
             case 'buyer':
-              window.location.href = 'buyer.html';
+              window.location.href = 'buyer/buyer.html';
               break;
             case 'seller':
-              window.location.href = 'seller.html';
+              window.location.href = 'sellers/sellers.html';
               break;
             case 'admin':
               window.location.href = 'admin/index.html';
               break;
             case 'customer_rep':
-              window.location.href = 'customer_rep.html';
+              window.location.href = 'Customer_rep/index.html';
               break;
             default:
               document.getElementById('message').textContent = 'Unknown role. Cannot proceed.';

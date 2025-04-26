@@ -6,6 +6,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
+from datetime import timedelta
 
 
 load_dotenv()
@@ -24,6 +25,7 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)  # Set expiry to 1 hour
     # ==============================
     # Initialize Extensions
     # ==============================
@@ -67,7 +69,7 @@ def create_app():
     from .utils.close_auctions_utils import close_expired_auctions
     print("Scheduler started")
     scheduler = BackgroundScheduler()
-    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=3600)
+    scheduler.add_job(func=lambda: close_expired_auctions(app), trigger="interval", seconds=60)
     scheduler.start()
 
     @app.teardown_appcontext

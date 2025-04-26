@@ -83,7 +83,7 @@ def add_item():
         Brand=brand,
         Model=model,
         Condition=condition,
-        CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
+        CreatedAt=datetime.now(timezone.utc)
     )
     db.session.add(new_item)
     db.session.flush()  # Get ItemID
@@ -160,7 +160,7 @@ def add_item():
             notification = Notification(
                 ReceiverID=alert.UserID,
                 Message=json.dumps(notif_payload),
-                CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
+                CreatedAt=datetime.now(timezone.utc)
             )
             db.session.add(notification)
 
@@ -220,7 +220,8 @@ def view_my_items():
             "SubcategoryID": item.SubcategoryID,
             "CreatedAt": item.CreatedAt,
             "Attributes": attribute_data,
-            "Auction": auction_data
+            "Auction": auction_data,
+            "Status": item.Status
         })
 
     return jsonify({"items": item_list}), 200
@@ -308,26 +309,30 @@ def delete_item(item_id):
     return jsonify({'message': 'Item and its attributes deleted successfully'}), 200
 
 # ================================
-# Accept Highest Bid Below Min Price
+# Accept Highest Bid
 # ================================
 @seller_bp.route('/accept-bid', methods=['POST'])
 @jwt_required()
 def accept_bid():
-    """API → Seller accepts the highest bid even if it is below secret minimum"""
+    """API → Seller accepts the highest bid and notifies the buyer"""
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
 
     if not user or user.Role != 'seller':
         return jsonify({'error': 'Seller access required'}), 403
 
+    print("🔧 /accept-bid called")
     data = request.get_json()
+    print("📥 Data received:", data)
     auction_id = data.get('auction_id')
 
     if not auction_id:
+        print("DEBUG: Missing auction_id in request")
         return jsonify({'error': 'auction_id is required'}), 400
 
     auction = Auction.query.get(auction_id)
     if not auction or auction.IsClosed is False:
+        print(f"DEBUG: Auction issue → Exists: {bool(auction)}, IsClosed: {getattr(auction, 'IsClosed', None)}")
         return jsonify({'error': 'Invalid or active auction'}), 400
 
     item = Item.query.get(auction.ItemID)
@@ -336,16 +341,20 @@ def accept_bid():
 
     highest_bid = Bid.query.filter_by(AuctionID=auction.AuctionID).order_by(Bid.Amount.desc()).first()
     if not highest_bid:
+        print("DEBUG: No bids found for this auction")
         return jsonify({'error': 'No bids to accept'}), 400
 
     transaction = Transaction(
         AuctionID=auction.AuctionID,
         BuyerID=highest_bid.BidderID,
         Price=highest_bid.Amount,
-        TransactionDate=datetime.now(datetime.timezone.utc).isoformat(),
+        TransactionDate=datetime.now(timezone.utc),
         Status='pending'
     )
     db.session.add(transaction)
+
+    # Set item status as sold
+    item.Status = 'sold'
 
     notification = Notification(
         UserID=highest_bid.BidderID,
@@ -393,11 +402,12 @@ def extend_auction():
         return jsonify({'error': 'Unauthorized'}), 403
 
     try:
-        new_end_time = datetime.fromisoformat(new_end_time_str)
+        # Parse new_end_time and ensure it is timezone-aware in UTC
+        new_end_time = datetime.fromisoformat(new_end_time_str).replace(tzinfo=timezone.utc)
         if new_end_time <= datetime.now(timezone.utc):  # Standardized time
             return jsonify({'error': 'New end time must be in the future'}), 400
-    except ValueError:
-        return jsonify({'error': 'Invalid datetime format'}), 400
+    except:
+        return jsonify({'error': 'Invalid datetime format. Use ISO 8601 format (YYYY-MM-DDTHH:MM:SS).'}), 400
 
     auction.EndTime = new_end_time
     auction.IsClosed = False
@@ -449,106 +459,3 @@ def withdraw_item():
 
     db.session.commit()
     return jsonify({'message': 'Item withdrawn from auction'}), 200
-
-
-# # ================================
-# # Seller Search items with filters
-# # ================================
-# @seller_bp.route('/search-items', methods=['GET'])
-# @jwt_required()
-# def search_items():
-#     """API → Seller searches their own items with flexible filters"""
-#     current_user_id = get_jwt_identity()
-#     user = User.query.get(current_user_id)
-
-#     if not user or user.Role != 'seller':
-#         return jsonify({'error': 'Seller access required'}), 403
-
-#     # --- Get query parameters ---
-#     title = request.args.get('title')
-#     subcategory_name = request.args.get('subcategory_name')
-#     attribute_name = request.args.get('attribute_name')
-#     value = request.args.get('value')
-#     condition = request.args.get('condition')
-#     date_from = request.args.get('date_from')
-#     date_to = request.args.get('date_to')
-#     sort_by = request.args.get('sort_by', 'created_desc')
-#     limit = int(request.args.get('limit', 20))
-#     offset = int(request.args.get('offset', 0))
-
-#     # --- Start base query for current seller ---
-#     query = db.session.query(Item).filter(Item.OwnerID == user.UserID)
-
-#     # --- Filter: title ---
-#     if title:
-#         query = query.filter(Item.Title.ilike(f"%{title}%"))
-
-#     # --- Filter: subcategory name ---
-#     if subcategory_name:
-#         query = query.join(Subcategory).filter(Subcategory.Name.ilike(f"%{subcategory_name}%"))
-
-#     # --- Filter: condition ---
-#     if condition:
-#         query = query.filter(Item.Condition == condition)
-
-#     # --- Filter: date range ---
-#     if date_from:
-#         try:
-#             date_obj = datetime.strptime(date_from, '%Y-%m-%d')
-#             query = query.filter(Item.CreatedAt >= date_obj)
-#         except:
-#             return jsonify({'error': 'Invalid date_from format. Use YYYY-MM-DD'}), 400
-
-#     if date_to:
-#         try:
-#             date_obj = datetime.strptime(date_to, '%Y-%m-%d')
-#             query = query.filter(Item.CreatedAt <= date_obj)
-#         except:
-#             return jsonify({'error': 'Invalid date_to format. Use YYYY-MM-DD'}), 400
-
-#     # --- Filter: attribute name and value ---
-#     if attribute_name and value:
-#         query = query.join(ItemAttributeValue, Item.ItemID == ItemAttributeValue.ItemID)\
-#                      .join(Attribute, Attribute.AttributeID == ItemAttributeValue.AttributeID)\
-#                      .filter(Attribute.Name.ilike(f"%{attribute_name}%"),
-#                              ItemAttributeValue.Value.ilike(f"%{value}%"))
-
-#     # --- Sorting ---
-#     if sort_by == 'title_asc':
-#         query = query.order_by(Item.Title.asc())
-#     elif sort_by == 'title_desc':
-#         query = query.order_by(Item.Title.desc())
-#     else:  # Default to newest first
-#         query = query.order_by(Item.CreatedAt.desc())
-
-#     # --- Pagination ---
-#     query = query.offset(offset).limit(limit)
-
-#     items = query.all()
-
-#     # --- Build Response ---
-#     result = []
-#     for item in items:
-#         attrs = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
-#         attributes = [{
-#             "attribute_id": attr.AttributeID,
-#             "name": Attribute.query.get(attr.AttributeID).Name,
-#             "value": attr.Value
-#         } for attr in attrs]
-
-#         result.append({
-#             "ItemID": item.ItemID,
-#             "Title": item.Title,
-#             "Description": item.Description,
-#             "Brand": item.Brand,
-#             "Model": item.Model,
-#             "Condition": item.Condition,
-#             "SubcategoryID": item.SubcategoryID,
-#             "CreatedAt": item.CreatedAt,
-#             "Attributes": attributes
-#         })
-
-#     return jsonify({
-#         "count": len(result),
-#         "results": result
-#     }), 200

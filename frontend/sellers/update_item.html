@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Item - Seller</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #fff;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+      font-weight: 500;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #5563DE;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #5563DE;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #435ac9;
+    }
+    .message {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #d8000c;
+    }
+    .nav {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .nav a {
+      text-decoration: none;
+      color: #5563DE;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+    .nav a:hover {
+      color: #435ac9;
+    }
+    header {
+      width: 100%;
+      background: #fff;
+      padding: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    .header .logo {
+      float: left;
+      margin-left: 20px;
+      font-size: 24px;
+      font-weight: 500;
+      color: #5563DE;
+    }
+    .header .nav-links {
+      float: right;
+      margin-right: 20px;
+    }
+    .header .nav-links a {
+      margin: 0 10px;
+      color: #5563DE;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .header .nav-links a:hover {
+      color: #435ac9;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h1>Update Item</h1>
+    <div id="updateMessage" class="message"></div>
+    <form id="updateItemForm">
+      <!-- Basic Item Details -->
+      <label for="title">Title:</label>
+      <input type="text" id="title" placeholder="Enter item title" required>
+      
+      <label for="description">Description:</label>
+      <textarea id="description" rows="3" placeholder="Enter item description"></textarea>
+      
+      <label for="brand">Brand:</label>
+      <input type="text" id="brand" placeholder="Enter brand" required>
+      
+      <label for="model">Model:</label>
+      <input type="text" id="model" placeholder="Enter model" required>
+      
+      <label for="condition">Condition:</label>
+      <select id="condition" required>
+        <option value="">-- Select Condition --</option>
+        <option value="New">New</option>
+        <option value="Used">Used</option>
+        <option value="Refurbished">Refurbished</option>
+        <option value="Open Box">Open Box</option>
+      </select>
+      
+      <!-- Optional Auction Details -->
+      <label for="startPrice">Auction Start Price ($):</label>
+      <input type="number" step="0.01" id="startPrice" placeholder="Leave blank if unchanged">
+      
+      <label for="minIncrement">Minimum Increment ($):</label>
+      <input type="number" step="0.01" id="minIncrement" placeholder="Leave blank if unchanged">
+      
+      <button type="submit">Update Item</button>
+    </form>
+    <div class="nav">
+      <a href="view_my_items.html">← Back to my items</a>
+    </div>
+  </div>
+  
+  <script>
+    // Utility function to retrieve query parameter values
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+    
+    const itemId = getQueryParam('id');
+    if (!itemId) {
+      document.getElementById('updateMessage').textContent = 'Item ID is missing.';
+    } else {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+      } else {
+        // Fetch all items for the seller and filter for the specific item
+        fetch('http://127.0.0.1:5000/seller/my-items', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          const item = data.items.find(itm => itm.ItemID == itemId);
+          if (!item) {
+            document.getElementById('updateMessage').textContent = 'Item not found or unauthorized.';
+          } else {
+            // Pre-fill form fields with the item details
+            document.getElementById('title').value = item.Title || '';
+            document.getElementById('description').value = item.Description || '';
+            document.getElementById('brand').value = item.Brand || '';
+            document.getElementById('model').value = item.Model || '';
+            document.getElementById('condition').value = item.Condition || '';
+            if (item.Auction) {
+              document.getElementById('startPrice').value = item.Auction.StartPrice || '';
+              document.getElementById('minIncrement').value = item.Auction.MinIncrement || '';
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching item details:', error);
+          document.getElementById('updateMessage').textContent = 'Error fetching item details.';
+        });
+      }
+    }
+    
+    // Handle form submission to update the item
+    document.getElementById('updateItemForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+      
+      // Gather updated form data
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const brand = document.getElementById('brand').value.trim();
+      const model = document.getElementById('model').value.trim();
+      const condition = document.getElementById('condition').value;
+      
+      // Optional Auction Updates
+      const startPrice = document.getElementById('startPrice').value;
+      const minIncrement = document.getElementById('minIncrement').value;
+      
+      const payload = { title, description, brand, model, condition };
+      if (startPrice) payload.start_price = startPrice;
+      if (minIncrement) payload.min_increment = minIncrement;
+      
+      fetch(`http://127.0.0.1:5000/seller/update-item/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('updateMessage').textContent = data.message || data.error;
+      })
+      .catch(error => {
+        console.error('Error updating item:', error);
+        document.getElementById('updateMessage').textContent = 'An error occurred while updating the item.';
+      });
+    });
+  </script>
+</body>
+</html>

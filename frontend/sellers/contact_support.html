@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contact Support - BuyMe</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      width: 75%; /* Reduced from 95% to 75% */
+      max-width: 800px; /* Adjusted max-width for better scaling */
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-top: 0;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    input, textarea {
+      font-size: 1rem;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+
+    button {
+      background-color: #304ffe;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    button:hover {
+      background: #435ac9;
+      transform: translateY(-2px);
+    }
+
+    .confirmation {
+      margin-top: 10px;
+      color: green;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .query-card {
+      background: #f9f9ff;
+      border-left: 4px solid #304ffe;
+      margin-top: 25px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .query-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .query-header .subject {
+      font-weight: 600;
+      color: #304ffe;
+    }
+
+    .query-header .meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      background-color: #ccc;
+      color: white;
+    }
+
+    .status.open { background-color: #ffc107; color: black; }
+    .status.closed { background-color: #28a745; }
+
+    .btn-toggle-response {
+      background-color: #304ffe;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .query-body {
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
+
+    .response-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-left: 4px solid #28a745;
+      border-radius: 6px;
+    }
+
+    .response-box p {
+      margin: 5px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h2>Contact Support</h2>
+
+    <form id="supportForm" onsubmit="submitQuery(event)">
+      <input type="text" id="subject" placeholder="Subject" required />
+      <textarea id="message" rows="4" placeholder="Describe your issue..." required></textarea>
+      <button type="submit">Submit Query</button>
+      <div class="confirmation" id="confirmationMsg"></div>
+    </form>
+
+    <h2 style="margin-top: 40px;">My Support Queries</h2>
+    <div id="queryList"></div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+    const token = localStorage.getItem('token');
+
+    async function submitQuery(e) {
+      e.preventDefault();
+      const subject = document.getElementById('subject').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const confirmation = document.getElementById('confirmationMsg');
+
+      if (!subject || !message) return;
+
+      const res = await fetch(`${BASE_URL}/public/customer-query`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ subject, message })
+      });
+
+      if (res.ok) {
+        document.getElementById('supportForm').reset();
+        confirmation.textContent = "✅ Query submitted! Please allow us 2-3 business days to respond.";
+        loadQueries();
+      } else {
+        confirmation.textContent = "❌ Failed to submit query. Please try again.";
+      }
+    }
+
+    async function loadQueries() {
+      const res = await fetch(`${BASE_URL}/public/customer-query/mine`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await res.json();
+      const container = document.getElementById('queryList');
+      container.innerHTML = '';
+
+      data.forEach((q, idx) => {
+        container.innerHTML += `
+          <div class="query-card">
+            <div class="query-header">
+              <div class="subject">${q.Subject}</div>
+              <div class="meta">
+                <span>${new Date(q.CreatedAt).toLocaleString()}</span>
+                <span class="status ${q.Status}">${q.Status.toUpperCase()}</span>
+                <button class="btn-toggle-response" onclick="toggleResponse(${idx})">View Response</button>
+              </div>
+            </div>
+            <div class="query-body">
+              <p>${q.Message}</p>
+              <div id="response-${idx}" class="response-box hidden">
+                ${q.Response ? `
+                  <p><strong>Response from ${q.ResponderName || 'Support Rep'}:</strong></p>
+                  <p>${q.Response}</p>
+                  <small>Responded at: ${new Date(q.ResponseAt).toLocaleString()}</small>
+                ` : `
+                  <p><em>No response yet. Please allow us some time.</em></p>
+                `}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function toggleResponse(index) {
+      const responseDiv = document.getElementById(`response-${index}`);
+      responseDiv.classList.toggle('hidden');
+    }
+
+    loadQueries();
+  </script>
+</body>
+</html>

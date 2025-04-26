@@ -372,3 +372,34 @@ def search_faqs():
 
     sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
     return jsonify(sorted_results)
+
+@public_bp.route('/delete-account', methods=['DELETE'])
+@jwt_required()
+def delete_account():
+    """
+    Deletes the currently logged-in user's account along with all associated data.
+    """
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    try:
+        # Delete associated data
+        CustomerQuery.query.filter_by(UserID=user_id).delete()
+        Item.query.filter_by(OwnerID=user_id).delete()
+        Bid.query.filter_by(UserID=user_id).delete()
+        Auction.query.filter(Auction.ItemID.in_(
+            db.session.query(Item.ItemID).filter_by(OwnerID=user_id)
+        )).delete()
+
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({"message": "Account and associated data deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        print("🔥 Error deleting account:", str(e))
+        return jsonify({"error": "Failed to delete account"}), 500

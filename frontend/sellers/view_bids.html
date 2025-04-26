@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Bids - Seller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #5563DE;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .nav {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .nav a {
+      color: #5563DE;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    .error {
+      text-align: center;
+      color: red;
+      margin-top: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #5563DE;
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+    .header .logo {
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h1>📝 Auction Bids</h1>
+    <table id="bidsTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Bid ID</th>
+          <th>Bidder ID</th>
+          <th>Amount ($)</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="bidsTableBody"></tbody>
+    </table>
+    <div id="errorMessage" class="error"></div>
+
+    <div class="nav">
+      <a href="view_my_items.html">← Back to My Items</a>
+    </div>
+  </div>
+
+  <script>
+    const auctionId = new URLSearchParams(window.location.search).get('auction_id');
+    const token = localStorage.getItem('token');
+
+    if (!auctionId || !token) {
+      document.getElementById('errorMessage').textContent = 'Missing auction ID or not logged in.';
+    } else {
+      fetch(`/bids/${auctionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch bids');
+        return response.json();
+      })
+      .then(data => {
+        if (data.bids && data.bids.length > 0) {
+          const tableBody = document.getElementById('bidsTableBody');
+          document.getElementById('bidsTable').style.display = 'table';
+
+          data.bids.forEach(bid => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${bid.BidID}</td>
+              <td>${bid.UserID}</td>
+              <td>$${bid.Amount.toFixed(2)}</td>
+              <td>${bid.Timestamp}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          document.getElementById('errorMessage').textContent = 'No bids found for this auction.';
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        document.getElementById('errorMessage').textContent = 'Error loading bid data.';
+      });
+    }
+  </script>
+
+</body>
+</html>

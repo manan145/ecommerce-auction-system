@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Auction - Seller</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .header .logo {
+      color: #fff;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      width: 75%; /* Reduced from 95% to 75% */
+      max-width: 800px; /* Adjusted max-width for better scaling */
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #5563DE;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #304ffe;
+      border: none;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    button:hover {
+      background: #435ac9;
+      transform: translateY(-2px);
+    }
+
+    .message {
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .message.success {
+      color: #006400;
+    }
+
+    .message.error {
+      color: #d8000c;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+  <div class="container">
+    <button onclick="window.history.back()" style="margin-bottom: 20px; background: #ccc; color: #333; font-size: 14px; padding: 10px; border-radius: 6px; border: none; cursor: pointer;">Back</button>
+    <h1>Create Auction</h1>
+    <form id="createAuctionForm">
+      <!-- Basic Item Details -->
+      <label for="title">Title:</label>
+      <input type="text" id="title" placeholder="Enter item title" required>
+      
+      <label for="description">Description:</label>
+      <textarea id="description" rows="3" placeholder="Enter item description"></textarea>
+      
+      <label for="brand">Brand:</label>
+      <input type="text" id="brand" placeholder="Enter brand" required>
+      
+      <label for="model">Model:</label>
+      <input type="text" id="model" placeholder="Enter model" required>
+      
+      <!-- Condition -->
+      <label for="condition">Condition:</label>
+      <select id="condition" required>
+        <option value="">-- Select Condition --</option>
+        <option value="New">New</option>
+        <option value="Used">Used</option>
+        <option value="Refurbished">Refurbished</option>
+        <option value="Open Box">Open Box</option>
+      </select>
+      
+      <!-- Category Dropdown -->
+      <label for="category">Category:</label>
+      <select id="category" required>
+        <option value="">-- Select Category --</option>
+      </select>
+
+      <!-- Subcategory Dropdown -->
+      <label for="subcategory">Subcategory:</label>
+      <select id="subcategory" required>
+        <option value="">-- Select Subcategory --</option>
+      </select>
+      
+      <!-- Dynamic Attributes -->
+      <div id="attributesContainer">
+        <!-- Dynamic attribute fields will appear here -->
+      </div>
+      
+      <!-- Auction Details -->
+      <label for="startPrice">Start Price ($):</label>
+      <input type="number" step="0.01" id="startPrice" placeholder="e.g., 50.00" required>
+      
+      <label for="minIncrement">Minimum Increment ($):</label>
+      <input type="number" step="0.01" id="minIncrement" placeholder="e.g., 5.00" required>
+      
+      <label for="secretMinPrice">Secret Minimum Price (Reserve) ($):</label>
+      <input type="number" step="0.01" id="secretMinPrice" placeholder="e.g., 100.00" required>
+      
+      <label for="startTime">Auction Start Time:</label>
+      <input type="datetime-local" id="startTime" required>
+      
+      <label for="endTime">Auction End Time:</label>
+      <input type="datetime-local" id="endTime" required>
+      
+      <button type="submit">Create Auction</button>
+    </form>
+    <div id="auctionMessage" class="message"></div>
+  </div>
+  <script>
+    const BASE_URL = 'http://127.0.0.1:5000';
+
+    async function fetchCategories() {
+      const res = await fetch(`${BASE_URL}/public/browse/categories`);
+      const categories = await res.json();
+      const categorySelect = document.getElementById('category');
+      categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+      categories.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat.CategoryID;
+        option.textContent = cat.Name;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    async function fetchSubcategories(categoryId) {
+      const res = await fetch(`${BASE_URL}/public/browse/subcategories/${categoryId}`);
+      const subcategories = await res.json();
+      const subcategorySelect = document.getElementById('subcategory');
+      subcategorySelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+      subcategories.forEach(sub => {
+        const option = document.createElement('option');
+        option.value = sub.SubcategoryID;
+        option.textContent = sub.Name;
+        subcategorySelect.appendChild(option);
+      });
+    }
+
+    async function fetchAttributes(subcategoryId) {
+      const res = await fetch(`${BASE_URL}/public/browse/attributes/${subcategoryId}`);
+      const attributes = await res.json();
+      const attributesContainer = document.getElementById('attributesContainer');
+      attributesContainer.innerHTML = '';
+      attributes.forEach(attr => {
+        const label = document.createElement('label');
+        label.textContent = attr.Name + ":";
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Enter ${attr.Name}`;
+        input.setAttribute('data-attribute-id', attr.AttributeID);
+        attributesContainer.appendChild(label);
+        attributesContainer.appendChild(input);
+      });
+    }
+
+    document.getElementById('category').addEventListener('change', function () {
+      const categoryId = this.value;
+      if (categoryId) fetchSubcategories(categoryId);
+    });
+
+    document.getElementById('subcategory').addEventListener('change', function () {
+      const subcategoryId = this.value;
+      if (subcategoryId) fetchAttributes(subcategoryId);
+    });
+
+    document.getElementById('createAuctionForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = '../login.html';
+        return;
+      }
+
+      // Construct the attributes array
+      const attributes = Array.from(document.querySelectorAll('#attributesContainer input')).map(input => {
+        const attributeId = input.getAttribute('data-attribute-id');
+        const value = input.value.trim();
+
+        // Ensure both attribute_id and value are valid
+        if (!attributeId || value === "") {
+          document.getElementById('auctionMessage').textContent = "Please fill all attribute fields.";
+          throw new Error("Invalid attribute format: Missing attribute_id or value.");
+        }
+
+        return {
+          attribute_id: parseInt(attributeId, 10),
+          value: value
+        };
+      });
+
+      // Construct the payload
+      const payload = {
+        category_id: parseInt(document.getElementById('category').value, 10),
+        subcategory_id: parseInt(document.getElementById('subcategory').value, 10),
+        title: document.getElementById('title').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        brand: document.getElementById('brand').value.trim(),
+        model: document.getElementById('model').value.trim(),
+        condition: document.getElementById('condition').value,
+        start_price: parseFloat(document.getElementById('startPrice').value),
+        min_increment: parseFloat(document.getElementById('minIncrement').value),
+        secret_min_price: parseFloat(document.getElementById('secretMinPrice').value),
+        start_time: document.getElementById('startTime').value.replace('T', ' ') + ":00",
+        end_time: document.getElementById('endTime').value.replace('T', ' ') + ":00",
+        attributes: attributes
+      };
+
+      // Send the payload to the backend
+      fetch(`${BASE_URL}/seller/add-item`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(response => {
+          const messageElement = document.getElementById('auctionMessage');
+          if (response.status === 201) {
+            messageElement.textContent = 'Auction created successfully!';
+            messageElement.className = 'message success';
+            return response.json();
+          } else {
+            messageElement.textContent = 'Failed to create auction.';
+            messageElement.className = 'message error';
+            throw new Error('Failed to create auction.');
+          }
+        })
+        .then(data => {
+          console.log('Success:', data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          const messageElement = document.getElementById('auctionMessage');
+          messageElement.textContent = 'An error occurred while creating the auction.';
+          messageElement.className = 'message error';
+        });
+    });
+
+    fetchCategories();
+  </script>
+</body>
+</html>
