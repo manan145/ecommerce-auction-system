@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from ..models import *
-from datetime import datetime
+from datetime import datetime, timedelta
+from sqlalchemy import func, or_, and_
 from ..utils.filter_utils import filter_items  # Reusable filtering logic
+from fuzzywuzzy import fuzz
+import re
 
 public_bp = Blueprint('public', __name__)
 
@@ -97,12 +100,8 @@ from flask import json
 @jwt_required(optional=True)
 def public_search_items():
     try:
-        raw_data = request.get_data(as_text=True)
-        print("📦 Raw request data:", raw_data)
-
         data = request.get_json()
-        print("✅ Parsed data:", data)
-        print("🔎 Data type:", type(data))
+
 
         filters = data.get('filters', {})
         sort_by = data.get('sort_by', 'created_desc')
@@ -134,9 +133,7 @@ def public_search_items():
         items = result_data.get("results", [])
 
         for item in items:
-            print("🧪 Item in results:", item, "| Type:", type(item))
             if not isinstance(item, dict):
-                print("⚠️ Skipping item — not a dict.")
                 continue
 
             auction = Auction.query.filter_by(ItemID=item["ItemID"]).first()
@@ -211,100 +208,167 @@ def submit_customer_query():
     db.session.commit()
     return jsonify({'message': 'Query submitted'}), 201
 
-# ==========================================    
-# Message Sending
-# ==========================================
-@public_bp.route('/messages/send', methods=['POST'])
+@public_bp.route('/customer-query/mine', methods=['GET'])
 @jwt_required()
-def send_message():
+def get_my_queries():
     """
-    Send a message to another user (e.g., rep responding to query)
+    Returns all queries submitted by the currently logged-in user,
+    including rep responses, responder name, response time, and status.
     """
-    sender_id = get_jwt_identity()
-    data = request.get_json()
-    receiver_id = data.get('receiver_id')
-    content = data.get('content')
+    user_id = get_jwt_identity()
 
-    if not receiver_id or not content:
-        return jsonify({'error': 'Receiver ID and content required'}), 400
+    queries = db.session.query(
+        CustomerQuery,
+        User.Username.label('ResponderName')
+    ).outerjoin(User, CustomerQuery.ResponseBy == User.UserID)\
+     .filter(CustomerQuery.UserID == user_id)\
+     .order_by(CustomerQuery.CreatedAt.desc()).all()
 
-    message = Message(SenderID=sender_id, ReceiverID=receiver_id, Content=content)
-    db.session.add(message)
-
-    notification = Notification(
-        UserID=receiver_id,
-        Message=json.dumps({
-            "type": "new_message",
-            "from_user_id": sender_id,
-            "content_preview": content[:50],  # Short preview
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
-        }),
-        CreatedAt=datetime.now(datetime.timezone.utc).isoformat()
-    )
-    db.session.add(notification)
-
-    db.session.commit()
-    return jsonify({'message': 'Message sent'}), 201
-
-# ==========================================
-# Get Message Thread
-# ==========================================
-@public_bp.route('/messages/thread/<int:user_id>', methods=['GET'])
-@jwt_required()
-def get_thread(user_id):
-    """
-    Fetch threaded conversation between current user and user_id
-    """
-    current_user_id = get_jwt_identity()
-
-    thread = Message.query.filter(
-        ((Message.SenderID == current_user_id) & (Message.ReceiverID == user_id)) |
-        ((Message.SenderID == user_id) & (Message.ReceiverID == current_user_id))
-    ).order_by(Message.Timestamp.asc()).all()
-
-    return jsonify([{
-        'SenderID': msg.SenderID,
-        'ReceiverID': msg.ReceiverID,
-        'Content': msg.Content,
-        'Timestamp': msg.Timestamp.isoformat()
-    } for msg in thread]), 200
-
-# ==========================================
-# Get Last Message from Each Sender
-# ==========================================
-@public_bp.route('/messages/last-from-each-sender', methods=['GET'])
-@jwt_required()
-def get_last_messages_by_sender():
-    """
-    API → Get the latest message from each sender to the current receiver,
-    sorted by most recent timestamp (like WhatsApp chat list).
-
-    Returns:
-        JSON list of latest messages grouped by sender, ordered by most recent first
-    """
-    current_user_id = get_jwt_identity()
-
-    from sqlalchemy import func, and_
-    
-    # Subquery: latest message timestamp per sender to this receiver
-    subquery = db.session.query(
-        Message.SenderID,
-        func.max(Message.Timestamp).label('LatestTime')
-    ).filter(Message.ReceiverID == current_user_id)\
-     .group_by(Message.SenderID).subquery()
-
-    # Join with Message to fetch the actual message contents
-    latest_messages = db.session.query(Message)\
-        .join(subquery, and_(
-            Message.SenderID == subquery.c.SenderID,
-            Message.Timestamp == subquery.c.LatestTime
-        )).order_by(Message.Timestamp.desc()).all()
-
-    result = [{
-        "SenderID": msg.SenderID,
-        "MessageID": msg.MessageID,
-        "Content": msg.Content,
-        "Timestamp": msg.Timestamp.isoformat()
-    } for msg in latest_messages]
+    result = []
+    for query, responder_name in queries:
+        result.append({
+            'QueryID': query.QueryID,
+            'Subject': query.Subject,
+            'Message': query.Message,
+            'Status': query.Status,
+            'CreatedAt': query.CreatedAt.isoformat(),
+            'Response': query.Response,
+            'ResponderName': responder_name,
+            'ResponseAt': query.ResponseAt.isoformat() if query.ResponseAt else None
+        })
 
     return jsonify(result), 200
+
+# ==========================================
+# Get Similar Auctions
+# ==========================================
+@public_bp.route('/auctions/similar/<int:auction_id>', methods=['GET'])
+@jwt_required()
+def get_smarter_similar_auctions(auction_id):
+    now = datetime.now(timezone.utc)
+    first_day_this_month = now.replace(day=1)
+    last_day_prev_month = first_day_this_month - timedelta(days=1)
+    first_day_prev_month = last_day_prev_month.replace(day=1)
+
+    # Fetch the current auction and item
+    auction = Auction.query.get(auction_id)
+    if not auction:
+        return jsonify({"error": "Auction not found"}), 404
+
+    item = Item.query.get(auction.ItemID)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    # Extract title keywords and brand for fuzzy match
+    title_keywords = [word.strip().lower() for word in item.Title.split() if len(word) > 2]
+    brand = item.Brand.lower() if item.Brand else ""
+
+    # Build keyword filters using ILIKE
+    keyword_filters = [Item.Title.ilike(f"%{kw}%") for kw in title_keywords]
+
+    # Query: same subcategory, closed, ended within last month, not the same auction
+    similar_query = (
+        db.session.query(Auction, Item)
+        .join(Item, Item.ItemID == Auction.ItemID)
+        .filter(
+            Auction.AuctionID != auction_id,
+            Auction.IsClosed == True,
+            Auction.EndTime >= first_day_prev_month,
+            Auction.EndTime <= last_day_prev_month,
+            Item.SubcategoryID == item.SubcategoryID,
+            or_(
+                func.lower(Item.Brand).ilike(f"%{brand}%"),
+                *keyword_filters
+            )
+        )
+        .order_by(Auction.EndTime.desc())
+        .limit(10)
+    )
+
+    similar_auctions = similar_query.all()
+
+    results = []
+    for auct, itm in similar_auctions:
+        final_transaction = (
+            Transaction.query
+            .filter_by(AuctionID=auct.AuctionID, Status="completed")
+            .order_by(Transaction.TransactionDate.desc())
+            .first()
+        )
+
+        results.append({
+            "item_id": itm.ItemID,
+            "title": itm.Title,
+            "brand": itm.Brand,
+            "model": itm.Model,
+            "condition": itm.Condition,
+            "final_price": float(final_transaction.Price) if final_transaction else None,
+            "end_time": auct.EndTime.isoformat() if auct.EndTime else None
+        })
+
+
+    return jsonify(results), 200
+
+@public_bp.route('/browse/item-details/<int:item_id>', methods=['GET'])
+@jwt_required()
+def get_item_details(item_id):
+    item = Item.query.get(item_id)
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    attributes = ItemAttributeValue.query.filter_by(ItemID=item.ItemID).all()
+    attr_data = [{
+        "name": Attribute.query.get(attr.AttributeID).Name,
+        "value": attr.Value
+    } for attr in attributes]
+
+    return jsonify({
+        "ItemID": item.ItemID,
+        "Title": item.Title,
+        "Brand": item.Brand,
+        "Model": item.Model,
+        "Condition": item.Condition,
+        "Description": item.Description,
+        "Attributes": attr_data
+    }), 200
+
+@public_bp.route('/faq', methods=['GET'])
+def get_faqs():
+    faqs = FAQ.query.all()
+    faq_list = [{"id": faq.FAQID, "question": faq.Question, "answer": faq.Answer} for faq in faqs]
+    return jsonify(faq_list), 200
+
+
+
+@public_bp.route('/faq/search', methods=['GET'])
+def search_faqs():
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+
+    keywords = query.lower().split()
+    faqs = FAQ.query.all()
+    results = []
+
+    for faq in faqs:
+        question = faq.Question
+        answer = faq.Answer
+        combined = f"{question} {answer}".lower()
+
+        score = fuzz.partial_ratio(query.lower(), combined)
+        if score >= 60:
+            highlighted_q = question
+            highlighted_a = answer
+            for kw in keywords:
+                pattern = re.compile(re.escape(kw), re.IGNORECASE)
+                highlighted_q = pattern.sub(r'<mark>\g<0></mark>', highlighted_q)
+                highlighted_a = pattern.sub(r'<mark>\g<0></mark>', highlighted_a)
+
+            results.append({
+                'question': highlighted_q,
+                'answer': highlighted_a,
+                'score': score
+            })
+
+    sorted_results = sorted(results, key=lambda x: x['score'], reverse=True)
+    return jsonify(sorted_results)

@@ -116,34 +116,31 @@ def add_item():
         item_attr = ItemAttributeValue(ItemID=new_item.ItemID, AttributeID=attr_id, Value=value)
         db.session.add(item_attr)
 
-    # Notify buyers with matching alerts
+        # Notify buyers with matching alerts
     subcat = Subcategory.query.get(subcategory_id)
     alerts = Alert.query.filter_by(Subcategory=subcat.Name).all()
 
     for alert in alerts:
-        criteria = alert.SearchCriteria
+        criteria = alert.SearchCriteria or {}
         match = True
 
-        # Match Brand, Model, Condition
         for field in ["Brand", "Model", "Condition"]:
             expected = criteria.get(field)
-            if expected and getattr(new_item, field) not in expected:
-                match = False
-                break
 
-        # Match attributes
-        attr_dict = {}
-        if match:
-            item_attrs = ItemAttributeValue.query.filter_by(ItemID=new_item.ItemID).all()
-            attr_dict = {
-                Attribute.query.get(attr.AttributeID).Name: attr.Value
-                for attr in item_attrs
-            }
+            if expected:
+                expected_values = [value.lower() for value in expected]
+                item_value = getattr(new_item, field, "").lower()
 
-            for attr_name, expected_values in criteria.get("attributes", {}).items():
-                if attr_dict.get(attr_name) not in expected_values:
-                    match = False
-                    break
+                if field in ["Brand", "Model"]:
+                    # Partial match: any expected value should be a substring of the item_value
+                    if not any(expected_val in item_value for expected_val in expected_values):
+                        match = False
+                        break
+                else:
+                    # Exact match for condition
+                    if item_value not in expected_values:
+                        match = False
+                        break
 
         # Create notification if match is found
         if match:
@@ -151,11 +148,14 @@ def add_item():
                 "type": "item_alert_match",
                 "title": "🔔 New item matched your alert",
                 "item_id": new_item.ItemID,
+                "item_title": new_item.Title, 
                 "subcategory": subcat.Name,
                 "brand": new_item.Brand,
                 "model": new_item.Model,
                 "condition": new_item.Condition,
-                "attributes": attr_dict
+                "start_time": new_auction.StartTime.isoformat(),
+                "end_time": new_auction.EndTime.isoformat()
+    
             }
             notification = Notification(
                 ReceiverID=alert.UserID,
@@ -353,6 +353,7 @@ def accept_bid():
             "type": "payment_required",
             "transaction_id": transaction.TransactionID,
             "item_id": item.ItemID,
+            "item_title": item.Title,
             "price": float(highest_bid.Amount)
         }),
         Status='unread'

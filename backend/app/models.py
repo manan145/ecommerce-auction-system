@@ -113,30 +113,6 @@ class Transaction(db.Model):
     TransactionDate = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('completed', 'pending', 'cancelled'), default='completed')
 
-# ==========================
-# Feedback
-# ==========================
-class Feedback(db.Model):
-    __tablename__ = 'Feedback'
-
-    FeedbackID = db.Column(db.Integer, primary_key=True)
-    FromUserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    ToUserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    Rating = db.Column(db.Integer, nullable=False)
-    Comment = db.Column(db.Text)
-    Date = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-
-# ==========================
-# Message
-# ==========================
-class Message(db.Model):
-    __tablename__ = 'Message'
-
-    MessageID = db.Column(db.Integer, primary_key=True)
-    SenderID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    ReceiverID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    Content = db.Column(db.Text, nullable=False)
-    Timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
 # Alert
@@ -146,19 +122,9 @@ class Alert(db.Model):
 
     AlertID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    Category = db.Column(db.String(50), nullable=False)
     Subcategory = db.Column(db.String(50), nullable=False)
     SearchCriteria = db.Column(db.JSON, nullable=False)
-    CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-
-# ==========================
-# Watchlist
-# ==========================
-class Watchlist(db.Model):
-    __tablename__ = 'Watchlist'
-
-    WatchlistID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
 # ==========================
@@ -209,5 +175,17 @@ class CustomerQuery(db.Model):
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
     Subject = db.Column(db.String(100), nullable=False)
     Message = db.Column(db.Text, nullable=False)
+    Response = db.Column(db.Text)
+    ResponseBy = db.Column(db.Integer, db.ForeignKey('User.UserID'))
+    ResponseAt = db.Column(db.DateTime(timezone=True))   
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('open', 'closed'), default='open')
+
+
+class FAQ(db.Model):
+    __tablename__ = 'FAQ'
+
+    FAQID = db.Column(db.Integer, primary_key=True)
+    Question = db.Column(db.Text, nullable=False)
+    Answer = db.Column(db.Text, nullable=False)
+

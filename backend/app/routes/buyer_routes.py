@@ -2,8 +2,9 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timezone
 from ..models import db, Auction, Bid, User, Item
-from ..models import db, User, Transaction, Auction, Item, Alert
+from ..models import db, User, Transaction, Auction, Item, Alert, Notification
 from sqlalchemy.orm import joinedload
+import json
 
 buyer_bp = Blueprint('buyer', __name__)
 
@@ -255,12 +256,8 @@ def create_alert():
         "subcategory": "Smartphones",
         "search_criteria": {
             "Brand": ["Apple"],
-            "Model": ["iPhone 13"],
+            "Model": ["iPhone 14"],
             "Condition": ["New"],
-            "attributes": {
-                "Storage": ["128GB", "256GB"],
-                "Color": ["Black"]
-            }
         }
     }
 
@@ -268,27 +265,26 @@ def create_alert():
         201 Created with alert ID if the alert was successfully saved.
         4xx error if missing fields or validation fails.
     """
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-
-    if not user or user.Role != 'buyer':
-        return jsonify({"error": "Only buyers can create alerts"}), 403
-
+    user_id = get_jwt_identity()
     data = request.get_json()
-    subcategory = data.get('subcategory')
-    search_criteria = data.get('search_criteria')
 
-    if not subcategory or not search_criteria:
-        return jsonify({"error": "Subcategory and search_criteria are required"}), 400
+    category = data.get("category")
+    subcategory = data.get("subcategory")
+    search_criteria = data.get("search_criteria")
+
+    if not category or not subcategory or not search_criteria:
+        return jsonify({"error": "Missing category, subcategory, or search criteria"}), 400
 
     alert = Alert(
-        UserID=user.UserID,
+        UserID=user_id,
+        Category=category,
         Subcategory=subcategory,
         SearchCriteria=search_criteria
     )
     db.session.add(alert)
     db.session.commit()
 
+    
     return jsonify({"message": "Alert created successfully", "alert_id": alert.AlertID}), 201
 
 # ================================================
@@ -318,6 +314,7 @@ def view_alerts():
     alerts = Alert.query.filter_by(UserID=user.UserID).all()
     result = [{
         "alert_id": alert.AlertID,
+        "category": alert.Category,
         "subcategory": alert.Subcategory,
         "search_criteria": alert.SearchCriteria,
         "created_at": alert.CreatedAt
@@ -325,6 +322,20 @@ def view_alerts():
 
     return jsonify(result), 200
 
+@buyer_bp.route('/delete-alert/<int:alert_id>', methods=['DELETE'])
+@jwt_required()
+def delete_alert(alert_id):
+    """Delete an alert by alert_id."""
+    user_id = get_jwt_identity()  # Get the user ID from the JWT
+    alert = Alert.query.filter_by(AlertID=alert_id, UserID=user_id).first()
+
+    if not alert:
+        return jsonify({"error": "Alert not found or you are not authorized to delete it"}), 404
+
+    db.session.delete(alert)
+    db.session.commit()
+
+    return jsonify({"message": "Alert deleted successfully!"}), 200
 # ================================================
 # API → Buyer views their bid history       
 # ================================================
@@ -332,16 +343,21 @@ def view_alerts():
 @jwt_required()
 def get_my_bids():
     from datetime import timezone
+    from collections import defaultdict
 
     user_id = int(get_jwt_identity())  # ensure integer for comparison
-    print(f"[DEBUG] Logged in user ID: {user_id}")
-
     now = datetime.now(timezone.utc)
-    bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc()).all()
+
+    # Fetch and group all bids by this user
+    user_bids = Bid.query.filter_by(BidderID=user_id).order_by(Bid.BidTime.desc(), Bid.Amount.desc()).all()
+    bids_by_auction = defaultdict(list)
+    for bid in user_bids:
+        bids_by_auction[bid.AuctionID].append(bid)
+
     result = []
 
-    for bid in bids:
-        auction = Auction.query.get(bid.AuctionID)
+    for auction_id, user_bids_for_auction in bids_by_auction.items():
+        auction = Auction.query.get(auction_id)
         if not auction:
             continue
 
@@ -356,35 +372,41 @@ def get_my_bids():
         is_closed = auction.IsClosed or end_time <= now
         status = "closed" if is_closed else "active"
 
-        transaction = Transaction.query.filter_by(AuctionID=auction.AuctionID).first()
-
-        # Fix: force int comparison
+        transaction = Transaction.query.filter_by(AuctionID=auction_id).first()
         is_winner = (
-            transaction is not None and 
-            transaction.BuyerID == user_id and 
+            transaction is not None and
+            transaction.BuyerID == user_id and
             is_closed
         )
-
         transaction_id = transaction.TransactionID if transaction else None
         transaction_status = transaction.Status if transaction else None
         has_paid = transaction_status == "completed" if transaction_status else False
 
-        print(f"[DEBUG] Auction {auction.AuctionID} | Transaction BuyerID: {transaction.BuyerID if transaction else 'None'} | is_winner: {is_winner}")
+        # Find the actual highest bid for the auction
+        highest_bid = (
+            Bid.query
+            .filter_by(AuctionID=auction_id)
+            .order_by(Bid.Amount.desc(), Bid.BidTime.asc())
+            .first()
+        )
+        highest_bid_id = highest_bid.BidID if highest_bid else None
 
-        result.append({
-            "amount": float(bid.Amount),
-            "bid_time": bid.BidTime.isoformat(),
-            "item_title": item.Title,
-            "status": status,
-            "is_closed": is_closed,
-            "auction_id": auction.AuctionID,
-            "transaction_id": transaction_id,
-            "transaction_status": transaction_status,
-            "has_paid": has_paid,
-            "is_winner": is_winner,
-            "won": is_winner,
-            "is_highest_bidder": False
-        })
+        # Mark only the user's highest bid (among all auction bids) as highest bidder
+        for bid in user_bids_for_auction:
+            result.append({
+                "amount": float(bid.Amount),
+                "bid_time": bid.BidTime.isoformat(),
+                "item_title": item.Title,
+                "status": status,
+                "is_closed": is_closed,
+                "auction_id": auction_id,
+                "transaction_id": transaction_id,
+                "transaction_status": transaction_status,
+                "has_paid": has_paid,
+                "is_winner": is_winner,
+                "won": is_winner,
+                "is_highest_bidder": (bid.BidID == highest_bid_id and highest_bid.BidderID == user_id and not is_closed)
+            })
 
     print("DEBUG: Final My Bids Result:")
     for entry in result:
@@ -417,3 +439,51 @@ def bid_history(auction_id):
             "timestamp": bid.BidTime.isoformat()
         } for bid, username in bids
     ])
+
+@buyer_bp.route('/notifications/<string:status>', methods=['GET'])
+@jwt_required()
+def get_notifications_by_status(status):
+    user_id = get_jwt_identity()
+    if status not in ['unread', 'read']:
+        return jsonify({'error': 'Invalid status'}), 400
+
+    notifications = (
+        Notification.query
+        .filter_by(UserID=user_id, Status=status)
+        .order_by(Notification.CreatedAt.desc())
+        .all()
+    )
+
+    all_notifications = []
+    for notif in notifications:
+        try:
+            msg = json.loads(notif.Message)
+            notif_type = msg.get("type", "general")
+            title = msg.get("title", "🔔 Notification")
+            data = {
+                "notification_id": notif.NotificationID,
+                "type": notif_type,
+                "title": title,
+                "data": msg,
+                "created_at": notif.CreatedAt
+            }
+            all_notifications.append(data)
+        except Exception as e:
+            print(f"Error parsing notification: {e}")
+
+    return jsonify(all_notifications), 200
+
+
+@buyer_bp.route('/notifications/<int:notification_id>/read', methods=['POST'])
+@jwt_required()
+def mark_notification_read(notification_id):
+    user_id = get_jwt_identity()
+
+    notif = Notification.query.filter_by(NotificationID=notification_id, UserID=user_id).first()
+
+    if not notif:
+        return jsonify({"error": "Notification not found"}), 404
+
+    notif.Status = 'read'
+    db.session.commit()
+    return jsonify({"message": "Notification marked as read"}), 200
