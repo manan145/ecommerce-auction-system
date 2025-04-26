@@ -55,9 +55,44 @@
       text-decoration: none;
       color: #5563DE;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 40px;
+    }
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: #5563DE;
+    }
+    .nav-links a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #5563DE;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
   <div class="container">
     <h2>Extend Auction</h2>
     <form id="extendForm">

@@ -226,8 +226,8 @@
   <header class="header">
     <div class="logo">BuyMe</div>
     <nav class="nav-links">
-      <a href="../sellers/sellers.html">Home</a>
-      <a href="notifications.html" class="notification-bell" title="Notifications" style="position: relative;">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
         <i class="fas fa-bell"></i>
       </a>
       <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
@@ -238,8 +238,10 @@
       <h4>Navigation</h4>
       <nav class="nav flex-column">
         <a class="nav-link" href="create_auction.html">Create Auction</a>
-        <a class="nav-link active" href="view_my_items.html">My Items</a>
+        <a class="nav-link" href="questions.html">FAQs</a>
+        <a class="nav-link" href="contact_support.html">Contact Support</a> <!-- Added Contact Support -->
       </nav>
+      <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
     </aside>
     <main>
       <div class="page-header">
@@ -284,6 +286,8 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    const BASE_URL = "http://127.0.0.1:5000"; // Add this line to define BASE_URL
+
     // ...existing code for dropdowns, modals, and API calls...
     let items = [];
     function handleAcceptBid(auctionId) {
@@ -442,6 +446,41 @@
       localStorage.removeItem('token');
       window.location.href = '../login.html';
     };
+
+    function confirmDeleteAccount() {
+      if (confirm("Are you sure you want to delete your account? This action is irreversible and will delete all your associated bids, auctions, and items.")) {
+        deleteAccount();
+      }
+    }
+
+    async function deleteAccount() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("You must be logged in to delete your account.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/public/delete-account`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(result.message || "Account deleted successfully.");
+          localStorage.removeItem('token');
+          window.location.href = "../login.html";
+        } else {
+          alert(result.error || "Failed to delete account.");
+        }
+      } catch (err) {
+        console.error("Error deleting account:", err);
+        alert("An error occurred while deleting your account.");
+      }
+    }
   </script>
 </body>
 </html>

@@ -59,73 +59,109 @@
       color: red;
       margin-top: 20px;
     }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #5563DE;
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+    .header .logo {
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+  <div class="container">
+    <h1>📝 Auction Bids</h1>
+    <table id="bidsTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Bid ID</th>
+          <th>Bidder ID</th>
+          <th>Amount ($)</th>
+          <th>Timestamp</th>
+        </tr>
+      </thead>
+      <tbody id="bidsTableBody"></tbody>
+    </table>
+    <div id="errorMessage" class="error"></div>
 
-<div class="container">
-  <h1>📝 Auction Bids</h1>
-  <table id="bidsTable" style="display: none;">
-    <thead>
-      <tr>
-        <th>Bid ID</th>
-        <th>Bidder ID</th>
-        <th>Amount ($)</th>
-        <th>Timestamp</th>
-      </tr>
-    </thead>
-    <tbody id="bidsTableBody"></tbody>
-  </table>
-  <div id="errorMessage" class="error"></div>
-
-  <div class="nav">
-    <a href="view_my_items.html">← Back to My Items</a>
+    <div class="nav">
+      <a href="view_my_items.html">← Back to My Items</a>
+    </div>
   </div>
-</div>
 
-<script>
-  const auctionId = new URLSearchParams(window.location.search).get('auction_id');
-  const token = localStorage.getItem('token');
+  <script>
+    const auctionId = new URLSearchParams(window.location.search).get('auction_id');
+    const token = localStorage.getItem('token');
 
-  if (!auctionId || !token) {
-    document.getElementById('errorMessage').textContent = 'Missing auction ID or not logged in.';
-  } else {
-    fetch(`/bids/${auctionId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      }
-    })
-    .then(response => {
-      if (!response.ok) throw new Error('Failed to fetch bids');
-      return response.json();
-    })
-    .then(data => {
-      if (data.bids && data.bids.length > 0) {
-        const tableBody = document.getElementById('bidsTableBody');
-        document.getElementById('bidsTable').style.display = 'table';
+    if (!auctionId || !token) {
+      document.getElementById('errorMessage').textContent = 'Missing auction ID or not logged in.';
+    } else {
+      fetch(`/bids/${auctionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch bids');
+        return response.json();
+      })
+      .then(data => {
+        if (data.bids && data.bids.length > 0) {
+          const tableBody = document.getElementById('bidsTableBody');
+          document.getElementById('bidsTable').style.display = 'table';
 
-        data.bids.forEach(bid => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${bid.BidID}</td>
-            <td>${bid.UserID}</td>
-            <td>$${bid.Amount.toFixed(2)}</td>
-            <td>${bid.Timestamp}</td>
-          `;
-          tableBody.appendChild(row);
-        });
-      } else {
-        document.getElementById('errorMessage').textContent = 'No bids found for this auction.';
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      document.getElementById('errorMessage').textContent = 'Error loading bid data.';
-    });
-  }
-</script>
+          data.bids.forEach(bid => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${bid.BidID}</td>
+              <td>${bid.UserID}</td>
+              <td>$${bid.Amount.toFixed(2)}</td>
+              <td>${bid.Timestamp}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          document.getElementById('errorMessage').textContent = 'No bids found for this auction.';
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        document.getElementById('errorMessage').textContent = 'Error loading bid data.';
+      });
+    }
+  </script>
 
 </body>
 </html>

@@ -82,9 +82,55 @@
     .nav a:hover {
       color: #435ac9;
     }
+    header {
+      width: 100%;
+      background: #fff;
+      padding: 10px 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    .header .logo {
+      float: left;
+      margin-left: 20px;
+      font-size: 24px;
+      font-weight: 500;
+      color: #5563DE;
+    }
+    .header .nav-links {
+      float: right;
+      margin-right: 20px;
+    }
+    .header .nav-links a {
+      margin: 0 10px;
+      color: #5563DE;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .header .nav-links a:hover {
+      color: #435ac9;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 18px;
+    }
   </style>
 </head>
 <body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
   <div class="container">
     <h1>Update Item</h1>
     <div id="updateMessage" class="message"></div>

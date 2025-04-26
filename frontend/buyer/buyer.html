@@ -212,6 +212,7 @@
         <a class="nav-link" href="create_alerts.html">Create Alerts</a>
         <a class="nav-link" href="contact_support.html">Contact Support</a>
       </nav>
+      <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
     </aside>
 
     <main>
@@ -518,6 +519,41 @@
 
       document.getElementById("detailsBody").innerHTML = details;
       new bootstrap.Modal(document.getElementById("detailsModal")).show();
+    }
+
+    function confirmDeleteAccount() {
+      if (confirm("Are you sure you want to delete your account? This action is irreversible and will delete all your associated bids, auctions, and items.")) {
+        deleteAccount();
+      }
+    }
+
+    async function deleteAccount() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("You must be logged in to delete your account.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/public/delete-account`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert(result.message || "Account deleted successfully.");
+          localStorage.removeItem('token');
+          window.location.href = "../login.html";
+        } else {
+          alert(result.error || "Failed to delete account.");
+        }
+      } catch (err) {
+        console.error("Error deleting account:", err);
+        alert("An error occurred while deleting your account.");
+      }
     }
 
     fetchCategories();

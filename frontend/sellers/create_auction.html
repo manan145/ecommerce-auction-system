@@ -3,82 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <title>Create Auction - Seller</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #333;
+      min-height: 100vh;
       display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #5563DE, #304ffe);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      padding: 20px;
+      flex-wrap: wrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
+
+    .header .logo {
+      color: #fff;
+      font-size: 26px;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 15px;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      padding: 10px 16px;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
     .container {
-      width: 100%;
-      max-width: 700px;
+      width: 75%; /* Reduced from 95% to 75% */
+      max-width: 800px; /* Adjusted max-width for better scaling */
+      margin: 40px auto;
       background: #fff;
-      padding: 30px 40px;
-      border-radius: 10px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
+
     h1 {
       text-align: center;
-      margin-bottom: 25px;
-      color: #333;
-      font-weight: 500;
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-top: 0;
     }
+
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: 500;
       color: #555;
     }
+
     input, select, textarea {
       width: 100%;
       padding: 12px 15px;
       margin-bottom: 20px;
       border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 1rem;
       box-sizing: border-box;
       transition: border-color 0.3s ease;
     }
+
     input:focus, select:focus, textarea:focus {
       border-color: #5563DE;
       outline: none;
     }
+
     button {
       width: 100%;
       padding: 12px;
-      background: #5563DE;
+      background: #304ffe;
       border: none;
       color: #fff;
       font-size: 16px;
       font-weight: 500;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, transform 0.3s ease;
     }
+
     button:hover {
       background: #435ac9;
+      transform: translateY(-2px);
     }
+
     .message {
       text-align: center;
       margin-bottom: 15px;
       font-size: 14px;
     }
+
     .message.success {
-      color: #006400; /* Dark green color */
+      color: #006400;
     }
+
     .message.error {
-      color: #d8000c; /* Red color */
+      color: #d8000c;
     }
   </style>
 </head>
 <body>
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="sellers.html">Home</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
   <div class="container">
-    <button onclick="window.history.back()" style="margin-bottom: 20px; background: #ccc; color: #333; font-size: 14px; padding: 10px; border-radius: 5px; border: none; cursor: pointer;">Back</button>
+    <button onclick="window.history.back()" style="margin-bottom: 20px; background: #ccc; color: #333; font-size: 14px; padding: 10px; border-radius: 6px; border: none; cursor: pointer;">Back</button>
     <h1>Create Auction</h1>
     <form id="createAuctionForm">
       <!-- Basic Item Details -->
@@ -141,15 +200,6 @@
     </form>
     <div id="auctionMessage" class="message"></div>
   </div>
-  <aside class="sidebar" style="position: fixed; left: 0; top: 0; height: 100vh; background: #fff; border-right: 1px solid #ddd; max-width: 220px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); padding: 30px 20px;">
-    <h4>Navigation</h4>
-    <nav class="nav flex-column">
-      <a class="nav-link" href="sellers.html">Seller Home</a>
-      <a class="nav-link active" href="create_auction.html">Create Auction</a>
-      <a class="nav-link" href="view_my_items.html">My Items</a>
-      <a class="nav-link" href="notifications.html">Notifications</a>
-    </nav>
-  </aside>
   <script>
     const BASE_URL = 'http://127.0.0.1:5000';
 

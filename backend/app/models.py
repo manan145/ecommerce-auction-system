@@ -30,7 +30,7 @@ class Subcategory(db.Model):
     __tablename__ = 'Subcategory'
 
     SubcategoryID = db.Column(db.Integer, primary_key=True)
-    CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID'), nullable=False)
+    CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID', ondelete="CASCADE"), nullable=False)
     Name = db.Column(db.String(50), nullable=False)
 
 # ==========================
@@ -51,9 +51,9 @@ class Item(db.Model):
         'Open Box',
         name='item_condition_enum'
     ), nullable=False)
-    OwnerID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID'), nullable=False)
-    SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID'), nullable=False)
+    OwnerID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
+    CategoryID = db.Column(db.Integer, db.ForeignKey('Category.CategoryID', ondelete="CASCADE"), nullable=False)
+    SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID', ondelete="CASCADE"), nullable=False)
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('active', 'withdrawn', 'sold'), default='active', nullable=False)
 
@@ -64,14 +64,14 @@ class Attribute(db.Model):
     __tablename__ = 'Attribute'
 
     AttributeID = db.Column(db.Integer, primary_key=True)
-    SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID'), nullable=False)
+    SubcategoryID = db.Column(db.Integer, db.ForeignKey('Subcategory.SubcategoryID', ondelete="CASCADE"), nullable=False)
     Name = db.Column(db.String(50), nullable=False)
 
 class ItemAttributeValue(db.Model):
     __tablename__ = 'ItemAttributeValue'
 
-    ItemID = db.Column(db.Integer, db.ForeignKey('Item.ItemID'), primary_key=True)
-    AttributeID = db.Column(db.Integer, db.ForeignKey('Attribute.AttributeID'), primary_key=True)
+    ItemID = db.Column(db.Integer, db.ForeignKey('Item.ItemID', ondelete="CASCADE"), primary_key=True)
+    AttributeID = db.Column(db.Integer, db.ForeignKey('Attribute.AttributeID', ondelete="CASCADE"), primary_key=True)
     Value = db.Column(db.String(100))
 
 # ==========================
@@ -81,7 +81,7 @@ class Auction(db.Model):
     __tablename__ = 'Auction'
 
     AuctionID = db.Column(db.Integer, primary_key=True)
-    ItemID = db.Column(db.Integer, db.ForeignKey('Item.ItemID'), nullable=False)
+    ItemID = db.Column(db.Integer, db.ForeignKey('Item.ItemID', ondelete="CASCADE"), nullable=False)
     StartPrice = db.Column(db.Numeric(10, 2), nullable=False)
     MinIncrement = db.Column(db.Numeric(10, 2), nullable=False)
     SecretMinPrice = db.Column(db.Numeric(10, 2), nullable=False)
@@ -93,8 +93,8 @@ class Bid(db.Model):
     __tablename__ = 'Bid'
 
     BidID = db.Column(db.Integer, primary_key=True)
-    AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
-    BidderID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID', ondelete="CASCADE"), nullable=False)
+    BidderID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
     Amount = db.Column(db.Numeric(10, 2), nullable=False)
     BidTime = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     MaxAutoBid = db.Column(db.Numeric(10, 2))
@@ -107,8 +107,8 @@ class Transaction(db.Model):
     __tablename__ = 'Transaction'
 
     TransactionID = db.Column(db.Integer, primary_key=True)
-    AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID'), nullable=False)
-    BuyerID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    AuctionID = db.Column(db.Integer, db.ForeignKey('Auction.AuctionID', ondelete="CASCADE"), nullable=False)
+    BuyerID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
     Price = db.Column(db.Numeric(10, 2), nullable=False)
     TransactionDate = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('completed', 'pending', 'cancelled'), default='completed')
@@ -121,7 +121,7 @@ class Alert(db.Model):
     __tablename__ = 'Alert'
 
     AlertID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
     Category = db.Column(db.String(50), nullable=False)
     Subcategory = db.Column(db.String(50), nullable=False)
     SearchCriteria = db.Column(db.JSON, nullable=False)
@@ -134,7 +134,7 @@ class Notification(db.Model):
     __tablename__ = 'Notification'
 
     NotificationID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
     Message = db.Column(db.String(255), nullable=False)
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('unread', 'read'), default='unread')
@@ -146,8 +146,8 @@ class CustomerRep(db.Model):
     __tablename__ = 'CustomerRep'
 
     RepID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
-    AssignedBy = db.Column(db.Integer, db.ForeignKey('User.UserID'))
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
+    AssignedBy = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"))
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Department = db.Column(db.String(50))
     Shift = db.Column(db.String(20))
@@ -160,7 +160,7 @@ class Admin(db.Model):
     __tablename__ = 'Admin'
 
     AdminID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False, unique=True)
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False, unique=True)
     AccessLevel = db.Column(db.Enum('SuperAdmin', 'Manager', 'ReadOnly'), nullable=False)
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     LastLogin = db.Column(db.DateTime(timezone=True))
@@ -172,11 +172,11 @@ class CustomerQuery(db.Model):
     __tablename__ = 'CustomerQuery'
 
     QueryID = db.Column(db.Integer, primary_key=True)
-    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID'), nullable=False)
+    UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
     Subject = db.Column(db.String(100), nullable=False)
     Message = db.Column(db.Text, nullable=False)
     Response = db.Column(db.Text)
-    ResponseBy = db.Column(db.Integer, db.ForeignKey('User.UserID'))
+    ResponseBy = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"))
     ResponseAt = db.Column(db.DateTime(timezone=True))   
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('open', 'closed'), default='open')

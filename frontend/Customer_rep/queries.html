@@ -50,7 +50,7 @@
   const token = localStorage.getItem('token');
 
   // Load queries
-  fetch('/rep/queries', {
+  fetch('http://127.0.0.1:5000/rep/queries', {
     method: 'GET',
     headers: {
       'Authorization': 'Bearer ' + token
@@ -72,6 +72,8 @@
         <p><strong>Message:</strong> ${q.Message}</p>
         <small><strong>Query ID:</strong> ${q.QueryID} | <strong>User ID:</strong> ${q.UserID}</small><br>
         <small><strong>Created At:</strong> ${new Date(q.CreatedAt).toLocaleString()}</small><br>
+        <textarea class="form-control mt-2" placeholder="Write your response here..." id="response-${q.QueryID}"></textarea>
+        <button class="btn btn-sm btn-outline-primary mt-2" onclick="respondToQuery(${q.QueryID})">Respond</button>
         <button class="btn btn-sm btn-outline-success mt-2" onclick="closeQuery(${q.QueryID}, this)">Mark as Closed</button>
       `;
       container.appendChild(card);
@@ -82,7 +84,7 @@
   function closeQuery(queryId, button) {
     button.disabled = true;
 
-    fetch(`/rep/queries/close/${queryId}`, {
+    fetch('http://127.0.0.1:5000/rep/queries/close/' + queryId, { // Updated endpoint
       method: 'PUT',
       headers: {
         'Authorization': 'Bearer ' + token
@@ -98,8 +100,38 @@
         showMessage(res.body.error || 'Error closing query.', 'danger');
       }
     })
-    .catch(() => {
+    .catch(err => {
+      console.error('Network error:', err); // Log the error for debugging
       button.disabled = false;
+      showMessage('Network error. Try again.', 'danger');
+    });
+  }
+
+  function respondToQuery(queryId) {
+    const response = document.getElementById(`response-${queryId}`).value.trim();
+    if (!response) {
+      showMessage('Response cannot be empty.', 'danger');
+      return;
+    }
+
+    fetch('http://127.0.0.1:5000/rep/queries/respond/' + queryId, { // Updated endpoint
+      method: 'PUT',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ response })
+    })
+    .then(res => res.json().then(data => ({ status: res.status, body: data })))
+    .then(res => {
+      if (res.status === 200) {
+        showMessage('Response added successfully.', 'success');
+      } else {
+        showMessage(res.body.error || 'Error adding response.', 'danger');
+      }
+    })
+    .catch(err => {
+      console.error('Network error:', err); // Log the error for debugging
       showMessage('Network error. Try again.', 'danger');
     });
   }

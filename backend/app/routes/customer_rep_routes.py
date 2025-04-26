@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from ..models import db, User, CustomerRep, CustomerQuery, Notification, Auction, Bid
-from datetime import datetime
+from ..models import db, User, CustomerRep, CustomerQuery, Notification, Auction, Bid, Item, Subcategory
+from datetime import datetime, timezone
 import json
 from werkzeug.security import generate_password_hash
 import string, secrets
@@ -130,7 +130,7 @@ def view_queries():
         'UserID': q.UserID,
         'Subject': q.Subject,
         'Message': q.Message,
-        'CreatedAt': q.CreatedAt.isoformat()
+        'CreatedAt': q.CreatedAt
     } for q in queries]), 200
 
 # =========================
@@ -154,19 +154,52 @@ def close_query(query_id):
 
     query.Status = 'closed'
 
-    notification = Notification(
-        UserID=query.UserID,
-        Message=json.dumps({
-            "type": "query_closed",
-            "query_id": query.QueryID,
-            "subject": query.Subject,
-            "closed_by": rep_id,
-            "timestamp": datetime.now(datetime.timezone.utc).isoformat()
-        }),
-    )
-    db.session.add(notification)
+    # notification = Notification(
+    #     UserID=query.UserID,
+    #     Message=json.dumps({
+    #         "type": "query_closed",
+    #         "query_id": query.QueryID,
+    #         "subject": query.Subject,
+    #         "closed_by": rep_id,
+    #         "timestamp": datetime.now(timezone.utc)
+    #     }),
+    # )
+    # db.session.add(notification)
     db.session.commit()
     return jsonify({'message': 'Query closed successfully'}), 200
+
+# =========================
+# Respond to a specific query
+# =========================
+@rep_bp.route('/queries/respond/<int:query_id>', methods=['PUT'])
+@jwt_required()
+def respond_to_query(query_id):
+    """
+    Customer rep responds to a query
+    """
+    rep_id = get_jwt_identity()
+    user = User.query.get(rep_id)
+
+    if not user or user.Role != 'customer_rep':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    query = CustomerQuery.query.get(query_id)
+    if not query or query.Status == 'closed':
+        return jsonify({'error': 'Invalid or already closed query'}), 404
+
+    data = request.get_json()
+    response = data.get('response')
+
+    if not response:
+        return jsonify({'error': 'Response message is required'}), 400
+
+    query.Response = response
+    query.ResponseBy = rep_id
+    query.ResponseAt = datetime.now(timezone.utc)
+
+    db.session.commit()
+
+    return jsonify({'message': 'Response added successfully'}), 200
 
 # ===========================================================
 # Remove Auction
@@ -175,20 +208,26 @@ def close_query(query_id):
 @jwt_required()
 def remove_auction(auction_id):
     """
-    API → Customer rep forcefully deletes an auction record from the database.
+    API → Customer rep forcefully deletes an auction record and its associated item from the database.
 
     Returns:
-        200 OK if auction is deleted
+        200 OK if auction and item are deleted
         404 Not Found if auction does not exist
     """
     auction = Auction.query.get(auction_id)
     if not auction:
         return jsonify({'error': 'Auction not found'}), 404
 
-    db.session.delete(auction)
+    # Fetch the associated item
+    item = Item.query.get(auction.ItemID)
+
+    db.session.delete(auction)  # Remove the auction
+
+    if item:
+        db.session.delete(item)  # Remove the associated item
     db.session.commit()
 
-    return jsonify({'message': f'Auction {auction_id} removed successfully.'}), 200
+    return jsonify({'message': f'Auction {auction_id} and its associated item removed successfully.'}), 200
 
 
 # ===========================================================
@@ -214,27 +253,37 @@ def remove_bid(bid_id):
     return jsonify({'message': f'Bid {bid_id} removed successfully'}), 200
 
 # ================================
-# Get Auction Details by AuctionID
+# Get All Auctions with Unpacked Item Details
 # ================================
-@rep_bp.route('/auction/<int:auction_id>', methods=['GET'])
+@rep_bp.route('/auctions', methods=['GET'])
 @jwt_required()
-def get_auction_details(auction_id):
-    """API → Customer Rep fetches auction details for verification"""
-    auction = Auction.query.get(auction_id)
-    if not auction:
-        return jsonify({'error': 'Auction not found'}), 404
+def get_all_auctions():
+    """API → Customer Rep fetches all auctions with unpacked item and subcategory details"""
+    auctions = Auction.query.all()
+    result = []
 
-    response = {
-        'AuctionID': auction.AuctionID,
-        'StartPrice': float(auction.StartPrice),
-        'MinIncrement': float(auction.MinIncrement),
-        'ReservePrice': float(auction.SecretMinPrice),
-        'StartDate': auction.StartTime.strftime('%Y-%m-%d %H:%M:%S'),
-        'EndDate': auction.EndTime.strftime('%Y-%m-%d %H:%M:%S'),
-        'Status': 'Closed' if auction.IsClosed else 'Open'
-    }
+    for auction in auctions:
+        item = Item.query.get(auction.ItemID)
+        subcategory = Subcategory.query.get(item.SubcategoryID) if item else None
 
-    return jsonify(response), 200
+        result.append({
+            'AuctionID': auction.AuctionID,
+            'StartPrice': float(auction.StartPrice),
+            'MinIncrement': float(auction.MinIncrement),
+            'SecretMinPrice': float(auction.SecretMinPrice),
+            'StartTime': auction.StartTime.strftime('%Y-%m-%d %H:%M:%S'),
+            'EndTime': auction.EndTime.strftime('%Y-%m-%d %H:%M:%S'),
+            'IsClosed': auction.IsClosed,
+            'ItemID': item.ItemID,
+            'Title': item.Title,
+            'Brand': item.Brand,
+            'Condition': item.Condition,
+            'Subcategory': subcategory.Name if subcategory else None,
+            'Status': item.Status,
+            'CreatedAt': item.CreatedAt.strftime('%Y-%m-%d %H:%M:%S')
+        })
+
+    return jsonify(result), 200
 
 # ================================
 # Get Bids for Auction by AuctionID
@@ -256,3 +305,62 @@ def get_bids_for_auction(auction_id):
     } for bid in bids]
 
     return jsonify({'bids': bid_list}), 200
+
+# ================================
+#  GET user by email
+# ================================
+@rep_bp.route('/user', methods=['GET', 'POST'])
+@jwt_required()
+def get_user_by_email_or_id():
+    if request.method == 'GET':
+        email = request.args.get('email')
+        user_id = request.args.get('user_id')
+    elif request.method == 'POST':
+        data = request.get_json()
+        email = data.get('email')
+        user_id = data.get('user_id')
+    else:
+        return jsonify({'error': 'Invalid request method'}), 405
+
+    if email:
+        user = User.query.filter_by(Email=email).first()
+    elif user_id:
+        user = User.query.get(user_id)
+    else:
+        return jsonify({'error': 'Either email or user_id is required'}), 400
+
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify({
+        'UserID': user.UserID,
+        'Username': user.Username,
+        'Email': user.Email
+    }), 200
+
+# ================================
+#  PUT update user
+# ================================
+@rep_bp.route('/user/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def update_user_info(user_id):
+    user = User.query.get(user_id)
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+    data = request.get_json()
+    user.Username = data.get('username', user.Username)
+    user.Email = data.get('email', user.Email)
+    db.session.commit()
+    return jsonify({'message': 'User info updated successfully'}), 200
+
+
+# 3. DELETE user
+@rep_bp.route('/user/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    user = User.query.get(user_id)
+    if not user or user.Role not in ['buyer', 'seller']:
+        return jsonify({'error': 'User not found'}), 404
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted successfully'}), 200

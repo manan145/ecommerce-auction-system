@@ -70,7 +70,7 @@
     document.getElementById('auctionDetails').innerHTML = '';
     document.getElementById('message').innerHTML = '';
 
-    fetch(`/rep/auction/${auctionId}`, {
+    fetch(`http://127.0.0.1:5000/rep/auction/${auctionId}`, {
       method: 'GET',
       headers: {
         'Authorization': 'Bearer ' + token
