@@ -182,6 +182,7 @@ class CustomerQuery(db.Model):
     Status = db.Column(db.Enum('open', 'closed'), default='open')
 
 
+
 class FAQ(db.Model):
     __tablename__ = 'FAQ'
 

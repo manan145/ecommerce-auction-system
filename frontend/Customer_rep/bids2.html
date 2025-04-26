@@ -66,7 +66,7 @@
     e.preventDefault();
     const auctionId = document.getElementById('auctionId').value;
 
-    fetch(`/rep/bids/${auctionId}`, {
+    fetch(`http://127.0.0.1:5000/rep/bids/${auctionId}`, {
       method: 'GET',
       headers: {
         'Authorization': 'Bearer ' + token
@@ -102,7 +102,7 @@
 
   function removeBid(id, btn) {
     btn.disabled = true;
-    fetch(`/rep/remove-bid/${id}`, {
+    fetch(`http://127.0.0.1:5000/rep/remove-bid/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': 'Bearer ' + token

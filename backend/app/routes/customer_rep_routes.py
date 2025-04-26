@@ -100,13 +100,21 @@ def reset_user_password():
 
     # Update password
     target_user.PasswordHash = generate_password_hash(temp_password)
+
+    # Add notification
+    notification = Notification(
+        UserID=target_user.UserID,
+        Message=f"Your password has been reset. Temporary password: {temp_password}",
+        Status='unread'
+    )
+    db.session.add(notification)  # ← This line was missing
+
     db.session.commit()
 
     return jsonify({
         "message": f"Temporary password generated for user '{target_user.Username}'",
         "temporary_password": temp_password
     }), 200
-
 # =========================
 # View all open queries
 # =========================
