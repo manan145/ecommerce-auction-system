@@ -135,7 +135,7 @@ class Notification(db.Model):
 
     NotificationID = db.Column(db.Integer, primary_key=True)
     UserID = db.Column(db.Integer, db.ForeignKey('User.UserID', ondelete="CASCADE"), nullable=False)
-    Message = db.Column(db.String(255), nullable=False)
+    Message = db.Column(db.Text, nullable=False)  # changed from db.String(255) to db.Text
     CreatedAt = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     Status = db.Column(db.Enum('unread', 'read'), default='unread')
 

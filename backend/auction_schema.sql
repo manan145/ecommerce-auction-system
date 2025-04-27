@@ -1,10 +1,10 @@
 CREATE TABLE User (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) NOT NULL,
-    Email VARCHAR(100) NOT NULL UNIQUE,
+    Email VARCHAR(100) UNIQUE NOT NULL,
     PasswordHash VARCHAR(255) NOT NULL,
     Role ENUM('buyer', 'seller', 'customer_rep', 'admin') NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Category (
@@ -16,31 +16,31 @@ CREATE TABLE Subcategory (
     SubcategoryID INT PRIMARY KEY AUTO_INCREMENT,
     CategoryID INT NOT NULL,
     Name VARCHAR(50) NOT NULL,
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID)
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE CASCADE
 );
 
 CREATE TABLE Item (
     ItemID INT PRIMARY KEY AUTO_INCREMENT,
-    Title VARCHAR(100) NOT NULL,
     Brand VARCHAR(50) NOT NULL,
     Model VARCHAR(100) NOT NULL,
-    `Condition` ENUM('New', 'Open Box', 'Refurbished', 'Used'),
+    Title VARCHAR(100) NOT NULL,
     Description TEXT,
+    Condition ENUM('New', 'Refurbished', 'Used', 'Open Box') NOT NULL,
     OwnerID INT NOT NULL,
     CategoryID INT NOT NULL,
     SubcategoryID INT NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Status ENUM('active', 'withdrawn', 'sold') DEFAULT 'active',
-    FOREIGN KEY (OwnerID) REFERENCES User(UserID),
-    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID),
-    FOREIGN KEY (SubcategoryID) REFERENCES Subcategory(SubcategoryID)
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Status ENUM('active', 'withdrawn', 'sold') DEFAULT 'active' NOT NULL,
+    FOREIGN KEY (OwnerID) REFERENCES User(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (CategoryID) REFERENCES Category(CategoryID) ON DELETE CASCADE,
+    FOREIGN KEY (SubcategoryID) REFERENCES Subcategory(SubcategoryID) ON DELETE CASCADE
 );
 
 CREATE TABLE Attribute (
     AttributeID INT PRIMARY KEY AUTO_INCREMENT,
     SubcategoryID INT NOT NULL,
     Name VARCHAR(50) NOT NULL,
-    FOREIGN KEY (SubcategoryID) REFERENCES Subcategory(SubcategoryID)
+    FOREIGN KEY (SubcategoryID) REFERENCES Subcategory(SubcategoryID) ON DELETE CASCADE
 );
 
 CREATE TABLE ItemAttributeValue (
@@ -48,8 +48,8 @@ CREATE TABLE ItemAttributeValue (
     AttributeID INT NOT NULL,
     Value VARCHAR(100),
     PRIMARY KEY (ItemID, AttributeID),
-    FOREIGN KEY (ItemID) REFERENCES Item(ItemID),
-    FOREIGN KEY (AttributeID) REFERENCES Attribute(AttributeID)
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE,
+    FOREIGN KEY (AttributeID) REFERENCES Attribute(AttributeID) ON DELETE CASCADE
 );
 
 CREATE TABLE Auction (
@@ -61,7 +61,7 @@ CREATE TABLE Auction (
     StartTime DATETIME NOT NULL,
     EndTime DATETIME NOT NULL,
     IsClosed BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (ItemID) REFERENCES Item(ItemID)
+    FOREIGN KEY (ItemID) REFERENCES Item(ItemID) ON DELETE CASCADE
 );
 
 CREATE TABLE Bid (
@@ -71,8 +71,8 @@ CREATE TABLE Bid (
     Amount DECIMAL(10,2) NOT NULL,
     BidTime DATETIME DEFAULT CURRENT_TIMESTAMP,
     MaxAutoBid DECIMAL(10,2),
-    FOREIGN KEY (AuctionID) REFERENCES Auction(AuctionID),
-    FOREIGN KEY (BidderID) REFERENCES User(UserID)
+    FOREIGN KEY (AuctionID) REFERENCES Auction(AuctionID) ON DELETE CASCADE,
+    FOREIGN KEY (BidderID) REFERENCES User(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE Transaction (
@@ -82,75 +82,67 @@ CREATE TABLE Transaction (
     Price DECIMAL(10,2) NOT NULL,
     TransactionDate DATETIME DEFAULT CURRENT_TIMESTAMP,
     Status ENUM('completed', 'pending', 'cancelled') DEFAULT 'completed',
-    FOREIGN KEY (AuctionID) REFERENCES Auction(AuctionID),
-    FOREIGN KEY (BuyerID) REFERENCES User(UserID)
-);
-
-CREATE TABLE Feedback (
-    FeedbackID INT PRIMARY KEY AUTO_INCREMENT,
-    FromUserID INT NOT NULL,
-    ToUserID INT NOT NULL,
-    Rating INT NOT NULL,
-    Comment TEXT,
-    Date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (FromUserID) REFERENCES User(UserID),
-    FOREIGN KEY (ToUserID) REFERENCES User(UserID)
-);
-
-CREATE TABLE Message (
-    MessageID INT PRIMARY KEY AUTO_INCREMENT,
-    SenderID INT NOT NULL,
-    ReceiverID INT NOT NULL,
-    Content TEXT NOT NULL,
-    Timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (SenderID) REFERENCES User(UserID),
-    FOREIGN KEY (ReceiverID) REFERENCES User(UserID)
+    FOREIGN KEY (AuctionID) REFERENCES Auction(AuctionID) ON DELETE CASCADE,
+    FOREIGN KEY (BuyerID) REFERENCES User(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE Alert (
     AlertID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT NOT NULL,
+    Category VARCHAR(50) NOT NULL,
     Subcategory VARCHAR(50) NOT NULL,
     SearchCriteria JSON NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserID) REFERENCES User(UserID)
-);
-
-CREATE TABLE Watchlist (
-    WatchlistID INT PRIMARY KEY AUTO_INCREMENT,
-    UserID INT NOT NULL,
-    AuctionID INT NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (UserID) REFERENCES User(UserID),
-    FOREIGN KEY (AuctionID) REFERENCES Auction(AuctionID)
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE Notification (
     NotificationID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT NOT NULL,
-    Message VARCHAR(255) NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Message TEXT NOT NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     Status ENUM('unread', 'read') DEFAULT 'unread',
-    FOREIGN KEY (UserID) REFERENCES User(UserID)
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE CustomerRep (
     RepID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT NOT NULL,
     AssignedBy INT,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     Department VARCHAR(50),
     Shift VARCHAR(20),
     Status ENUM('active', 'inactive') DEFAULT 'active',
-    FOREIGN KEY (UserID) REFERENCES User(UserID),
-    FOREIGN KEY (AssignedBy) REFERENCES User(UserID)
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (AssignedBy) REFERENCES User(UserID) ON DELETE CASCADE
 );
 
 CREATE TABLE Admin (
     AdminID INT PRIMARY KEY AUTO_INCREMENT,
-    UserID INT NOT NULL,
+    UserID INT UNIQUE NOT NULL,
     AccessLevel ENUM('SuperAdmin', 'Manager', 'ReadOnly') NOT NULL,
-    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     LastLogin DATETIME,
-    FOREIGN KEY (UserID) REFERENCES User(UserID)
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE
 );
+
+CREATE TABLE CustomerQuery (
+    QueryID INT PRIMARY KEY AUTO_INCREMENT,
+    UserID INT NOT NULL,
+    Subject VARCHAR(100) NOT NULL,
+    Message TEXT NOT NULL,
+    Response TEXT,
+    ResponseBy INT,
+    ResponseAt DATETIME,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Status ENUM('open', 'closed') DEFAULT 'open',
+    FOREIGN KEY (UserID) REFERENCES User(UserID) ON DELETE CASCADE,
+    FOREIGN KEY (ResponseBy) REFERENCES User(UserID) ON DELETE CASCADE
+);
+
+CREATE TABLE FAQ (
+    FAQID INT PRIMARY KEY AUTO_INCREMENT,
+    Question TEXT NOT NULL,
+    Answer TEXT NOT NULL
+);
+
