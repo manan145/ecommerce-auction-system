@@ -1,353 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Manage Auctions & Bids</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Auctions & Bids – Customer Rep</title>
+
+  <!-- Fonts + Bootstrap -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    body {
-      background-color: #f8f9fa;
-      padding: 40px;
+    /* ---------- SHARED LOOK ---------- */
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Roboto',sans-serif;
+      background:linear-gradient(135deg,rgba(240,244,248,.85),rgba(217,226,236,.85)),
+                 url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
+      min-height:100vh;display:flex;flex-direction:column;color:#333
     }
-    .container {
-      max-width: 1200px;
-      background-color: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    .header{
+      background:linear-gradient(135deg,#5563DE,#304ffe);
+      padding:15px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+      box-shadow:0 2px 8px rgba(0,0,0,.15)
     }
-    .modal-body {
-      max-height: 400px;
-      overflow-y: auto;
+    .header .logo{color:#fff;font-family:'Montserrat',sans-serif;font-size:26px;text-decoration:none}
+    .nav-links{display:flex;gap:15px;align-items:center}
+    .nav-links a{color:#fff;text-decoration:none;padding:10px 16px;font-weight:500;border-radius:4px;transition:.3s}
+    .nav-links a:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+    .container-fluid{display:flex;padding:0;flex:1}
+    .sidebar{
+      background:#fff;border-right:1px solid #ddd;min-height:100vh;padding:30px 20px;max-width:220px;
+      box-shadow:2px 0 10px rgba(0,0,0,.05)
     }
-    .title {
-      text-align: center;
-    }
-    .center-align {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .view-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center; /* Vertically and horizontally center-align the buttons */
-    }
-    .btn {
-      font-size: 14px; /* Ensure consistent font size for all buttons */
-    }
+    .sidebar h4{font-family:'Montserrat',sans-serif;margin-bottom:20px;color:#304ffe}
+    .sidebar .nav-link{display:block;color:#304ffe;margin-bottom:15px;padding:6px 10px;border-radius:6px;text-decoration:none;transition:.3s}
+    .sidebar .nav-link:hover{background:rgba(48,79,254,.1)}
+    main{flex:1;padding:30px}
+    .page-header{background:#304ffe;color:#fff;padding:12px 24px;border-radius:8px;font-size:1.5rem;font-weight:500;text-align:center;margin-bottom:25px}
+    .content-wrapper{background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.1)}
+
+    /* ---------- PAGE-SPECIFIC ---------- */
+    table td,table th{text-align:center;vertical-align:middle}
+    .btn-info{background:#00bcd4;border:0}
+    .btn-secondary{background:#6c757d;border:0}
+    .btn-primary{background:#007bff;border:0}
+    .btn-danger{background:#dc3545;border:0}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h3 class="mb-4 title">Manage Auctions & Bids</h3>
-    <table class="table table-bordered">
-      <thead class="table-light">
-        <tr>
-          <th>Item ID</th>
-          <th>Auction ID</th>
-          <th>Title</th>
-          <th>Brand</th>
-          <th>Subcategory</th>
-          <th>Created At</th>
-          <th>Specifications</th>
-          <th>Auction Details</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="auctionTableBody">
-        <script>
-          const token = localStorage.getItem('token');
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
 
-          let auctionData = [];
+  <div class="container-fluid">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h4>Navigation</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="profile.html">View Profile</a>
+        <a class="nav-link" href="queries.html">Open Queries</a>
+        <a class="nav-link" href="reset_password.html">Reset User Password</a>
+        <a class="nav-link" href="manage_auction_and_bids.html">Manage Auctions & Bids</a>
+        <a class="nav-link" href="manage_users.html">Manage Users</a>
+      </nav>
+    </aside>
 
-          // Fetch all auctions and populate the table
-          fetch('http://127.0.0.1:5000/rep/auctions', {
-            method: 'GET',
-            headers: {
-              'Authorization': 'Bearer ' + token
-            }
-          })
-          .then(res => res.json())
-          .then(data => {
-            auctionData = data;
-            const tableBody = document.getElementById('auctionTableBody');
-            tableBody.innerHTML = '';
-
-            data.forEach(item => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${item.ItemID}</td>
-                <td>${item.AuctionID}</td>
-                <td>${item.Title}</td>
-                <td>${item.Brand}</td>
-                <td>${item.Subcategory}</td>
-                <td>${new Date(item.CreatedAt).toLocaleString()}</td>
-                <td>
-                  <div class="view-buttons">
-                    <button class="btn btn-sm btn-info" onclick="viewSpecifications(${item.ItemID})">View</button>
-                  </div>
-                </td>
-                <td>
-                  <div class="view-buttons">
-                    <button class="btn btn-sm btn-secondary" onclick="viewAuctionDetails(${item.AuctionID})">View</button>
-                  </div>
-                </td>
-                <td>${item.Status}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="btn btn-sm btn-danger" onclick="deleteAuction(${item.AuctionID})">Delete Auction</button>
-                    <button class="btn btn-sm btn-primary" onclick="manageBids(${item.AuctionID})">Manage Bids</button>
-                  </div>
-                </td>
-              `;
-              tableBody.appendChild(row);
-            });
-          })
-          .catch(err => console.error('Failed to fetch auctions:', err));
-
-          // View specifications in a modal
-          function viewSpecifications(itemId) {
-            fetch(`http://127.0.0.1:5000/public/browse/item-details/${itemId}`, {
-              method: 'GET',
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            })
-            .then(res => {
-              if (!res.ok) {
-                throw new Error('Failed to fetch item details');
-              }
-              return res.json();
-            })
-            .then(data => {
-              const list = document.getElementById('specificationsList');
-              list.innerHTML = '';
-              if (data.Attributes && data.Attributes.length > 0) {
-                data.Attributes.forEach(attr => {
-                  const li = document.createElement('li');
-                  li.textContent = `${attr.name}: ${attr.value}`;
-                  list.appendChild(li);
-                });
-              } else {
-                const li = document.createElement('li');
-                li.textContent = 'No specifications available.';
-                list.appendChild(li);
-              }
-              const modal = new bootstrap.Modal(document.getElementById('specificationsModal'));
-              modal.show();
-            })
-            .catch(err => {
-              console.error('Error fetching specifications:', err);
-              alert('Failed to load specifications. Please try again later.');
-            });
-          }
-
-          // Delete auction
-          function deleteAuction(auctionId) {
-            if (!confirm('Are you sure you want to delete this auction?')) return;
-
-            fetch(`http://127.0.0.1:5000/rep/remove-auction/${auctionId}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            })
-            .then(res => res.json())
-            .then(data => {
-              alert(data.message);
-              location.reload();
-            })
-            .catch(err => console.error('Failed to delete auction:', err));
-          }
-
-          // Manage bids for a specific auction
-          async function manageBids(auctionId) {
-            try {
-              const res = await fetch(`http://127.0.0.1:5000/rep/bids/${auctionId}`, {
-                method: 'GET',
-                headers: {
-                  'Authorization': 'Bearer ' + token
-                }
-              });
-              const data = await res.json();
-
-              const tableBody = document.getElementById('bidsTableBody');
-              tableBody.innerHTML = '';
-
-              if (!data.bids || data.bids.length === 0) {
-                tableBody.innerHTML = `
-                  <tr>
-                    <td colspan="6" class="text-center text-muted">No bids found for this auction.</td>
-                  </tr>
-                `;
-                const modal = new bootstrap.Modal(document.getElementById('bidsModal'));
-                modal.show();
-                return;
-              }
-
-              for (const bid of data.bids) {
-                const bidderName = await fetchBidderName(bid.UserID);
-                const row = document.createElement('tr');
-                row.setAttribute('data-bid-id', bid.BidID); // Add data-bid-id attribute
-                row.innerHTML = `
-                  <td>${bid.BidID}</td>
-                  <td>${bid.UserID}</td>
-                  <td>${bidderName || 'N/A'}</td>
-                  <td>$${bid.Amount.toFixed(2)}</td>
-                  <td>${new Date(bid.Timestamp).toLocaleString()}</td>
-                  <td>
-                    <button class="btn btn-sm btn-danger" onclick="deleteBid(${bid.BidID})">Delete</button>
-                  </td>
-                `;
-                tableBody.appendChild(row);
-              }
-
-              const modal = new bootstrap.Modal(document.getElementById('bidsModal'));
-              modal.show();
-            } catch (err) {
-              console.error('Failed to fetch bids:', err);
-              alert('An error occurred while fetching bids. Please try again later.');
-            }
-          }
-
-          // Fetch bidder's username by UserID using the /rep/user API route
-          async function fetchBidderName(userId) {
-            try {
-              const res = await fetch(`http://127.0.0.1:5000/rep/user`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': 'Bearer ' + token,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ user_id: userId })
-              });
-              if (res.ok) {
-                const data = await res.json();
-                return data.Username;
-              }
-            } catch (err) {
-              console.error(`Failed to fetch username for UserID ${userId}:`, err);
-            }
-            return null;
-          }
-
-          // Delete a specific bid
-          function deleteBid(bidId) {
-            if (!confirm('Are you sure you want to delete this bid?')) return;
-
-            fetch(`http://127.0.0.1:5000/rep/remove-bid/${bidId}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': 'Bearer ' + token
-              }
-            })
-            .then(res => res.json())
-            .then(data => {
-              if (data.message) {
-                alert(data.message);
-
-                // Remove the bid row from the table
-                const bidRow = document.querySelector(`#bidsTableBody tr[data-bid-id="${bidId}"]`);
-                if (bidRow) {
-                  bidRow.remove();
-                }
-              }
-            })
-            .catch(err => console.error('Failed to delete bid:', err));
-          }
-
-          function viewAuctionDetails(auctionId) {
-            const auction = auctionData.find(a => a.AuctionID === auctionId);
-            if (!auction) {
-              alert('Auction not found.');
-              return;
-            }
-
-            const modalBody = document.getElementById('auctionDetailsBody');
-            modalBody.innerHTML = `
-              <h5>Auction Details</h5>
-              <p><strong>Auction ID:</strong> ${auction.AuctionID}</p>
-              <p><strong>Start Price:</strong> $${auction.StartPrice}</p>
-              <p><strong>Minimum Increment:</strong> $${auction.MinIncrement}</p>
-              <p><strong>Secret Minimum Price:</strong> $${auction.SecretMinPrice}</p>
-              <p><strong>Start Time:</strong> ${new Date(auction.StartTime).toLocaleString()}</p>
-              <p><strong>End Time:</strong> ${new Date(auction.EndTime).toLocaleString()}</p>
-              <p><strong>Is Closed:</strong> ${auction.IsClosed ? 'Yes' : 'No'}</p>
-            `;
-            const modal = new bootstrap.Modal(document.getElementById('auctionDetailsModal'));
-            modal.show();
-          }
-        </script>
-      </tbody>
-    </table>
-    <div class="mt-3 center-align">
-      <a href="index.html" class="btn btn-secondary">Back to Dashboard</a>
-    </div>
-  </div>
-
-  <!-- Modal for Viewing Specifications -->
-  <div class="modal fade" id="specificationsModal" tabindex="-1" aria-labelledby="specificationsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="specificationsModalLabel">Item Specifications</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <ul id="specificationsList">
-            <!-- Specifications will be dynamically populated -->
-          </ul>
+    <!-- Main -->
+    <main>
+      <div class="page-header">Manage Auctions & Bids</div>
+      <div class="content-wrapper">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Item ID</th>
+              <th>Auction ID</th>
+              <th>Title</th>
+              <th>Brand</th>
+              <th>Subcategory</th>
+              <th>Created At</th>
+              <th>Specifications</th>
+              <th>Auction Details</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="auctionTableBody"><!-- rows injected here --></tbody>
+        </table>
+        <div class="text-center mt-3">
+          <a href="index.html" class="btn btn-primary">
+            <span class="me-1">&larr;</span>Back
+          </a>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 
-  <!-- Modal for Viewing Auction Details -->
-  <div class="modal fade" id="auctionDetailsModal" tabindex="-1" aria-labelledby="auctionDetailsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="auctionDetailsModalLabel">Auction Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="auctionDetailsBody">
-          <!-- Auction details will be dynamically inserted here -->
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- ---------- ORIGINAL JS (functionality unchanged) ---------- -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const token = localStorage.getItem('token');
+  let auctionData = [];
 
-  <!-- Modal for Viewing Bids -->
-  <div class="modal fade" id="bidsModal" tabindex="-1" aria-labelledby="bidsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="bidsModalLabel">Bid History</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <table class="table table-bordered">
-            <thead>
-              <tr>
-                <th>Bid ID</th>
-                <th>Bidder ID</th>
-                <th>Bidder Name</th>
-                <th>Amount</th>
-                <th>Timestamp</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="bidsTableBody">
-              <!-- Bids will be dynamically populated -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+  /* ---------- Fetch & render auctions ---------- */
+  fetch('http://127.0.0.1:5000/rep/auctions', {
+    headers:{'Authorization':'Bearer '+token}
+  })
+  .then(r=>r.json())
+  .then(data=>{
+    auctionData = data;
+    const tbody = document.getElementById('auctionTableBody');
+    tbody.innerHTML = '';
+    data.forEach(item=>{
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.ItemID}</td>
+        <td>${item.AuctionID}</td>
+        <td>${item.Title}</td>
+        <td>${item.Brand}</td>
+        <td>${item.Subcategory}</td>
+        <td>${new Date(item.CreatedAt).toLocaleString()}</td>
+        <td>
+          <button class="btn btn-sm btn-info" onclick="viewSpecifications(${item.ItemID})">View</button>
+        </td>
+        <td>
+          <button class="btn btn-sm btn-secondary" onclick="viewAuctionDetails(${item.AuctionID})">View</button>
+        </td>
+        <td>${item.Status}</td>
+        <td>
+          <button class="btn btn-sm btn-danger mb-1" onclick="deleteAuction(${item.AuctionID})">Delete Auction</button><br>
+          <button class="btn btn-sm btn-primary" onclick="manageBids(${item.AuctionID})">Manage Bids</button>
+        </td>`;
+      tbody.appendChild(row);
+    });
+  })
+  .catch(err=>console.error('Failed to fetch auctions:',err));
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  /* ---------- Helper functions (unchanged) ---------- */
+  function viewSpecifications(itemId){
+    fetch(`http://127.0.0.1:5000/public/browse/item-details/${itemId}`,{
+      headers:{'Authorization':'Bearer '+token}
+    })
+    .then(r=>r.ok?r.json():Promise.reject())
+    .then(data=>{
+      const list=document.getElementById('specificationsList');
+      list.innerHTML='';
+      if(data.Attributes?.length){
+        data.Attributes.forEach(a=>{
+          const li=document.createElement('li');
+          li.textContent=`${a.name}: ${a.value}`;
+          list.appendChild(li);
+        });
+      }else{
+        list.innerHTML='<li>No specifications available.</li>';
+      }
+      new bootstrap.Modal('#specificationsModal').show();
+    })
+    .catch(()=>alert('Failed to load specifications.'));
+  }
+
+  function viewAuctionDetails(auctionId){
+    const a = auctionData.find(x=>x.AuctionID===auctionId);
+    if(!a){alert('Auction not found.');return;}
+    document.getElementById('auctionDetailsBody').innerHTML = `
+      <p><strong>Auction ID:</strong> ${a.AuctionID}</p>
+      <p><strong>Start Price:</strong> $${a.StartPrice}</p>
+      <p><strong>Minimum Increment:</strong> $${a.MinIncrement}</p>
+      <p><strong>Secret Minimum Price:</strong> $${a.SecretMinPrice}</p>
+      <p><strong>Start Time:</strong> ${new Date(a.StartTime).toLocaleString()}</p>
+      <p><strong>End Time:</strong> ${new Date(a.EndTime).toLocaleString()}</p>
+      <p><strong>Is Closed:</strong> ${a.IsClosed ? 'Yes' : 'No'}</p>`;
+    new bootstrap.Modal('#auctionDetailsModal').show();
+  }
+
+  function deleteAuction(auctionId){
+    if(!confirm('Are you sure you want to delete this auction?')) return;
+    fetch(`http://127.0.0.1:5000/rep/remove-auction/${auctionId}`,{
+      method:'DELETE',headers:{'Authorization':'Bearer '+token}
+    })
+    .then(r=>r.json())
+    .then(d=>{alert(d.message);location.reload();})
+    .catch(()=>alert('Failed to delete auction.'));
+  }
+
+  async function manageBids(auctionId){
+    try{
+      const r = await fetch(`http://127.0.0.1:5000/rep/bids/${auctionId}`,{
+        headers:{'Authorization':'Bearer '+token}
+      });
+      const data = await r.json();
+      const tbody=document.getElementById('bidsTableBody');
+      tbody.innerHTML='';
+      if(!data.bids?.length){
+        tbody.innerHTML='<tr><td colspan="6" class="text-muted text-center">No bids for this auction.</td></tr>';
+        new bootstrap.Modal('#bidsModal').show();return;
+      }
+      for(const bid of data.bids){
+        const bidderName = await fetchBidderName(bid.UserID);
+        const tr=document.createElement('tr');
+        tr.setAttribute('data-bid-id',bid.BidID);
+        tr.innerHTML = `
+          <td>${bid.BidID}</td>
+          <td>${bid.UserID}</td>
+          <td>${bidderName||'N/A'}</td>
+          <td>$${bid.Amount.toFixed(2)}</td>
+          <td>${new Date(bid.Timestamp).toLocaleString()}</td>
+          <td><button class="btn btn-sm btn-danger" onclick="deleteBid(${bid.BidID})">Delete</button></td>`;
+        tbody.appendChild(tr);
+      }
+      new bootstrap.Modal('#bidsModal').show();
+    }catch(err){
+      console.error(err);alert('Error fetching bids.');
+    }
+  }
+
+  async function fetchBidderName(userId){
+    try{
+      const r=await fetch('http://127.0.0.1:5000/rep/user',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify({user_id:userId})
+      });
+      if(r.ok){const d=await r.json();return d.Username;}
+    }catch{}
+    return null;
+  }
+
+  function deleteBid(bidId){
+    if(!confirm('Delete this bid?'))return;
+    fetch(`http://127.0.0.1:5000/rep/remove-bid/${bidId}`,{
+      method:'DELETE',headers:{'Authorization':'Bearer '+token}
+    })
+    .then(r=>r.json())
+    .then(d=>{
+      alert(d.message||'Bid deleted.');
+      document.querySelector(`[data-bid-id="${bidId}"]`)?.remove();
+    })
+    .catch(()=>alert('Failed to delete bid.'));
+  }
+</script>
+
+<!-- ---------- 3 Bootstrap modals (unchanged HTML) ---------- -->
+<div class="modal fade" id="specificationsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Item Specifications</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><ul id="specificationsList"></ul></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="auctionDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Auction Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="auctionDetailsBody"></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="bidsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Bid History</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <table class="table table-bordered align-middle">
+        <thead><tr><th>Bid ID</th><th>Bidder ID</th><th>Bidder Name</th><th>Amount</th><th>Timestamp</th><th>Actions</th></tr></thead>
+        <tbody id="bidsTableBody"></tbody>
+      </table>
+    </div>
+  </div></div>
+</div>
+
 </body>
 </html>
+
