@@ -1,146 +1,132 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Open Queries - Rep Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body { background-color: #f8f9fa; padding: 40px; }
-    .container {
-      max-width: 900px;
-      background-color: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h3 { text-align: center; margin-bottom: 25px; }
-    .query-card {
-      border: 1px solid #dee2e6;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .query-card small {
-      color: #6c757d;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Answer Queries – Rep Dashboard</title>
+
+<!-- fonts / bootstrap -->
+<link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:'Roboto',sans-serif;
+  background:linear-gradient(135deg,rgba(240,244,248,.85),rgba(217,226,236,.85)),
+             url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
+  min-height:100vh;color:#333;display:flex;flex-direction:column}
+.header{
+  background:linear-gradient(135deg,#5563DE,#304ffe);
+  padding:15px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header .logo{color:#fff;text-decoration:none;font-size:26px;font-family:'Montserrat',sans-serif}
+.nav-links{display:flex;gap:15px;align-items:center}
+.nav-links a{color:#fff;text-decoration:none;padding:10px 16px;font-weight:500;border-radius:4px;transition:.3s}
+.nav-links a:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.container-fluid{display:flex;padding:0;flex:1}
+.sidebar{
+  background:#fff;border-right:1px solid #ddd;min-height:100vh;padding:30px 20px;max-width:220px;
+  box-shadow:2px 0 10px rgba(0,0,0,.05)}
+.sidebar h4{font-family:'Montserrat',sans-serif;margin-bottom:20px;color:#304ffe}
+.sidebar .nav-link{font-size:1rem;color:#304ffe;margin-bottom:15px;text-decoration:none;display:block;
+  padding:6px 10px;border-radius:6px;transition:.3s}
+.sidebar .nav-link:hover{background:rgba(48,79,254,.1)}
+main{flex:1;padding:30px}
+.page-header{background:#304ffe;color:#fff;padding:12px 24px;border-radius:8px;margin-bottom:25px;
+  font-size:1.5rem;font-weight:500}
+.content-wrapper{background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.1)}
+.query-card{border:1px solid #dee2e6;padding:15px;border-radius:8px;margin-bottom:15px}
+.query-card small{color:#6c757d}
+</style>
 </head>
+
 <body>
+<header class="header">
+  <div class="logo">BuyMe</div>
+  <nav class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+  </nav>
+</header>
 
-<div class="container">
-  <h3>Open Customer Queries</h3>
-  <div id="queriesList"></div>
-  <div id="message"></div>
+<div class="container-fluid">
+  <aside class="sidebar">
+    <h4>Navigation</h4>
+    <nav class="nav flex-column">
+      <a class="nav-link" href="profile.html">View Profile</a>
+      <a class="nav-link" href="queries.html">Open Queries</a>
+      <a class="nav-link" href="reset_password.html">Reset User Password</a>
+      <a class="nav-link" href="manage_auction_and_bids.html">Manage Auctions & Bids</a>
+    </nav>
+  </aside>
 
-  <div class="text-center mt-4">
-    <a href="index.html" style="color: #6c757d; text-decoration: none;">← Back to Dashboard</a>
-  </div>
+  <main>
+    <div class="page-header">Answer Customer Queries</div>
+    <div class="content-wrapper">
+      <div id="queriesList"></div>
+      <div id="message" class="mt-3"></div>
+      <div class="text-center mt-4">
+        <a href="index.html" class="btn btn-secondary">Back</a>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
-  const token = localStorage.getItem('token');
+const token=localStorage.getItem('token');
 
-  // Load queries
-  fetch('http://127.0.0.1:5000/rep/queries', {
-    method: 'GET',
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(res => res.json())
-  .then(queries => {
-    const container = document.getElementById('queriesList');
-    if (queries.length === 0) {
-      container.innerHTML = '<p class="text-muted">No open queries.</p>';
-      return;
-    }
+// load queries with reply box
+fetch('http://127.0.0.1:5000/rep/queries',{headers:{Authorization:'Bearer '+token}})
+ .then(r=>r.json())
+ .then(qs=>{
+   const c=document.getElementById('queriesList');
+   if(!qs.length){c.innerHTML='<p class="text-muted">No open queries.</p>';return;}
+   qs.forEach(q=>{
+     const card=document.createElement('div');card.className='query-card';card.id=`query-${q.QueryID}`;
+     card.innerHTML=`
+       <p><strong>Subject:</strong> ${q.Subject}</p>
+       <p><strong>Message:</strong> ${q.Message}</p>
+       <small><strong>Query ID:</strong> ${q.QueryID} &nbsp;|&nbsp; <strong>User ID:</strong> ${q.UserID}</small><br>
+       <small><strong>Created:</strong> ${new Date(q.CreatedAt).toLocaleString()}</small>
+       <div class="mt-3">
+         <textarea class="form-control" rows="3" placeholder="Write a reply..." id="reply-${q.QueryID}"></textarea>
+         <button class="btn btn-sm btn-primary mt-2" onclick="sendReply(${q.QueryID})" id="btn-${q.QueryID}">Send Reply</button>
+         <button class="btn btn-sm btn-outline-success mt-2 ms-2" onclick="closeQuery(${q.QueryID},this)">Mark as Closed</button>
+       </div>`;
+     c.appendChild(card);
+   });
+ });
 
-    queries.forEach(q => {
-      const card = document.createElement('div');
-      card.className = 'query-card';
-      card.id = `query-${q.QueryID}`;
+function sendReply(id){
+ const btn=document.getElementById(`btn-${id}`);
+ const msg=document.getElementById(`reply-${id}`).value.trim();
+ if(!msg){flash('Reply cannot be empty','danger');return;}
+ btn.disabled=true;
+ fetch(`http://127.0.0.1:5000/rep/queries/reply/${id}`,{
+   method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+   body:JSON.stringify({message:msg})})
+  .then(r=>r.json().then(b=>({ok:r.ok,body:b})))
+  .then(res=>{
+     if(res.ok){
+       flash('Reply sent','success');
+       document.getElementById(`reply-${id}`).disabled=true;
+       btn.textContent='Replied';
+     }else{btn.disabled=false;flash(res.body.error||'Error','danger');}
+  }).catch(()=>{btn.disabled=false;flash('Network error','danger');});
+}
 
-      card.innerHTML = `
-        <p><strong>Subject:</strong> ${q.Subject}</p>
-        <p><strong>Message:</strong> ${q.Message}</p>
-        <small><strong>Query ID:</strong> ${q.QueryID} | <strong>User ID:</strong> ${q.UserID}</small><br>
-        <small><strong>Created At:</strong> ${new Date(q.CreatedAt).toLocaleString()}</small>
-        <div class="mt-3">
-          <textarea class="form-control" rows="3" placeholder="Write a reply..." id="reply-${q.QueryID}"></textarea>
-          <button class="btn btn-sm btn-primary mt-2" onclick="sendReply(${q.QueryID})" id="reply-btn-${q.QueryID}">Send Reply</button>
-          <button class="btn btn-sm btn-outline-success mt-2 ms-2" onclick="closeQuery(${q.QueryID}, this)">Mark as Closed</button>
-        </div>
-      `;
+function closeQuery(id,button){
+ button.disabled=true;
+ fetch(`http://127.0.0.1:5000/rep/queries/close/${id}`,{method:'PUT',headers:{Authorization:'Bearer '+token}})
+   .then(r=>r.json().then(b=>({ok:r.ok,body:b})))
+   .then(res=>{
+     if(res.ok){document.getElementById(`query-${id}`).remove();flash('Query closed','success');}
+     else{button.disabled=false;flash(res.body.error||'Error','danger');}
+   }).catch(()=>{button.disabled=false;flash('Network error','danger');});
+}
 
-      container.appendChild(card);
-    });
-  });
-
-  // Send reply to backend
-  function sendReply(queryId) {
-    const btn = document.getElementById(`reply-btn-${queryId}`);
-    const message = document.getElementById(`reply-${queryId}`).value;
-
-    if (!message.trim()) {
-      showMessage('Reply cannot be empty.', 'danger');
-      return;
-    }
-
-    btn.disabled = true;
-
-    fetch(`http://127.0.0.1:5000/rep/queries/reply/${queryId}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message })
-    })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(res => {
-      if (res.status === 200) {
-        showMessage('Reply sent successfully.', 'success');
-        document.getElementById(`reply-${queryId}`).disabled = true;
-        btn.disabled = true;
-        btn.textContent = "Replied";
-      } else {
-        btn.disabled = false;
-        showMessage(res.body.error || 'Failed to send reply.', 'danger');
-      }
-    })
-    .catch(() => {
-      btn.disabled = false;
-      showMessage('Network error while replying.', 'danger');
-    });
-  }
-
-  // Close query handler
-  function closeQuery(queryId, button) {
-    button.disabled = true;
-
-    fetch(`http://127.0.0.1:5000/rep/queries/close/${queryId}`, {
-      method: 'PUT',
-      headers: { 'Authorization': 'Bearer ' + token }
-    })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(res => {
-      if (res.status === 200) {
-        document.getElementById(`query-${queryId}`).remove();
-        showMessage('Query closed successfully.', 'success');
-      } else {
-        button.disabled = false;
-        showMessage(res.body.error || 'Error closing query.', 'danger');
-      }
-    })
-    .catch(() => {
-      button.disabled = false;
-      showMessage('Network error. Try again.', 'danger');
-    });
-  }
-
-  function showMessage(msg, type) {
-    document.getElementById('message').innerHTML =
-      `<div class="alert alert-${type} mt-3">${msg}</div>`;
-  }
+function flash(m,t){document.getElementById('message').innerHTML=`<div class="alert alert-${t}">${m}</div>`;}
 </script>
-
 </body>
 </html>
+
