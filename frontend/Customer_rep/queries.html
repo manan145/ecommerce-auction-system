@@ -1,70 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Open Queries - Rep Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Queries – Customer Rep</title>
+
+  <!-- Google Fonts + Bootstrap 5 -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <style>
-    body {
-      background-color: #f8f9fa;
-      padding: 40px;
+    /* ---------- GLOBAL LOOK (matches other pages) ---------- */
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Roboto',sans-serif;
+      background:linear-gradient(135deg,rgba(240,244,248,.85),rgba(217,226,236,.85)),
+                 url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
+      min-height:100vh;
+      color:#333;
+      display:flex;
+      flex-direction:column;
     }
-    .container {
-      max-width: 900px;
-      background-color: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    /* header */
+    .header{
+      background:linear-gradient(135deg,#5563DE,#304ffe);
+      padding:15px 30px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      box-shadow:0 2px 8px rgba(0,0,0,.15);
     }
-    h3 {
-      text-align: center;
-      margin-bottom: 25px;
+    .header .logo{color:#fff;text-decoration:none;font-size:26px;font-family:'Montserrat',sans-serif}
+    .nav-links{display:flex;gap:15px;align-items:center}
+    .nav-links a{color:#fff;text-decoration:none;padding:10px 16px;font-weight:500;border-radius:4px;transition:.3s}
+    .nav-links a:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+    /* sidebar + layout */
+    .container-fluid{display:flex;padding:0;flex:1}
+    .sidebar{
+      background:#fff;border-right:1px solid #ddd;min-height:100vh;
+      padding:30px 20px;max-width:220px;box-shadow:2px 0 10px rgba(0,0,0,.05)
     }
-    .query-card {
-      border: 1px solid #dee2e6;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
+    .sidebar h4{font-family:'Montserrat',sans-serif;margin-bottom:20px;color:#304ffe}
+    .sidebar .nav-link{font-size:1rem;color:#304ffe;margin-bottom:15px;text-decoration:none;
+      display:block;padding:6px 10px;border-radius:6px;transition:.3s}
+    .sidebar .nav-link:hover{background:rgba(48,79,254,.1)}
+    main{flex:1;padding:30px}
+    .page-header{
+      background:#304ffe;color:#fff;padding:12px 24px;border-radius:8px;
+      margin-bottom:25px;font-size:1.5rem;font-weight:500;text-align:center
     }
-    .query-card small {
-      color: #6c757d;
+    .content-wrapper{
+      background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.1)
     }
+
+    /* ---------- PAGE-SPECIFIC ---------- */
+    .query-card{
+      border:1px solid #dee2e6;padding:15px;border-radius:8px;margin-bottom:15px
+    }
+    .query-card small{color:#6c757d}
   </style>
 </head>
+
 <body>
+  <!-- 🟦 Header -->
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
 
-<div class="container">
-  <h3>Open Customer Queries</h3>
-  <div id="queriesList">
-    <!-- Queries will be loaded here -->
+  <div class="container-fluid">
+    <!-- 🟦 Sidebar -->
+    <aside class="sidebar">
+      <h4>Navigation</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="profile.html">View Profile</a>
+        <a class="nav-link" href="queries.html">Open Queries</a>
+        <a class="nav-link" href="reset_password.html">Reset User Password</a>
+        <a class="nav-link" href="manage_auction_and_bids.html">Manage Auctions & Bids</a>
+        <a class="nav-link" href="manage_users.html">Manage Users</a>
+      </nav>
+    </aside>
+
+    <!-- 🟦 Main content -->
+    <main>
+      <div class="page-header">Open Customer Queries</div>
+      <div class="content-wrapper">
+        <div id="queriesList"></div>
+        <div id="message" class="mt-3"></div>
+
+        <div class="text-center mt-4">
+          <a href="index.html" class="btn btn-primary">← Back</a>
+        </div>
+      </div>
+    </main>
   </div>
-  <div id="message"></div>
 
-  <!-- Subtle Go Back Link -->
-  <div class="text-center mt-4">
-    <a href="index.html" style="color: #6c757d; text-decoration: none;">← Back to Dashboard</a>
-  </div>
-</div>
-
+<!-- ---------- ORIGINAL JS (unchanged functionality) ---------- -->
 <script>
   const token = localStorage.getItem('token');
 
   // Load queries
   fetch('http://127.0.0.1:5000/rep/queries', {
-    method: 'GET',
-    headers: {
-      'Authorization': 'Bearer ' + token
-    }
+    headers: { 'Authorization':'Bearer '+token }
   })
   .then(res => res.json())
   .then(queries => {
     const container = document.getElementById('queriesList');
-    if (queries.length === 0) {
+    if (!queries.length){
       container.innerHTML = '<p class="text-muted">No open queries.</p>';
       return;
     }
 
-    queries.forEach(q => {
+    queries.forEach(q=>{
       const card = document.createElement('div');
       card.className = 'query-card';
       card.innerHTML = `
@@ -74,71 +126,68 @@
         <small><strong>Created At:</strong> ${new Date(q.CreatedAt).toLocaleString()}</small><br>
         <textarea class="form-control mt-2" placeholder="Write your response here..." id="response-${q.QueryID}"></textarea>
         <button class="btn btn-sm btn-outline-primary mt-2" onclick="respondToQuery(${q.QueryID})">Respond</button>
-        <button class="btn btn-sm btn-outline-success mt-2" onclick="closeQuery(${q.QueryID}, this)">Mark as Closed</button>
+        <button class="btn btn-sm btn-outline-success mt-2 ms-2" onclick="closeQuery(${q.QueryID}, this)">Mark as Closed</button>
       `;
       container.appendChild(card);
     });
   });
 
-  // Close query handler
-  function closeQuery(queryId, button) {
-    button.disabled = true;
-
-    fetch('http://127.0.0.1:5000/rep/queries/close/' + queryId, { // Updated endpoint
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + token
+  // Close query
+  function closeQuery(queryId, btn){
+    btn.disabled = true;
+    fetch('http://127.0.0.1:5000/rep/queries/close/'+queryId,{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token}
+    })
+    .then(r=>r.json().then(d=>({status:r.status,body:d})))
+    .then(res=>{
+      if(res.status===200){
+        btn.parentElement.remove();
+        showMessage('Query closed successfully.','success');
+      }else{
+        btn.disabled=false;
+        showMessage(res.body.error||'Error closing query.','danger');
       }
     })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(res => {
-      if (res.status === 200) {
-        button.parentElement.remove();
-        showMessage('Query closed successfully.', 'success');
-      } else {
-        button.disabled = false;
-        showMessage(res.body.error || 'Error closing query.', 'danger');
-      }
-    })
-    .catch(err => {
-      console.error('Network error:', err); // Log the error for debugging
-      button.disabled = false;
-      showMessage('Network error. Try again.', 'danger');
+    .catch(err=>{
+      console.error('Network error:',err);
+      btn.disabled=false;
+      showMessage('Network error. Try again.','danger');
     });
   }
 
-  function respondToQuery(queryId) {
+  // Respond to query
+  function respondToQuery(queryId){
     const response = document.getElementById(`response-${queryId}`).value.trim();
-    if (!response) {
-      showMessage('Response cannot be empty.', 'danger');
+    if(!response){
+      showMessage('Response cannot be empty.','danger');
       return;
     }
-
-    fetch('http://127.0.0.1:5000/rep/queries/respond/' + queryId, { // Updated endpoint
-      method: 'PUT',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
+    fetch('http://127.0.0.1:5000/rep/queries/respond/'+queryId,{
+      method:'PUT',
+      headers:{
+        'Authorization':'Bearer '+token,
+        'Content-Type':'application/json'
       },
-      body: JSON.stringify({ response })
+      body:JSON.stringify({response})
     })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(res => {
-      if (res.status === 200) {
-        showMessage('Response added successfully.', 'success');
-      } else {
-        showMessage(res.body.error || 'Error adding response.', 'danger');
+    .then(r=>r.json().then(d=>({status:r.status,body:d})))
+    .then(res=>{
+      if(res.status===200){
+        showMessage('Response added successfully.','success');
+      }else{
+        showMessage(res.body.error||'Error adding response.','danger');
       }
     })
-    .catch(err => {
-      console.error('Network error:', err); // Log the error for debugging
-      showMessage('Network error. Try again.', 'danger');
+    .catch(err=>{
+      console.error('Network error:',err);
+      showMessage('Network error. Try again.','danger');
     });
   }
 
-  function showMessage(msg, type) {
+  function showMessage(msg,type){
     document.getElementById('message').innerHTML =
-      `<div class="alert alert-${type} mt-3">${msg}</div>`;
+      `<div class="alert alert-${type}">${msg}</div>`;
   }
 </script>
 

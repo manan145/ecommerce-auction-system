@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>FAQs - BuyMe</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <title>FAQs – Buyer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Fonts + Bootstrap -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
-                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #333;
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      color: #333;
     }
-
     .header {
       background: linear-gradient(135deg, #5563DE, #304ffe);
       padding: 15px 30px;
@@ -30,56 +30,112 @@
       flex-wrap: wrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
-
     .header .logo {
       color: #fff;
-      font-size: 26px;
       font-family: 'Montserrat', sans-serif;
+      font-size: 26px;
       text-decoration: none;
     }
-
     .nav-links {
       display: flex;
       gap: 15px;
+      align-items: center;
     }
-
     .nav-links a {
       color: #fff;
       text-decoration: none;
       padding: 10px 16px;
       font-weight: 500;
       border-radius: 4px;
-      transition: background 0.3s ease, transform 0.3s ease;
+      transition: 0.3s;
     }
-
     .nav-links a:hover {
       background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
     }
-
-    .container {
-      width: 95%;
-      max-width: 1000px;
-      margin: 40px auto;
+    .container-fluid {
+      display: flex;
+      padding: 0;
+      flex: 1;
+    }
+    .sidebar {
       background: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    .sidebar h4 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 15px;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+    .sidebar .nav-link:hover {
+      background-color: rgba(48,79,254,0.1);
+    }
+    main {
+      flex: 1;
       padding: 30px;
+    }
+    .page-header {
+      background: #304ffe;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .content-wrapper {
+      background: #fff;
+      padding: 25px;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
-
-    h2 {
-      text-align: center;
-      font-family: 'Montserrat', sans-serif;
-      color: #304ffe;
-      margin-top: 0;
+    .faq-card {
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
-
+    .faq-question {
+      background: #f0f4fa;
+      padding: 14px 20px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .faq-question:hover {
+      background: #e5ebf7;
+    }
+    .faq-answer {
+      display: none;
+      padding: 16px 20px;
+      background: #fff;
+      border-top: 1px solid #ddd;
+      font-size: 0.95rem;
+      color: #444;
+    }
+    .faq-card.active .faq-answer {
+      display: block;
+    }
     .search-bar {
       display: flex;
       justify-content: center;
       margin-bottom: 25px;
     }
-
     .search-bar input {
       width: 70%;
       padding: 10px 14px;
@@ -88,7 +144,6 @@
       border: 1px solid #ccc;
       margin-right: 10px;
     }
-
     .search-bar button {
       padding: 10px 16px;
       background-color: #304ffe;
@@ -98,98 +153,109 @@
       border-radius: 6px;
       cursor: pointer;
     }
-
-    .faq-card {
-      margin-bottom: 20px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    .faq-question {
-      background: #f0f4fa;
-      padding: 14px 20px;
-      font-weight: 500;
-      cursor: pointer;
-    }
-
-    .faq-question:hover {
-      background: #e5ebf7;
-    }
-
-    .faq-answer {
-      display: none;
-      padding: 16px 20px;
-      background: #fff;
-      border-top: 1px solid #ddd;
-      font-size: 0.95rem;
-      color: #444;
-    }
-
-    .faq-card.active .faq-answer {
-      display: block;
-    }
-
-    mark {
-      background-color: #fffb00;
-      padding: 0 2px;
-    }
   </style>
 </head>
+
 <body>
-  <header class="header">
-    <div class="logo">BuyMe</div>
-    <nav class="nav-links">
-      <a href="buyer.html">Home</a>
-      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">BuyMe</div>
+  <nav class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="show_alerts.html" class="notification-bell"><i class="fas fa-bell"></i></a>
+    <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+  </nav>
+</header>
+
+<!-- Body -->
+<div class="container-fluid">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h4>Navigation</h4>
+    <nav class="nav flex-column">
+      <a class="nav-link" href="buyer.html">Active Auctions</a>
+      <a class="nav-link" href="my_bids.html">My Bids</a>
+      <a class="nav-link" href="questions.html">FAQs</a>
+      <a class="nav-link" href="create_alerts.html">Create Alerts</a>
+      <a class="nav-link" href="contact_support.html">Contact Support</a>
+      <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
     </nav>
-  </header>
+  </aside>
 
-  <div class="container">
-    <h2>Frequently Asked Questions</h2>
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search for a question...">
-      <button onclick="filterFAQs()">Search</button>
-    </div>
-    <div id="faqContainer"></div>
-  </div>
+  <!-- Main -->
+  <main>
+    <div class="page-header">Frequently Asked Questions</div>
 
-  <script>
-    const BASE_URL = 'http://127.0.0.1:5000';
+    <div class="content-wrapper">
 
-    async function loadFAQs() {
-      const res = await fetch(`${BASE_URL}/public/faq`);
-      const faqs = await res.json();
-      renderFAQs(faqs);
-    }
+      <!-- Search Bar -->
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search for a question...">
+        <button onclick="filterFAQs()">Search</button>
+      </div>
 
-    async function filterFAQs() {
-      const keyword = document.getElementById('searchInput').value.trim();
-      if (!keyword) {
-        loadFAQs();
-        return;
-      }
+      <!-- FAQ List -->
+      <div id="faqContainer"></div>
 
-      const res = await fetch(`${BASE_URL}/public/faq/search?q=${encodeURIComponent(keyword)}`);
-      const faqs = await res.json();
-      renderFAQs(faqs);
-    }
+      <!-- Back Button -->
+      <div class="text-center mt-4">
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">
+          &larr; Back
+        </button>
+      </div>
 
-    function renderFAQs(faqs) {
-      const container = document.getElementById('faqContainer');
-      container.innerHTML = faqs.map((faq, index) => `
-        <div class="faq-card">
-          <div class="faq-question" onclick="this.parentNode.classList.toggle('active')">
-            <strong style="margin-right: 10px;">Q${index + 1}.</strong>
-            <span>${faq.question}</span>
-          </div>
-          <div class="faq-answer">${faq.answer}</div>
-        </div>
-      `).join('');
-    }
+    </div> <!-- content-wrapper -->
+  </main>
+</div>
 
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const BASE_URL = "http://127.0.0.1:5000";
+
+async function loadFAQs() {
+  const res = await fetch(`${BASE_URL}/public/faq`);
+  const faqs = await res.json();
+  renderFAQs(faqs);
+}
+
+async function filterFAQs() {
+  const keyword = document.getElementById('searchInput').value.trim();
+  if (!keyword) {
     loadFAQs();
-  </script>
+    return;
+  }
+
+  const res = await fetch(`${BASE_URL}/public/faq/search?q=${encodeURIComponent(keyword)}`);
+  const faqs = await res.json();
+  renderFAQs(faqs);
+}
+
+function renderFAQs(faqs) {
+  const container = document.getElementById('faqContainer');
+  container.innerHTML = faqs.map((faq, index) => `
+    <div class="faq-card">
+      <div class="faq-question" onclick="this.parentNode.classList.toggle('active')">
+        <strong style="margin-right: 10px;">Q${index + 1}.</strong>
+        <span>${faq.question}</span>
+      </div>
+      <div class="faq-answer">
+        ${faq.answer}
+      </div>
+    </div>
+  `).join('');
+}
+
+function confirmDeleteAccount() {
+  if (confirm("Are you sure you want to delete your account? This action is irreversible.")) {
+    alert("Account deletion triggered.");
+  }
+}
+
+// Load FAQs initially
+loadFAQs();
+</script>
+
 </body>
 </html>

@@ -1,134 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>View Bids by Auction - Rep Dashboard</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    body {
-      background-color: #f8f9fa;
-      padding: 40px;
-    }
-    .container {
-      max-width: 900px;
-      background-color: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h3 {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-    .bid-card {
-      border: 1px solid #dee2e6;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .bid-card small {
-      color: #6c757d;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>View Bids – Rep Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+/* shared chrome */
+*{box-sizing:border-box}
+body{margin:0;font-family:'Roboto',sans-serif;
+  background:linear-gradient(135deg,rgba(240,244,248,.85),rgba(217,226,236,.85)),
+             url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
+  min-height:100vh;color:#333;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#5563DE,#304ffe);padding:15px 30px;
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header .logo{color:#fff;text-decoration:none;font-size:26px;font-family:'Montserrat',sans-serif}
+.nav-links{display:flex;gap:15px;align-items:center}
+.nav-links a{color:#fff;text-decoration:none;padding:10px 16px;font-weight:500;border-radius:4px;transition:.3s}
+.nav-links a:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.container-fluid{display:flex;padding:0;flex:1}
+.sidebar{background:#fff;border-right:1px solid #ddd;min-height:100vh;padding:30px 20px;max-width:220px;
+  box-shadow:2px 0 10px rgba(0,0,0,.05)}
+.sidebar h4{font-family:'Montserrat',sans-serif;margin-bottom:20px;color:#304ffe}
+.sidebar .nav-link{font-size:1rem;color:#304ffe;margin-bottom:15px;text-decoration:none;display:block;
+  padding:6px 10px;border-radius:6px;transition:.3s}
+.sidebar .nav-link:hover{background:rgba(48,79,254,.1)}
+main{flex:1;padding:30px}
+.page-header{background:#304ffe;color:#fff;padding:12px 24px;border-radius:8px;margin-bottom:25px;
+  font-size:1.5rem;font-weight:500}
+.content-wrapper{background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.1)}
+/* page-specific */
+.bid-card{border:1px solid #dee2e6;padding:15px;border-radius:8px;margin-bottom:15px}
+.bid-card small{color:#6c757d}
+</style>
 </head>
+
 <body>
+<header class="header">
+  <div class="logo">BuyMe</div>
+  <nav class="nav-links">
+    <a href="index.html">Dashboard</a>
+    <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+  </nav>
+</header>
 
-<div class="container">
-  <h3>View Bids by Auction ID</h3>
+<div class="container-fluid">
+  <aside class="sidebar">
+    <h4>Navigation</h4>
+    <nav class="nav flex-column">
+      <a class="nav-link" href="profile.html">View Profile</a>
+      <a class="nav-link" href="queries.html">Open Queries</a>
+      <a class="nav-link" href="reset_password.html">Reset User Password</a>
+      <a class="nav-link" href="manage_auction_and_bids.html">Manage Auctions & Bids</a>
+    </nav>
+  </aside>
 
-  <form id="bidSearchForm" class="mb-4">
-    <div class="row g-2 align-items-center">
-      <div class="col-auto">
-        <label for="auctionId" class="col-form-label">Auction ID:</label>
+  <main>
+    <div class="page-header">View Bids by Auction ID</div>
+    <div class="content-wrapper">
+
+      <!-- ===== original markup ===== -->
+      <form id="bidSearchForm" class="mb-4">
+        <div class="row g-2 align-items-center">
+          <div class="col-auto"><label for="auctionId" class="col-form-label">Auction&nbsp;ID:</label></div>
+          <div class="col-auto"><input type="number" id="auctionId" class="form-control" required></div>
+          <div class="col-auto"><button class="btn btn-primary">View Bids</button></div>
+        </div>
+      </form>
+
+      <div id="bidsList"></div>
+      <div id="message"></div>
+
+      <div class="text-center mt-4">
+        <a href="index.html" class="btn btn-secondary">Back</a>
       </div>
-      <div class="col-auto">
-        <input type="number" id="auctionId" class="form-control" required>
-      </div>
-      <div class="col-auto">
-        <button type="submit" class="btn btn-primary">View Bids</button>
-      </div>
-    </div>
-  </form>
-
-  <div id="bidsList"></div>
-  <div id="message"></div>
-
-  <!-- Subtle Go Back Link -->
-  <div class="text-center mt-4">
-    <a href="index.html" style="color: #6c757d; text-decoration: none;">← Back to Dashboard</a>
-  </div>
+    </div>  
+  </main>
 </div>
 
 <script>
-  const token = localStorage.getItem('token');
+const token=localStorage.getItem('token');
 
-  document.getElementById('bidSearchForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const auctionId = document.getElementById('auctionId').value;
+document.getElementById('bidSearchForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const id=document.getElementById('auctionId').value;
+ fetch(`http://127.0.0.1:5000/rep/bids/${id}`,{headers:{Authorization:'Bearer '+token}})
+  .then(r=>r.json())
+  .then(data=>{
+     const list=document.getElementById('bidsList');list.innerHTML='';
+     if(!data.bids||!data.bids.length){
+       list.innerHTML='<p class="text-muted">No bids found for this auction.</p>';return;}
+     data.bids.forEach(b=>{
+       const card=document.createElement('div');card.className='bid-card';
+       card.innerHTML=`
+         <p><strong>Bid ID:</strong> ${b.BidID}</p>
+         <p><strong>User ID:</strong> ${b.UserID}</p>
+         <p><strong>Amount:</strong> $${b.Amount}</p>
+         <p><strong>Timestamp:</strong> ${new Date(b.Timestamp).toLocaleString()}</p>
+         <button class="btn btn-sm btn-outline-danger mt-2" onclick="removeBid(${b.BidID},this)">Remove Bid</button>`;
+       list.appendChild(card);
+     });
+  }).catch(()=>flash('Failed to fetch bids.','danger'));
+});
 
-    fetch(`http://127.0.0.1:5000/rep/bids/${auctionId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      const list = document.getElementById('bidsList');
-      list.innerHTML = '';
+function removeBid(id,btn){
+ btn.disabled=true;
+ fetch(`http://127.0.0.1:5000/rep/remove-bid/${id}`,{method:'DELETE',headers:{Authorization:'Bearer '+token}})
+  .then(r=>r.json().then(b=>({ok:r.ok,body:b})))
+  .then(res=>{
+     if(res.ok){btn.parentElement.remove();flash(res.body.message,'success');}
+     else{btn.disabled=false;flash(res.body.error||'Failed to remove bid.','danger');}
+  }).catch(()=>{btn.disabled=false;flash('Network error.','danger');});
+}
 
-      if (!data.bids || data.bids.length === 0) {
-        list.innerHTML = '<p class="text-muted">No bids found for this auction.</p>';
-        return;
-      }
-
-      data.bids.forEach(b => {
-        const card = document.createElement('div');
-        card.className = 'bid-card';
-        card.innerHTML = `
-          <p><strong>Bid ID:</strong> ${b.BidID}</p>
-          <p><strong>User ID:</strong> ${b.UserID}</p>
-          <p><strong>Amount:</strong> $${b.Amount}</p>
-          <p><strong>Timestamp:</strong> ${new Date(b.Timestamp).toLocaleString()}</p>
-          <button class="btn btn-sm btn-outline-danger mt-2" onclick="removeBid(${b.BidID}, this)">Remove Bid</button>
-        `;
-        list.appendChild(card);
-      });
-    })
-    .catch(() => {
-      showMessage('Failed to fetch bids. Please check the Auction ID.', 'danger');
-    });
-  });
-
-  function removeBid(id, btn) {
-    btn.disabled = true;
-    fetch(`http://127.0.0.1:5000/rep/remove-bid/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    })
-    .then(res => res.json().then(data => ({ status: res.status, body: data })))
-    .then(res => {
-      if (res.status === 200) {
-        btn.parentElement.remove();
-        showMessage(res.body.message, 'success');
-      } else {
-        btn.disabled = false;
-        showMessage(res.body.error || 'Failed to remove bid.', 'danger');
-      }
-    })
-    .catch(() => {
-      btn.disabled = false;
-      showMessage('Network error.', 'danger');
-    });
-  }
-
-  function showMessage(msg, type) {
-    document.getElementById('message').innerHTML =
-      `<div class="alert alert-${type} mt-3">${msg}</div>`;
-  }
+function flash(m,t){document.getElementById('message').innerHTML=`<div class="alert alert-${t} mt-3">${m}</div>`;}
 </script>
-
 </body>
 </html>
