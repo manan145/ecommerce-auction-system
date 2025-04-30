@@ -1,282 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Contact Support - BuyMe</title>
+  <meta charset="UTF-8">
+  <title>Contact Support – Seller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, rgba(240,244,248,0.85), rgba(217,226,236,0.85)),
+      background: linear-gradient(135deg, rgba(240,244,248, 0.85), rgba(217,226,236, 0.85)),
                   url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
       background-size: cover;
       color: #333;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
     }
-
     .header {
       background: linear-gradient(135deg, #5563DE, #304ffe);
       padding: 15px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
-
     .header .logo {
       color: #fff;
       font-size: 26px;
       font-family: 'Montserrat', sans-serif;
       text-decoration: none;
     }
-
     .nav-links {
       display: flex;
       gap: 15px;
+      align-items: center;
     }
-
     .nav-links a {
       color: #fff;
       text-decoration: none;
       padding: 10px 16px;
       font-weight: 500;
       border-radius: 4px;
-      transition: background 0.3s ease, transform 0.3s ease;
+      transition: background 0.3s;
     }
-
     .nav-links a:hover {
       background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
     }
-
-    .container {
-      width: 75%; /* Reduced from 95% to 75% */
-      max-width: 800px; /* Adjusted max-width for better scaling */
-      margin: 40px auto;
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    .container-fluid {
+      display: flex;
     }
-
-    h2 {
-      text-align: center;
+    .sidebar {
+      background: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar h4 {
       font-family: 'Montserrat', sans-serif;
       color: #304ffe;
-      margin-top: 0;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 10px;
-    }
-
-    input, textarea {
+    .sidebar .nav-link, .sidebar button {
       font-size: 1rem;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      width: 100%;
-    }
-
-    button {
-      background-color: #304ffe;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 500;
-      transition: background 0.3s ease, transform 0.3s ease;
-    }
-
-    button:hover {
-      background: #435ac9;
-      transform: translateY(-2px);
-    }
-
-    .confirmation {
-      margin-top: 10px;
-      color: green;
-      font-weight: 500;
-      text-align: center;
-    }
-
-    .query-card {
-      background: #f9f9ff;
-      border-left: 4px solid #304ffe;
-      margin-top: 25px;
-      padding: 16px 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-
-    .query-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .query-header .subject {
-      font-weight: 600;
       color: #304ffe;
-    }
-
-    .query-header .meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 5px;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      background-color: #ccc;
-      color: white;
-    }
-
-    .status.open { background-color: #ffc107; color: black; }
-    .status.closed { background-color: #28a745; }
-
-    .btn-toggle-response {
-      background-color: #304ffe;
-      color: white;
-      padding: 6px 12px;
-      border: none;
+      margin-bottom: 15px;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
       border-radius: 6px;
+      background: none;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sidebar .nav-link:hover, .sidebar button:hover {
+      background-color: rgba(48, 79, 254, 0.1);
+      color: #1a237e;
+    }
+    main {
+      flex: 1;
+      padding: 30px;
+    }
+    .form-wrapper {
+      background: #fff;
+      max-width: 700px;
+      margin: auto;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #5563DE;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
     }
-
-    .query-body {
-      margin-top: 10px;
-      font-size: 0.95rem;
+    button:hover {
+      background-color: #3f4abc;
     }
-
-    .response-box {
-      margin-top: 10px;
-      padding: 10px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-left: 4px solid #28a745;
+    .back-btn {
+      background: #304ffe;
+      color: #fff;
+      border: none;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 500;
       border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 25px;
+      transition: background-color 0.3s ease;
     }
-
-    .response-box p {
-      margin: 5px 0;
+    .back-btn:hover {
+      background: #435ac9;
     }
-
-    .hidden {
-      display: none;
+    .response-message {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.95rem;
+      color: green;
     }
   </style>
 </head>
 <body>
   <header class="header">
-    <div class="logo">BuyMe</div>
+    <a class="logo" href="index.html">BuyMe – Seller</a>
     <nav class="nav-links">
-      <a href="sellers.html">Home</a>
+      <a href="index.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications"><i class="fas fa-bell"></i></a>
       <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
     </nav>
   </header>
-  <div class="container">
-    <h2>Contact Support</h2>
 
-    <form id="supportForm" onsubmit="submitQuery(event)">
-      <input type="text" id="subject" placeholder="Subject" required />
-      <textarea id="message" rows="4" placeholder="Describe your issue..." required></textarea>
-      <button type="submit">Submit Query</button>
-      <div class="confirmation" id="confirmationMsg"></div>
-    </form>
+  <div class="container-fluid">
+    <aside class="sidebar">
+      <h4>Navigation</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="create_auction.html">Create Auction</a>
+        <a class="nav-link" href="questions.html">FAQs</a>
+        <a class="nav-link" href="contact_support.html">Contact Support</a>
+        <a class="nav-link" href="sellers.html">My Items</a>
+      </nav>
+      <button onclick="confirmDeleteAccount()">Delete Account</button>
+    </aside>
 
-    <h2 style="margin-top: 40px;">My Support Queries</h2>
-    <div id="queryList"></div>
+    <main>
+      <button class="btn back-btn" onclick="window.location.href='index.html'">← Back</button>
+
+      <div class="form-wrapper">
+        <h2 class="text-center text-primary mb-4">Contact Support</h2>
+        <form id="supportForm">
+          <label for="subject">Subject:</label>
+          <input type="text" id="subject" required placeholder="Brief subject...">
+
+          <label for="message">Message:</label>
+          <textarea id="message" rows="5" required placeholder="Describe your issue or question..."></textarea>
+
+          <button type="submit">Send Message</button>
+        </form>
+        <div id="responseMessage" class="response-message"></div>
+      </div>
+    </main>
   </div>
 
   <script>
-    const BASE_URL = 'http://127.0.0.1:5000';
-    const token = localStorage.getItem('token');
-
-    async function submitQuery(e) {
+    document.getElementById('supportForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      const token = localStorage.getItem('token');
       const subject = document.getElementById('subject').value.trim();
       const message = document.getElementById('message').value.trim();
-      const confirmation = document.getElementById('confirmationMsg');
 
-      if (!subject || !message) return;
-
-      const res = await fetch(`${BASE_URL}/public/customer-query`, {
+      const response = await fetch('http://127.0.0.1:5000/support', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': 'Bearer ' + token
         },
         body: JSON.stringify({ subject, message })
       });
 
-      if (res.ok) {
-        document.getElementById('supportForm').reset();
-        confirmation.textContent = "✅ Query submitted! Please allow us 2-3 business days to respond.";
-        loadQueries();
-      } else {
-        confirmation.textContent = "❌ Failed to submit query. Please try again.";
-      }
+      const data = await response.json();
+      document.getElementById('responseMessage').textContent = data.message || 'Message sent!';
+    });
+
+    function confirmDeleteAccount(){
+      if(!confirm("⚠️ This will permanently delete your account and all listings. Proceed?")) return;
+      const token = localStorage.getItem("token");
+      if(!token){ alert("Please log in again."); return; }
+      fetch("http://127.0.0.1:5000/delete-account", {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      })
+      .then(r => r.json())
+      .then(d => {
+        alert(d.message || "Account deleted.");
+        localStorage.clear();
+        location.href = "../login.html";
+      })
+      .catch(() => alert("Failed to delete account."));
     }
-
-    async function loadQueries() {
-      const res = await fetch(`${BASE_URL}/public/customer-query/mine`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      const data = await res.json();
-      const container = document.getElementById('queryList');
-      container.innerHTML = '';
-
-      data.forEach((q, idx) => {
-        container.innerHTML += `
-          <div class="query-card">
-            <div class="query-header">
-              <div class="subject">${q.Subject}</div>
-              <div class="meta">
-                <span>${new Date(q.CreatedAt).toLocaleString()}</span>
-                <span class="status ${q.Status}">${q.Status.toUpperCase()}</span>
-                <button class="btn-toggle-response" onclick="toggleResponse(${idx})">View Response</button>
-              </div>
-            </div>
-            <div class="query-body">
-              <p>${q.Message}</p>
-              <div id="response-${idx}" class="response-box hidden">
-                ${q.Response ? `
-                  <p><strong>Response from ${q.ResponderName || 'Support Rep'}:</strong></p>
-                  <p>${q.Response}</p>
-                  <small>Responded at: ${new Date(q.ResponseAt).toLocaleString()}</small>
-                ` : `
-                  <p><em>No response yet. Please allow us some time.</em></p>
-                `}
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function toggleResponse(index) {
-      const responseDiv = document.getElementById(`response-${index}`);
-      responseDiv.classList.toggle('hidden');
-    }
-
-    loadQueries();
   </script>
 </body>
 </html>

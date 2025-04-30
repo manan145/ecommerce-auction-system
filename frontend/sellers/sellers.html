@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Items - Seller Dashboard</title>
+  <title>My Items – Seller</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Bootstrap CSS and fonts -->
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; }
@@ -25,42 +24,36 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .header .logo {
       color: #fff;
-      text-decoration: none;
       font-size: 26px;
       font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
     }
     .nav-links {
       display: flex;
       gap: 15px;
       align-items: center;
     }
-    .nav-links a, .nav-links button {
+    .nav-links a {
       color: #fff;
       text-decoration: none;
       padding: 10px 16px;
       font-weight: 500;
       border-radius: 4px;
-      background: none;
-      border: none;
-      transition: background 0.3s, transform 0.3s;
-      font-family: inherit;
-      cursor: pointer;
+      transition: 0.3s;
     }
-    .nav-links a:hover, .nav-links button:hover {
-      background: rgba(255, 255, 255, 0.2);
+    .nav-links a:hover {
+      background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
     }
     .container-fluid {
       display: flex;
-      padding: 0;
     }
     .sidebar {
-      background-color: #fff;
+      background: #fff;
       border-right: 1px solid #ddd;
       min-height: 100vh;
       padding: 30px 20px;
@@ -68,10 +61,10 @@
       box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
     }
     .sidebar h4 {
-      font-weight: 700;
       font-family: 'Montserrat', sans-serif;
-      margin-bottom: 20px;
       color: #304ffe;
+      font-weight: 700;
+      margin-bottom: 20px;
     }
     .sidebar .nav-link, .sidebar button {
       font-size: 1rem;
@@ -81,12 +74,11 @@
       display: block;
       padding: 6px 10px;
       border-radius: 6px;
-      transition: background 0.3s;
       background: none;
       border: none;
       text-align: left;
-      font-family: inherit;
       cursor: pointer;
+      transition: background 0.2s;
     }
     .sidebar .nav-link:hover, .sidebar button:hover {
       background-color: rgba(48, 79, 254, 0.1);
@@ -96,390 +88,155 @@
       flex: 1;
       padding: 30px;
     }
-    .page-header {
-      background-color: #304ffe;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 8px;
-      margin-bottom: 25px;
-      font-size: 1.5rem;
-      font-weight: 500;
-    }
-    .content-wrapper {
-      background-color: #fff;
-      padding: 25px;
+    .wrapper {
+      background: #fff;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 20px;
     }
     th, td {
       padding: 12px 16px;
-      border-bottom: 1px solid #e0e0e0;
-      text-align: center;
-      vertical-align: middle !important;
+      border: 1px solid #ddd;
+      text-align: left;
+      font-size: 0.95rem;
     }
     th {
-      background-color: #f0f4fa;
+      background-color: #5563DE;
+      color: white;
     }
-    tr:hover {
-      background-color: #f9fbff;
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
     }
     .btn-sm {
       font-size: 0.85rem;
-      padding: 6px 10px;
-      border: none;
-      cursor: pointer;
-      border-radius: 6px;
+      padding: 5px 10px;
     }
-    .btn-primary { background-color: #5563DE; color: white; }
-    .btn-secondary { background-color: #6c757d; color: white; }
-    .btn-view-specs {
-      min-width: 90px;
-      min-height: 44px;
-      font-size: 1.1rem;
-      padding: 10px 0;
-      background-color: #4fc3f7;
-      color: #222;
-      border: none;
-      border-radius: 10px;
-      display: inline-block;
-      margin: 0 auto;
-      font-weight: 500;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-      transition: background 0.2s;
-    }
-    .btn-view-specs:hover {
-      background-color: #039be5;
-      color: #fff;
-    }
-    .modal-content {
-      white-space: pre-wrap;
+    .message {
+      text-align: center;
+      margin-top: 15px;
       font-size: 0.95rem;
+      color: green;
     }
-    .badge {
-      font-size: 1rem;
-      padding: 6px 12px;
-      border-radius: 8px;
-    }
-    /* Dropdown for actions */
-    .dropbtn {
-      background-color: #5563DE;
-      color: white;
+    .back-btn {
+      background: #304ffe;
+      color: #fff;
       border: none;
-      border-radius: 6px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      width: 100%;
-      margin-bottom: 0;
-    }
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      left: 0;
-      top: 100%;
-      background-color: #fff;
-      min-width: 180px;
-      border: 1px solid #ccc;
-      box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.15);
-      border-radius: 8px;
-      z-index: 10;
-      padding: 0;
-      margin-top: 4px;
-    }
-    .dropdown-content button, .dropdown-content a {
-      background: none;
-      color: #333;
       padding: 12px 18px;
-      border: none;
-      width: 100%;
-      text-align: left;
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1rem;
-      text-decoration: none;
-      display: block;
-      border-radius: 0;
-      transition: background 0.2s;
+      margin-bottom: 25px;
+      transition: background-color 0.3s ease;
     }
-    .dropdown-content button:hover, .dropdown-content a:hover {
-      background-color: #f1f1f1;
+    .back-btn:hover {
+      background: #435ac9;
     }
-    .dropdown.show .dropdown-content {
-      display: block;
-      animation: dropdownFadeIn 0.15s;
-    }
-    @keyframes dropdownFadeIn {
-      from { opacity: 0; transform: translateY(-8px);}
-      to { opacity: 1; transform: translateY(0);}
-    }
-    td .dropdown.d-inline-block { width: 100%; }
-    .d-flex.flex-column.gap-1 > .dropdown.d-inline-block { width: 100%; }
-    .text-center { text-align: center; }
   </style>
 </head>
 <body>
   <header class="header">
-    <div class="logo">BuyMe</div>
+    <a class="logo" href="index.html">BuyMe – Seller</a>
     <nav class="nav-links">
-      <a href="sellers.html">Home</a>
-      <a href="notifications.html" class="notification-bell" title="Notifications">
-        <i class="fas fa-bell"></i>
-      </a>
+      <a href="index.html">Home</a>
+      <a href="notifications.html" title="Notifications"><i class="fas fa-bell"></i></a>
       <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
     </nav>
   </header>
+
   <div class="container-fluid">
     <aside class="sidebar">
       <h4>Navigation</h4>
       <nav class="nav flex-column">
         <a class="nav-link" href="create_auction.html">Create Auction</a>
         <a class="nav-link" href="questions.html">FAQs</a>
-        <a class="nav-link" href="contact_support.html">Contact Support</a> <!-- Added Contact Support -->
+        <a class="nav-link" href="contact_support.html">Contact Support</a>
+        <a class="nav-link" href="sellers.html">My Items</a>
       </nav>
-      <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
+      <button onclick="confirmDeleteAccount()">Delete Account</button>
     </aside>
+
     <main>
-      <div class="page-header">
-        📦 My Items
-      </div>
-      <div class="content-wrapper">
-        <table class="table table-bordered table-striped align-middle">
+      <button class="btn back-btn" onclick="window.location.href='index.html'">← Back</button>
+
+      <div class="wrapper">
+        <h2 class="text-center text-primary mb-4">🧾 My Items</h2>
+        <table id="itemsTable" style="display:none;">
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Item ID</th>
               <th>Title</th>
-              <th>Brand</th>
-              <th>Model</th>
               <th>Condition</th>
-              <th>Created At</th>
-              <th>Specifications</th>
-              <th>Auction Details</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody id="itemsTableBody"></tbody>
         </table>
-        <div class="nav mt-4">
-          <a href="sellers.html" class="btn btn-outline-primary">← Back to Home</a>
-        </div>
+        <div id="message" class="message"></div>
       </div>
     </main>
   </div>
-  <!-- Specifications Modal -->
-  <div class="modal fade" id="specificationsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Specifications</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body" id="specificationsContent"></div>
-      </div>
-    </div>
-  </div>
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const BASE_URL = "http://127.0.0.1:5000"; // Add this line to define BASE_URL
-
-    // ...existing code for dropdowns, modals, and API calls...
-    let items = [];
-    function handleAcceptBid(auctionId) {
-      const token = localStorage.getItem('token');
-    fetch('http://127.0.0.1:5000/seller/accept-bid', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + token
-      },
-      body: JSON.stringify({ auction_id: auctionId })
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert("❌ " + data.error);
-      } else {
-        alert(data.message || 'Bid accepted successfully');
-        location.reload();
-      }
-    })
-    .catch(err => {
-      alert('⚠️ Failed to accept bid.');
-      console.error(err);
-    });
-    }
-
-    function handleExtendAuction(auctionId) {
-      window.location.href = `extend_auction.html?auction_id=${auctionId}`;
-    }
-
-    function handleWithdrawItem(auctionId) {
-      if (!confirm("Are you sure you want to withdraw this item from the auction?")) return;
-      const token = localStorage.getItem('token');
-      fetch('http://127.0.0.1:5000/seller/withdraw-item', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        },
-        body: JSON.stringify({ auction_id: auctionId })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || 'Item withdrawn successfully');
-        location.reload();
-      })
-      .catch(err => {
-        alert('Failed to withdraw item.');
-        console.error(err);
-      });
-    }
-
-    function toggleDropdown(event) {
-      event.stopPropagation();
-      closeAllDropdowns();
-      const dropdown = event.target.closest(".dropdown");
-      dropdown.classList.toggle("show");
-    }
-
-    function closeAllDropdowns() {
-      document.querySelectorAll(".dropdown").forEach(d => d.classList.remove("show"));
-    }
-
-    function showSpecifications(index) {
-      const item = items[index];
-      const attributes = item.Attributes.map(attr => `<strong>${attr.name}</strong>: ${attr.value}`).join('<br>');
-      document.getElementById('specificationsContent').innerHTML = attributes;
-      new bootstrap.Modal(document.getElementById('specificationsModal')).show();
-    }
-
-    document.addEventListener('click', function () {
-      closeAllDropdowns();
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        window.location.href = '../login.html';
-        return;
-      }
-
-      fetch('http://127.0.0.1:5000/seller/my-items', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        items = data.items || [];
-        const tableBody = document.getElementById('itemsTableBody');
-        if (items.length > 0) {
-          tableBody.innerHTML = items.map((item, index) => {
-            const attributes = item.Attributes.map(attr => `<strong>${attr.name}</strong>: ${attr.value}`).join('<br>');
-            let auctionHTML = 'N/A';
-            if (item.Auction) {
-              const status = item.Auction.IsClosed ? 'Closed' : 'Active';
-              auctionHTML = `
-                <strong>Start Price:</strong> $${item.Auction.StartPrice.toFixed(2)}<br>
-                <strong>Min Increment:</strong> $${item.Auction.MinIncrement.toFixed(2)}<br>
-                <strong>Reserve Price:</strong> $${item.Auction.SecretMinPrice.toFixed(2)}<br>
-                <strong>Start:</strong> ${new Date(item.Auction.StartTime).toLocaleString()}<br>
-                <strong>End:</strong> ${new Date(item.Auction.EndTime).toLocaleString()}<br>
-                <strong>Status:</strong> ${status}<br>
-              `;
-            }
-            return `
-              <tr>
-                <td>${item.ItemID}</td>
-                <td>${item.Title}</td>
-                <td>${item.Brand}</td>
-                <td>${item.Model}</td>
-                <td>${item.Condition}</td>
-                <td>${new Date(item.CreatedAt).toLocaleString()}</td>
-                <td class="specifications-cell">
-                  <button class="btn-view-specs" onclick="showSpecifications(${index})">View</button>
-                </td>
-                <td class="text-start">${auctionHTML}</td>
-                <td>
-                  <span class="badge ${item.Status === 'active' ? 'bg-success' : item.Status === 'sold' ? 'bg-danger' : 'bg-warning text-dark'}">
-                    ${item.Status.charAt(0).toUpperCase() + item.Status.slice(1)}
-                  </span>
-                </td>
-                <td>
-                  <div class="d-flex flex-column gap-1">
-                    <button class="btn btn-sm btn-primary" onclick="window.location.href='update_item.html?id=${item.ItemID}'">Update</button>
-                    <button class="btn btn-sm btn-secondary" onclick="window.location.href='../buyer/bid_history.html?auctionId=${item.Auction?.AuctionID}'">Bid History</button>
-                    ${item.Auction && item.Auction.IsClosed ? `
-                      <div class="dropdown d-inline-block w-100">
-                        <button class="dropbtn w-100" onclick="toggleDropdown(event)">Manage</button>
-                        <div class="dropdown-content">
-                          <button onclick="handleAcceptBid(${item.Auction.AuctionID})">Accept Bid</button>
-                          <a href="extend_auction.html?auction_id=${item.Auction.AuctionID}">Extend Auction</a>
-                          <button onclick="handleWithdrawItem(${item.Auction.AuctionID})">Withdraw Item</button>
-                        </div>
-                      </div>
-                    ` : ''}
-                  </div>
-                </td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          tableBody.innerHTML = '<tr><td colspan="10" class="text-center">No items found.</td></tr>';
-        }
-      })
-      .catch(err => {
-        document.getElementById('itemsTableBody').innerHTML = '<tr><td colspan="10" class="text-center text-danger">Failed to load items.</td></tr>';
-        console.error(err);
-      });
-    });
-
-    document.getElementById('logoutBtn').onclick = function() {
-      localStorage.removeItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) {
       window.location.href = '../login.html';
-    };
-
-    function confirmDeleteAccount() {
-      if (confirm("Are you sure you want to delete your account? This action is irreversible and will delete all your associated bids, auctions, and items.")) {
-        deleteAccount();
-      }
     }
 
-    async function deleteAccount() {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert("You must be logged in to delete your account.");
-        return;
+    fetch('http://127.0.0.1:5000/seller/my-items', {
+      headers: {
+        'Authorization': 'Bearer ' + token
       }
-
-      try {
-        const response = await fetch(`${BASE_URL}/public/delete-account`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (!data.items || data.items.length === 0) {
+        document.getElementById('message').textContent = 'No items found.';
+      } else {
+        const tbody = document.getElementById('itemsTableBody');
+        document.getElementById('itemsTable').style.display = 'table';
+        data.items.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${item.ItemID}</td>
+            <td>${item.Title}</td>
+            <td>${item.Condition}</td>
+            <td>${item.Status}</td>
+            <td>
+              <a href="update_item.html?id=${item.ItemID}" class="btn btn-sm btn-outline-primary">Update</a>
+              <a href="view_bids.html?auction_id=${item.Auction?.AuctionID}" class="btn btn-sm btn-outline-info">View Bids</a>
+              <a href="extend_auction.html?auction_id=${item.Auction?.AuctionID}" class="btn btn-sm btn-outline-secondary">Extend</a>
+            </td>
+          `;
+          tbody.appendChild(row);
         });
-
-        const result = await response.json();
-        if (response.ok) {
-          alert(result.message || "Account deleted successfully.");
-          localStorage.removeItem('token');
-          window.location.href = "../login.html";
-        } else {
-          alert(result.error || "Failed to delete account.");
-        }
-      } catch (err) {
-        console.error("Error deleting account:", err);
-        alert("An error occurred while deleting your account.");
       }
+    })
+    .catch(() => {
+      document.getElementById('message').textContent = 'Failed to load items.';
+    });
+
+    function confirmDeleteAccount(){
+      if(!confirm("⚠️ This will permanently delete your account and all listings. Proceed?")) return;
+      fetch("http://127.0.0.1:5000/delete-account", {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token }
+      })
+      .then(r => r.json())
+      .then(d => {
+        alert(d.message || "Account deleted.");
+        localStorage.clear();
+        location.href = "../login.html";
+      })
+      .catch(() => alert("Failed to delete account."));
     }
   </script>
 </body>
