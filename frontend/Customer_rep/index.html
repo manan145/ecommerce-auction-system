@@ -44,14 +44,32 @@
     }
     .sidebar .nav-link:hover{background:rgba(48,79,254,.1)}
 
-    main{flex:1;padding:30px}
-    .page-header{
-      background:#304ffe;color:#fff;padding:12px 24px;border-radius:8px;
-      margin-bottom:25px;font-size:1.5rem;font-weight:500;text-align:center
+    main{
+      flex:1;
+      padding:30px;
+      /* Added flex centering like admin */
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
+
     .content-wrapper{
       background:#fff;padding:25px;border-radius:12px;box-shadow:0 10px 20px rgba(0,0,0,.1);
-      max-width:800px;margin:0 auto 30px
+      max-width:800px;
+      /* Removed fixed height to allow content fitting */
+      text-align: center;
+    }
+
+    /* Added styles like admin */
+    .content-wrapper h1 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-bottom: 20px;
+    }
+
+    .content-wrapper p {
+      font-size: 18px;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -60,7 +78,7 @@
   <header class="header">
     <div class="logo">BuyMe</div>
     <nav class="nav-links">
-      <a href="index.html">Dashboard</a>
+      <a href="index.html">Home</a>
       <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
     </nav>
   </header>
@@ -80,19 +98,17 @@
 
     <!-- main area -->
     <main>
-      <div class="page-header">Welcome to the Customer-Rep Dashboard</div>
-
-      <div class="content-wrapper text-center">
-        <p class="mb-3">Select a feature from the sidebar to get started.</p>
-
-        <!-- NEW explanatory list -->
-        <ul class="text-start mx-auto" style="max-width:480px">
-          <li><strong>View&nbsp;Profile</strong> &ndash; review and update your rep details</li>
-          <li><strong>Open&nbsp;Queries</strong> &ndash; respond to buyer &amp; seller questions</li>
-          <li><strong>Reset&nbsp;User&nbsp;Password</strong> &ndash; generate one-time passwords for users who forgot theirs</li>
-          <li><strong>Manage&nbsp;Auctions&nbsp;&amp;&nbsp;Bids</strong> &ndash; inspect auctions, delete auctions or bids when appropriate</li>
-          <li><strong>Manage&nbsp;Users</strong> &ndash; edit or remove buyer / seller accounts</li>
-        </ul>
+      <div class="content-wrapper">
+        <h1>Welcome, Customer Representative!</h1>
+        <p>
+          Use the sidebar to access your tools and features:
+          <br><br>
+          - View and update your profile<br>
+          - Respond to customer queries<br>
+          - Reset user passwords<br>
+          - Manage auctions and bids<br>
+          - Manage user accounts
+        </p>
       </div>
     </main>
   </div>
