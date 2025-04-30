@@ -93,24 +93,27 @@
     main {
       flex: 1;
       padding: 30px;
-    }
-    .page-header {
-      background: #304ffe;
-      color: #fff;
-      padding: 14px 24px;
-      border-radius: 8px;
-      font-size: 1.5rem;
-      margin-bottom: 30px;
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     .content-wrapper {
-      background: #fff;
+      background-color: #fff;
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
       max-width: 800px;
-      margin: 0 auto;
+      height: 300px;
       text-align: center;
+    }
+    .content-wrapper h1 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      margin-bottom: 20px;
+    }
+    .content-wrapper p {
+      font-size: 18px;
+      line-height: 1.6;
     }
   </style>
 </head>
@@ -143,17 +146,17 @@
 
     <!-- Main Section -->
     <main>
-      <div class="page-header">Welcome to the Buyer Dashboard</div>
-
       <div class="content-wrapper">
-        <p class="mb-3">Select an option from the sidebar to get started.</p>
-        <ul class="text-start mx-auto" style="max-width:480px;">
-          <li><strong>Active Auctions</strong> – Browse and place bids on available items.</li>
-          <li><strong>My Bids</strong> – View and manage your active and past bids.</li>
-          <li><strong>FAQs</strong> – Find answers to common questions.</li>
-          <li><strong>Create Alerts</strong> – Set up alerts for items you're interested in.</li>
-          <li><strong>Contact Support</strong> – Get help with any issues or inquiries.</li>
-        </ul>
+        <h1>Welcome, Buyer!</h1>
+        <p>
+          Use the sidebar to explore and manage your auctions and alerts:
+          <br><br>
+          - Browse and bid in ongoing auctions<br>
+          - Track your active and past bids<br>
+          - Create custom alerts for items of interest<br>
+          - Find answers to common questions<br>
+          - Reach out for support or assistance
+        </p>
       </div>
     </main>
   </div>
