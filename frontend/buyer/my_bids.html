@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Bids - BuyMe</title>
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <title>My Bids – Buyer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Fonts + Bootstrap -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Roboto', sans-serif;
       background: linear-gradient(135deg, rgba(240,244,248, 0.85), rgba(217,226,236, 0.85)),
-                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: #333;
+                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center/cover fixed;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      color: #333;
     }
-
     .header {
       background: linear-gradient(135deg, #5563DE, #304ffe);
       padding: 15px 30px;
@@ -28,81 +29,108 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
-
-    .header .logo  {
+    .header .logo {
       color: #fff;
-      text-decoration: none;
-      font-size: 26px;
       font-family: 'Montserrat', sans-serif;
+      font-size: 26px;
+      text-decoration: none;
     }
-
     .nav-links {
       display: flex;
       gap: 15px;
+      align-items: center;
     }
-
     .nav-links a {
       color: #fff;
       text-decoration: none;
       padding: 10px 16px;
       font-weight: 500;
       border-radius: 4px;
-      transition: background 0.3s ease, transform 0.3s ease;
+      transition: 0.3s;
     }
-
     .nav-links a:hover {
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255,255,255,0.2);
       transform: translateY(-2px);
     }
-
-    .container {
-      width: 95%;
-      max-width: 1200px;
-      margin: 40px auto;
+    .container-fluid {
+      display: flex;
+      padding: 0;
+      flex: 1;
+    }
+    .sidebar {
       background: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+    .sidebar h4 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 15px;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+    .sidebar .nav-link:hover {
+      background-color: rgba(48,79,254,0.1);
+    }
+    main {
+      flex: 1;
       padding: 30px;
+    }
+    .page-header {
+      background: #304ffe;
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .content-wrapper {
+      background: #fff;
+      padding: 25px;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
-
-    h2 {
-      margin-top: 0;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       padding: 12px 16px;
       border-bottom: 1px solid #e0e0e0;
       text-align: left;
     }
-
     th {
       background-color: #f0f4fa;
     }
-
     tr:hover:not(.dropdown) {
       background-color: #f9fbff;
     }
-
     .badge {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 12px;
       font-size: 0.85rem;
     }
-
     .bg-success { background-color: #28a745; color: white; }
     .bg-secondary { background-color: #6c757d; color: white; }
     .bg-warning { background-color: #ffc107; color: black; }
     .bg-info { background-color: #17a2b8; color: white; }
-
     .btn-sm {
       font-size: 0.875rem;
       padding: 6px 12px;
@@ -110,24 +138,20 @@
       cursor: pointer;
       border-radius: 4px;
     }
-
     .btn-primary {
       background-color: #304ffe;
       color: white;
     }
-
     .toggle-link {
       color: #304ffe;
       cursor: pointer;
       font-size: 0.9rem;
       text-decoration: underline;
     }
-
     .dropdown {
       display: none;
       background-color: #f9f9f9;
     }
-
     .dropdown td {
       padding-left: 40px;
       font-size: 0.9rem;
@@ -135,149 +159,178 @@
     }
   </style>
 </head>
+
 <body>
-  <header class="header">
-    <div class="logo">BuyMe</a></div>
-    <nav class="nav-links">
-      <a href="buyer.html">Home</a>
-      <a href="#" id="logoutLink">Logout</a>
+
+<!-- Header -->
+<header class="header">
+  <div class="logo">BuyMe</div>
+  <nav class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="show_alerts.html" class="notification-bell"><i class="fas fa-bell"></i></a>
+    <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+  </nav>
+</header>
+<!-- Body -->
+<div class="container-fluid">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h4>Navigation</h4>
+    <nav class="nav flex-column">
+      <a class="nav-link" href="buyer.html">Active Auctions</a>
+      <a class="nav-link" href="my_bids.html">My Bids</a>
+      <a class="nav-link" href="questions.html">FAQs</a>
+      <a class="nav-link" href="create_alerts.html">Create Alerts</a>
+      <a class="nav-link" href="contact_support.html">Contact Support</a>
+      <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
     </nav>
-  </header>
+  </aside>
 
-  <div class="container">
-    <h2 style="text-align: center;">My Bids</h2>
+  <!-- Main -->
+  <main>
+    <div class="page-header">My Bids</div>
 
-    <div id="bidContainer">
-      <table id="bidsTable">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Your Latest Bid</th>
-            <th>Time</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="bidsBody">
-          <!-- Bids will be populated here -->
-        </tbody>
-      </table>
-    </div>
-  </div>
+    <div class="content-wrapper">
+      <div id="bidContainer">
+        <table id="bidsTable" class="table table-bordered table-striped text-center align-middle">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Your Latest Bid</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="bidsBody">
+            <!-- Bids will be populated here -->
+          </tbody>
+        </table>
+      </div>
 
-  <script>
-    const BASE_URL = 'http://127.0.0.1:5000';
-    const token = localStorage.getItem('token');
+      <!-- Back Button -->
+      <div class="text-center mt-4">
+        <button class="btn btn-primary" onclick="window.location.href='index.html'">
+          &larr; Back
+        </button>
+      </div>
+    </div> <!-- content-wrapper -->
+  </main>
+</div>
 
-    function formatCurrency(value) {
-      return `$${parseFloat(value).toFixed(2)}`;
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const BASE_URL = 'http://127.0.0.1:5000';
+const token = localStorage.getItem('token');
+let currentAuctionId = null;
+
+function formatCurrency(value) {
+  return `$${parseFloat(value).toFixed(2)}`;
+}
+
+function toggleDropdown(id) {
+  const rows = document.querySelectorAll(`.dropdown[data-group='${id}']`);
+  rows.forEach(row => {
+    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+  });
+}
+
+async function fetchMyBids() {
+  const response = await fetch(`${BASE_URL}/buyer/my-bids`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json();
+  const grouped = {};
+  data.forEach(bid => {
+    const group = grouped[bid.auction_id] = grouped[bid.auction_id] || [];
+    group.push(bid);
+  });
+
+  const tbody = document.getElementById('bidsBody');
+  tbody.innerHTML = '';
+
+  Object.values(grouped).forEach((bids, idx) => {
+    const latest = bids[0];
+    const past = bids.slice(1);
+    const bidTime = new Date(latest.bid_time).toLocaleString();
+    const status = latest.is_closed ? 'Closed' : 'Active';
+
+    let action = '';
+    if (!latest.is_closed && latest.is_highest_bidder) {
+      action = `<span class="badge bg-success">You are the highest bidder</span>`;
+    } else if (latest.won) {
+      action = `
+        <div>
+          <span class="text-success">🎉 Congrats, you won!</span><br/>
+          ${
+            latest.transaction_status === 'pending'
+              ? `<button class="btn-sm btn-primary" onclick="makePayment(${latest.transaction_id})">Pay Now</button>`
+              : latest.transaction_status === 'completed'
+                ? `<span class="badge bg-info">Payment Completed</span>`
+                : `<span class="badge bg-warning">Awaiting Payment</span>`
+          }
+        </div>`;
+    } else if (latest.is_closed) {
+      action = `<span class="badge bg-secondary">Auction Ended</span>`;
     }
 
-    function toggleDropdown(id) {
-      const rows = document.querySelectorAll(`.dropdown[data-group='${id}']`);
-      rows.forEach(row => {
-        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-      });
-    }
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${latest.item_title}</strong></td>
+        <td>${formatCurrency(latest.amount)}</td>
+        <td>${bidTime}</td>
+        <td>${status}</td>
+        <td>${action}</td>
+      </tr>
+    `;
 
-    async function fetchMyBids() {
-      const response = await fetch(`${BASE_URL}/buyer/my-bids`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      const data = await response.json();
-
-      const grouped = {};
-      data.forEach(bid => {
-        const group = grouped[bid.auction_id] = grouped[bid.auction_id] || [];
-        group.push(bid);
-      });
-
-      const tbody = document.getElementById('bidsBody');
-      tbody.innerHTML = '';
-
-      Object.values(grouped).forEach((bids, idx) => {
-        const latest = bids[0];
-        const past = bids.slice(1);
-        const bidTime = new Date(latest.bid_time).toLocaleString();
-        const status = latest.is_closed ? 'Closed' : 'Active';
-
-        let action = '';
-        if (!latest.is_closed && latest.is_highest_bidder) {
-          action = `<span class="badge bg-success">You are the highest bidder</span>`;
-        } else if (latest.won) {
-          action = `
-            <div>
-              <span class="text-success">🎉 Congrats, you won!</span><br/>
-              ${
-                latest.transaction_status === 'pending'
-                  ? `<button class="btn-sm btn-primary" onclick="makePayment(${latest.transaction_id})">Pay Now</button>`
-                  : latest.transaction_status === 'completed'
-                    ? `<span class="badge bg-info">Payment Completed</span>`
-                    : `<span class="badge bg-warning">Awaiting Payment</span>`
-              }
-            </div>`;
-        } else if (latest.is_closed) {
-          action = `<span class="badge bg-secondary">Auction Ended</span>`;
-        }
-
+    if (past.length > 0) {
+      tbody.innerHTML += `
+        <tr>
+          <td colspan="5">
+            <span class="toggle-link" onclick="toggleDropdown('${idx}')">Show ${past.length} older bid(s)</span>
+          </td>
+        </tr>
+      `;
+      past.forEach(p => {
+        const time = new Date(p.bid_time).toLocaleString();
         tbody.innerHTML += `
-          <tr>
-            <td><strong>${latest.item_title}</strong></td>
-            <td>${formatCurrency(latest.amount)}</td>
-            <td>${bidTime}</td>
-            <td>${status}</td>
-            <td>${action}</td>
+          <tr class="dropdown" data-group="${idx}" style="display: none;">
+            <td colspan="5">Bid: ${formatCurrency(p.amount)} at ${time}</td>
           </tr>
         `;
-
-        if (past.length > 0) {
-          tbody.innerHTML += `
-            <tr>
-              <td colspan="5">
-                <span class="toggle-link" onclick="toggleDropdown('${idx}')">Show ${past.length} older bid(s)</span>
-              </td>
-            </tr>
-          `;
-
-          past.forEach(p => {
-            const time = new Date(p.bid_time).toLocaleString();
-            tbody.innerHTML += `
-              <tr class="dropdown" data-group="${idx}" style="display: none;">
-                <td colspan="5">Bid: ${formatCurrency(p.amount)} at ${time}</td>
-              </tr>
-            `;
-          });
-        }
       });
     }
+  });
+}
 
-    async function makePayment(transactionId) {
-      const response = await fetch(`${BASE_URL}/buyer/make-payment`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ transaction_id: transactionId })
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        alert("✅ Payment successful!");
-        fetchMyBids();
-      } else {
-        alert(`❌ ${result.error || 'Payment failed.'}`);
-      }
+async function makePayment(transactionId) {
+  const response = await fetch(`${BASE_URL}/buyer/make-payment`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`
     }
+  });
 
-    document.getElementById('logoutLink').addEventListener('click', e => {
-      e.preventDefault();
-      localStorage.removeItem('token');
-      window.location.href = '../login.html';
-    });
-
+  const result = await response.json();
+  if (response.ok) {
+    alert("✅ Payment completed successfully!");
     fetchMyBids();
-  </script>
+  } else {
+    alert("❌ Error: " + (result.error || "Failed to make payment."));
+  }
+}
+
+function confirmDeleteAccount() {
+  if (confirm("Are you sure you want to delete your account? This action is irreversible.")) {
+    alert("Account deletion triggered.");
+  }
+}
+
+// Load bids when page loads
+fetchMyBids();
+</script>
+
 </body>
 </html>

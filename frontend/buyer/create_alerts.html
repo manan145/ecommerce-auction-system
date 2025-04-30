@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <title>Manage Alerts</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -31,7 +31,7 @@
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
-    .header .logo  {
+    .header .logo {
       color: #fff;
       text-decoration: none;
       font-size: 26px;
@@ -41,6 +41,7 @@
     .nav-links {
       display: flex;
       gap: 15px;
+      align-items: center;
     }
 
     .nav-links a {
@@ -56,14 +57,60 @@
       transform: translateY(-2px);
     }
 
+    .notification-bell {
+      font-size: 20px;
+      color: white;
+      position: relative;
+    }
+
+    .container-fluid {
+      display: flex;
+      padding: 0;
+      flex: 1;
+    }
+
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #ddd;
+      min-height: 100vh;
+      padding: 30px 20px;
+      max-width: 220px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .sidebar h4 {
+      font-family: 'Montserrat', sans-serif;
+      color: #304ffe;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .sidebar .nav-link {
+      font-size: 1rem;
+      color: #304ffe;
+      margin-bottom: 15px;
+      text-decoration: none;
+      display: block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: 0.3s;
+    }
+
+    .sidebar .nav-link:hover {
+      background-color: rgba(48,79,254,0.1);
+    }
+
+    main {
+      flex: 1;
+      padding: 30px;
+    }
+
     .container {
-      width: 95%;
-      max-width: 1200px;
-      margin: 40px auto;
       background: #fff;
       padding: 30px;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
     }
 
     h2 {
@@ -87,10 +134,6 @@
       border: 1px solid #ddd;
     }
 
-    .form-group select {
-      cursor: pointer;
-    }
-
     .btn-primary {
       background-color: #304ffe;
       color: white;
@@ -99,7 +142,6 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     .btn-primary:hover {
@@ -137,204 +179,251 @@
       font-size: 0.85rem;
     }
 
-    .bg-warning { background-color: #ffc107; color: black; }
+    .bg-warning {
+      background-color: #ffc107;
+      color: black;
+    }
+
+    .btn-back {
+      background-color: #304ffe;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    .btn-back:hover {
+      background-color: #253fd3;
+    }
   </style>
 </head>
+
 <body>
-    <header class="header">
-      <div class="logo">BuyMe</div>
-      <nav class="nav-links">
-        <a href="buyer.html">Home</a>
-        <a href="#" id="logoutLink">Logout</a>
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">BuyMe</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="show_alerts.html" class="notification-bell"><i class="fas fa-bell"></i></a>
+      <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
+    </nav>
+  </header>
+
+  <!-- Layout -->
+  <div class="container-fluid">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h4>Navigation</h4>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="buyer.html">Active Auctions</a>
+        <a class="nav-link" href="my_bids.html">My Bids</a>
+        <a class="nav-link" href="questions.html">FAQs</a>
+        <a class="nav-link" href="create_alerts.html">Create Alerts</a>
+        <a class="nav-link" href="contact_support.html">Contact Support</a>
+        <button class="nav-link" onclick="confirmDeleteAccount()">Delete Account</button>
       </nav>
-    </header>
-  
-    <div class="container">
-      <h2>Create New Alert</h2>
-      <form id="alertForm">
-        <div class="form-group">
-          <label for="categorySelect">Category</label>
-          <select id="categorySelect" required></select>
-        </div>
-        <div class="form-group">
-          <label for="subcategorySelect">Subcategory</label>
-          <select id="subcategorySelect" required></select>
-        </div>
-        <div class="form-group">
-          <label for="brandInput">Brand</label>
-          <input type="text" id="brandInput" placeholder="Enter Brand" />
-        </div>
-        <div class="form-group">
-          <label for="modelInput">Model</label>
-          <input type="text" id="modelInput" placeholder="Enter Model" />
-        </div>
-        <div class="form-group">
-          <label for="conditionSelect">Condition</label>
-          <select id="conditionSelect">
-            <option value="">Any Condition</option>
-            <option value="new">New</option>
-            <option value="used">Used</option>
-            <option value="refurbished">Refurbished</option>
-          </select>
-        </div>
-        <div class="text-center">
-          <button type="submit" class="btn-primary">Create Alert</button>
-        </div>
-      </form>
-  
-      <div style="margin-top: 50px;"></div>
-  
-      <h2>View My Alerts</h2>
-      <table class="alert-table" id="alertsTable">
-        <thead>
-          <tr>
-            <th>Category</th>
-            <th>Subcategory</th>
-            <th>Brand</th>
-            <th>Model</th>
-            <th>Condition</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="alertsBody">
-          <!-- Alerts will be populated here -->
-        </tbody>
-      </table>
-    </div>
-  
-    <script>
-      const BASE_URL = "http://127.0.0.1:5000";
-      const token = localStorage.getItem('token');
-  
-      fetch(`${BASE_URL}/public/browse/categories`)
+    </aside>
+
+    <!-- Main -->
+    <main>
+      <div class="text-start mb-3">
+        <button class="btn-back" onclick="window.location.href='index.html'">&larr; Back</button>
+      </div>
+
+      <div class="container">
+        <h2>Create New Alert</h2>
+        <form id="alertForm">
+          <div class="form-group">
+            <label for="categorySelect">Category</label>
+            <select id="categorySelect" required></select>
+          </div>
+          <div class="form-group">
+            <label for="subcategorySelect">Subcategory</label>
+            <select id="subcategorySelect" required></select>
+          </div>
+          <div class="form-group">
+            <label for="brandInput">Brand</label>
+            <input type="text" id="brandInput" placeholder="Enter Brand" />
+          </div>
+          <div class="form-group">
+            <label for="modelInput">Model</label>
+            <input type="text" id="modelInput" placeholder="Enter Model" />
+          </div>
+          <div class="form-group">
+            <label for="conditionSelect">Condition</label>
+            <select id="conditionSelect">
+              <option value="">Any Condition</option>
+              <option value="new">New</option>
+              <option value="used">Used</option>
+              <option value="refurbished">Refurbished</option>
+            </select>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn-primary">Create Alert</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="container">
+        <h2>View My Alerts</h2>
+        <table class="alert-table" id="alertsTable">
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Subcategory</th>
+              <th>Brand</th>
+              <th>Model</th>
+              <th>Condition</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="alertsBody">
+            <!-- Alerts will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    const BASE_URL = "http://127.0.0.1:5000";
+    const token = localStorage.getItem('token');
+
+    fetch(`${BASE_URL}/public/browse/categories`)
+      .then(res => res.json())
+      .then(categories => {
+        const categorySelect = document.getElementById('categorySelect');
+        categorySelect.innerHTML = '<option value="">Select category</option>';
+        categories.forEach(cat => {
+          categorySelect.innerHTML += `<option value="${cat.CategoryID}">${cat.Name}</option>`;
+        });
+      });
+
+    const categorySelect = document.getElementById('categorySelect');
+    const subcategorySelect = document.getElementById('subcategorySelect');
+
+    categorySelect.addEventListener('change', () => {
+      const categoryId = categorySelect.value;
+      subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
+
+      if (!categoryId) return;
+
+      fetch(`${BASE_URL}/public/browse/subcategories/${categoryId}`)
         .then(res => res.json())
-        .then(categories => {
-          const categorySelect = document.getElementById('categorySelect');
-          categorySelect.innerHTML = '<option value="">Select category</option>';
-          categories.forEach(cat => {
-            categorySelect.innerHTML += `<option value="${cat.CategoryID}">${cat.Name}</option>`;
+        .then(subs => {
+          subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
+          subs.forEach(sub => {
+            subcategorySelect.innerHTML += `<option value="${sub.SubcategoryID}">${sub.Name}</option>`;
           });
         });
-  
-      const categorySelect = document.getElementById('categorySelect');
-      const subcategorySelect = document.getElementById('subcategorySelect');
-      categorySelect.addEventListener('change', () => {
-        const categoryId = categorySelect.value;
-        subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
-        
-        if (!categoryId) return;
-  
-        fetch(`${BASE_URL}/public/browse/subcategories/${categoryId}`)
-          .then(res => res.json())
-          .then(subs => {
-            subcategorySelect.innerHTML = '<option value="">Select subcategory</option>';
-            subs.forEach(sub => {
-              subcategorySelect.innerHTML += `<option value="${sub.SubcategoryID}">${sub.Name}</option>`;
-            });
-          });
-      });
-  
-      async function fetchMyAlerts() {
-        try {
-          const response = await fetch(`${BASE_URL}/buyer/my-alerts`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-  
-          if (!response.ok) {
-            console.error("Error fetching alerts:", response.statusText);
-            return;
-          }
-  
-          const alerts = await response.json();
-          const alertsBody = document.getElementById('alertsBody');
-          alertsBody.innerHTML = '';
-  
-          alerts.forEach(alert => {
-            alertsBody.innerHTML += `
-              <tr>
-                <td>${alert.category}</td>
-                <td>${alert.subcategory}</td>
-                <td>${alert.search_criteria.Brand?.join(", ") || '-'}</td>
-                <td>${alert.search_criteria.Model?.join(", ") || '-'}</td>
-                <td>${alert.search_criteria.Condition?.join(", ") || 'Any Condition'}</td>
-                <td><button class="btn-sm btn-primary" onclick="deleteAlert(${alert.alert_id})">Delete</button></td>
-              </tr>
-            `;
-          });
-        } catch (error) {
-          console.error("Error fetching alerts:", error);
-        }
+    });
+
+    async function fetchMyAlerts() {
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/my-alerts`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const alerts = await response.json();
+        const alertsBody = document.getElementById('alertsBody');
+        alertsBody.innerHTML = '';
+
+        alerts.forEach(alert => {
+          alertsBody.innerHTML += `
+            <tr>
+              <td>${alert.category}</td>
+              <td>${alert.subcategory}</td>
+              <td>${alert.search_criteria.Brand?.join(", ") || '-'}</td>
+              <td>${alert.search_criteria.Model?.join(", ") || '-'}</td>
+              <td>${alert.search_criteria.Condition?.join(", ") || 'Any Condition'}</td>
+              <td><button class="btn-sm btn-primary" onclick="deleteAlert(${alert.alert_id})">Delete</button></td>
+            </tr>
+          `;
+        });
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
       }
-  
-      async function deleteAlert(alertId) {
-        try {
-          const response = await fetch(`${BASE_URL}/buyer/delete-alert/${alertId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-  
-          const result = await response.json();
-          if (response.ok) {
-            alert("✅ Alert deleted successfully!");
-            fetchMyAlerts();
-          } else {
-            alert("❌ Error: " + result.error);
-          }
-        } catch (error) {
-          console.error("Error deleting alert:", error);
-          alert("❌ An error occurred while deleting the alert.");
+    }
+
+    async function deleteAlert(alertId) {
+      try {
+        const response = await fetch(`${BASE_URL}/buyer/delete-alert/${alertId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert("✅ Alert deleted successfully!");
+          fetchMyAlerts();
+        } else {
+          alert("❌ Error: " + result.error);
         }
+      } catch (error) {
+        console.error("Error deleting alert:", error);
+        alert("❌ An error occurred while deleting the alert.");
       }
-  
-      document.getElementById('alertForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-  
-        const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
-        const subcategoryName = subcategorySelect.options[subcategorySelect.selectedIndex].text;
-        const brand = document.getElementById('brandInput').value;
-        const model = document.getElementById('modelInput').value;
-        const condition = document.getElementById('conditionSelect').value;
-  
-        const body = {
-          category: categoryName,
-          subcategory: subcategoryName,
-          search_criteria: {
-            Brand: brand ? [brand] : [],
-            Model: model ? [model] : [],
-            Condition: condition ? [condition] : []
-          }
-        };
-  
-        try {
-          const res = await fetch(`${BASE_URL}/buyer/create-alert`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(body)
-          });
-  
-          const result = await res.json();
-  
-          if (res.ok) {
-            alert("✅ Alert created successfully!");
-            fetchMyAlerts();
-          } else {
-            alert("❌ Error: " + result.error);
-          }
-        } catch (error) {
-          console.error("Error creating alert:", error);
+    }
+
+    document.getElementById('alertForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+      const subcategoryName = subcategorySelect.options[subcategorySelect.selectedIndex].text;
+      const brand = document.getElementById('brandInput').value;
+      const model = document.getElementById('modelInput').value;
+      const condition = document.getElementById('conditionSelect').value;
+
+      const body = {
+        category: categoryName,
+        subcategory: subcategoryName,
+        search_criteria: {
+          Brand: brand ? [brand] : [],
+          Model: model ? [model] : [],
+          Condition: condition ? [condition] : []
         }
-      });
-  
-      fetchMyAlerts();
-  
-      document.getElementById('logoutLink').addEventListener('click', e => {
-        e.preventDefault();
-        localStorage.removeItem('token');
-        window.location.href = '../login.html';
-      });
-    </script>
-  </body>
+      };
+
+      try {
+        const res = await fetch(`${BASE_URL}/buyer/create-alert`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          alert("✅ Alert created successfully!");
+          fetchMyAlerts();
+        } else {
+          alert("❌ Error: " + result.error);
+        }
+      } catch (error) {
+        console.error("Error creating alert:", error);
+      }
+    });
+
+    fetchMyAlerts();
+
+    document.getElementById('logoutLink').addEventListener('click', e => {
+      e.preventDefault();
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+
+    function confirmDeleteAccount() {
+      if (confirm("Are you sure you want to delete your account? This action is irreversible.")) {
+        alert("Account deletion triggered.");
+      }
+    }
+  </script>
+</body>
 </html>
