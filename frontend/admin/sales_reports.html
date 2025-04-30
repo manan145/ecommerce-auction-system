@@ -157,6 +157,23 @@
       display: block;
       margin: 20px auto 0;
     }
+
+    .btn-back {
+      background-color: #304ffe;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+      margin-bottom: 20px;
+    }
+
+    .btn-back:hover {
+      background-color: #253fd3;
+      transform: translateY(-2px);
+    }
   </style>
 </head>
 <body>
@@ -180,6 +197,7 @@
     </aside>
 
     <main>
+      <button class="btn-back" onclick="window.history.back()">← Back</button>
       <div class="scorecard">
         <h5>Total Earnings</h5>
         <div id="totalEarnings">Loading...</div>
