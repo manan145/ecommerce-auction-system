@@ -175,6 +175,7 @@
               <th>Title</th>
               <th>Condition</th>
               <th>Status</th>
+              <th>Is Closed</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -210,6 +211,7 @@
             <td>${item.Title}</td>
             <td>${item.Condition}</td>
             <td>${item.Status}</td>
+            <td>${item.Auction?.IsClosed == 1 ? 'closed' : 'open'}</td>
             <td>
               <a href="update_item.html?id=${item.ItemID}" class="btn btn-sm btn-outline-primary">Update</a>
               <a href="view_bids.html?auction_id=${item.Auction?.AuctionID}" class="btn btn-sm btn-outline-info">View Bids</a>

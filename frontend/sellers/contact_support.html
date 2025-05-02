@@ -192,7 +192,7 @@
       const subject = document.getElementById('subject').value.trim();
       const message = document.getElementById('message').value.trim();
 
-      const response = await fetch('http://127.0.0.1:5000/support', {
+      const response = await fetch('http://127.0.0.1:5000/public/customer-query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -89,7 +89,7 @@ def place_bid():
             return jsonify({"error": "You are already the highest bidder"}), 400
         min_valid_bid = float(current_highest.Amount) + float(auction.MinIncrement)
     else:
-        min_valid_bid = float(auction.StartPrice)
+        min_valid_bid = float(auction.StartPrice) + float(auction.MinIncrement)
 
     if float(bid_amount) < min_valid_bid:
         return jsonify({"error": f"Your bid must be at least {min_valid_bid}"}), 400
@@ -428,13 +428,16 @@ def bid_history(auction_id):
         .all()
     )
 
-    return jsonify([
-        {
-            "bidder_name": username,
-            "amount": float(bid.Amount),
-            "timestamp": bid.BidTime.isoformat()
-        } for bid, username in bids
-    ])
+    # Changed response structure to wrap bids in an object
+    return jsonify({
+        "bids": [
+            {
+                "bidder_name": username,
+                "amount": float(bid.Amount),
+                "timestamp": bid.BidTime.isoformat()
+            } for bid, username in bids
+        ]
+    })
 
 @buyer_bp.route('/notifications/<string:status>', methods=['GET'])
 @jwt_required()

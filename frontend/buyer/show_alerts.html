@@ -267,7 +267,7 @@
           `;
         } else {
           div.innerHTML = `
-            <strong>🔔 Notification</strong><br>
+            <strong>${n.Message || "🔔 Notification"}</strong><br>
             <em>${new Date(n.created_at).toLocaleString()}</em><br>
             ${status === 'unread' ? `<button class="btn btn-sm btn-outline-primary mt-2" onclick="markAsRead(${n.notification_id}, this)">Mark as Read</button>` : ''}
           `;

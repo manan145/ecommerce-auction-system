@@ -202,7 +202,14 @@
       });
 
       const data = await res.json();
-      document.getElementById('message').textContent = data.message || "Auction extended successfully.";
+      const messageEl = document.getElementById('message');
+      if (data.error) {
+        messageEl.style.color = 'red';
+        messageEl.textContent = data.error;
+      } else {
+        messageEl.style.color = 'green';
+        messageEl.textContent = data.message;
+      }
     });
 
     function confirmDeleteAccount(){

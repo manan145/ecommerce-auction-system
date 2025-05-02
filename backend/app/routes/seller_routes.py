@@ -94,8 +94,8 @@ def add_item():
         StartPrice=start_price,
         MinIncrement=min_increment,
         SecretMinPrice=secret_min_price,
-        StartTime=datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S'),
-        EndTime=datetime.strptime(end_time, '%Y-%m-%d %H:%M:%S')
+        StartTime=datetime.fromisoformat(start_time).astimezone(timezone.utc),
+        EndTime=datetime.fromisoformat(end_time).astimezone(timezone.utc)
     )
     db.session.add(new_auction)
 
@@ -155,10 +155,9 @@ def add_item():
                 "condition": new_item.Condition,
                 "start_time": new_auction.StartTime.isoformat(),
                 "end_time": new_auction.EndTime.isoformat()
-    
             }
             notification = Notification(
-                ReceiverID=alert.UserID,
+                UserID=alert.UserID,  # changed from ReceiverID to UserID
                 Message=json.dumps(notif_payload),
                 CreatedAt=datetime.now(timezone.utc)
             )
@@ -257,9 +256,9 @@ def update_item(item_id):
         if data.get('start_price'): auction.StartPrice = data['start_price']
         if data.get('min_increment'): auction.MinIncrement = data['min_increment']
         if data.get('start_time'):
-            auction.StartTime = datetime.strptime(data['start_time'], '%Y-%m-%d %H:%M:%S')
+            auction.StartTime = datetime.fromisoformat(data['start_time']).replace(tzinfo=timezone.utc)
         if data.get('end_time'):
-            auction.EndTime = datetime.strptime(data['end_time'], '%Y-%m-%d %H:%M:%S')
+            auction.EndTime = datetime.fromisoformat(data['end_time']).replace(tzinfo=timezone.utc)
         if data.get('is_closed') is not None:  # Allow updating IsClosed
             auction.IsClosed = data['is_closed']
         # Note: Do NOT allow changing SecretMinPrice casually for security reasons
@@ -394,8 +393,8 @@ def extend_auction():
         return jsonify({'error': 'auction_id and new_end_time required'}), 400
 
     auction = Auction.query.get(auction_id)
-    if not auction or auction.IsClosed is False:
-        return jsonify({'error': 'Invalid or active auction'}), 400
+    if not auction:
+        return jsonify({'error': 'Invalid auction'}), 400
 
     item = Item.query.get(auction.ItemID)
     if item.OwnerID != user.UserID:
@@ -403,7 +402,8 @@ def extend_auction():
 
     try:
         # Parse new_end_time and ensure it is timezone-aware in UTC
-        new_end_time = datetime.fromisoformat(new_end_time_str).replace(tzinfo=timezone.utc)
+        new_end_time = datetime.fromisoformat(new_end_time_str).astimezone(timezone.utc)
+        print(new_end_time)
         if new_end_time <= datetime.now(timezone.utc):  # Standardized time
             return jsonify({'error': 'New end time must be in the future'}), 400
     except:

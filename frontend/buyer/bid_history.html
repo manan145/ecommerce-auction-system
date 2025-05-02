@@ -178,16 +178,26 @@
         const tableBody = document.getElementById("historyTableBody");
 
         if (!response.ok) {
-          tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">${data.error || "Failed to fetch bid history."}</td></tr>`;
+          console.error("Fetch failed. Response data:", data);
+          tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">${data.error || data.message || ("Failed to fetch bid history. HTTP error: " + response.status)}</td></tr>`;
           return;
         }
 
-        if (!data || data.length === 0) {
+        // If the response is wrapped in an object with a "bids" property, extract it.
+        let bidsData = data.bids ? data.bids : data;
+
+        if (!Array.isArray(bidsData)) {
+          console.error("Invalid data format. Expected an array but received:", bidsData);
+          tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Invalid data format received.</td></tr>`;
+          return;
+        }
+
+        if (bidsData.length === 0) {
           tableBody.innerHTML = `<tr><td colspan="3" class="text-center">No bid history found for this auction.</td></tr>`;
           return;
         }
 
-        tableBody.innerHTML = data.map(bid => `
+        tableBody.innerHTML = bidsData.map(bid => `
           <tr>
             <td>${bid.bidder_name}</td>
             <td>$${parseFloat(bid.amount).toFixed(2)}</td>
@@ -197,7 +207,7 @@
       } catch (err) {
         console.error("Error fetching bid history:", err);
         document.getElementById("historyTableBody").innerHTML = `
-          <tr><td colspan="3" class="text-center text-danger">An error occurred while fetching bid history.</td></tr>
+          <tr><td colspan="3" class="text-center text-danger">${err.message}</td></tr>
         `;
       }
     }

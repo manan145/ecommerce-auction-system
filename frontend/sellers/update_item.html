@@ -264,8 +264,8 @@
       if (startPrice) body.start_price = parseFloat(startPrice);
       if (minIncrement) body.min_increment = parseFloat(minIncrement);
 
-      fetch('http://127.0.0.1:5000/seller/update-item', {
-        method: 'POST',
+      fetch(`http://127.0.0.1:5000/seller/update-item/${itemId}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token

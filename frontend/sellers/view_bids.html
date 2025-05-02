@@ -2,110 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>View Bids – Seller</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500|Montserrat:700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <title>View Bids - Seller</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
     body {
-      margin: 0;
       font-family: 'Roboto', sans-serif;
-      background: linear-gradient(135deg, rgba(240,244,248,.85), rgba(217,226,236,.85)),
-                  url('360_F_193879046_ZsK2TNMYp7d7FX0NNTB6iKKChXOu03iP.jpg') no-repeat center center fixed;
-      background-size: cover;
-      min-height: 100vh;
-      color: #333;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 20px;
     }
-    .header {
-      background: linear-gradient(135deg, #5563DE, #304ffe);
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    }
-    .header .logo {
-      color: #fff;
-      font-size: 26px;
-      font-family: 'Montserrat', sans-serif;
-      text-decoration: none;
-    }
-    .nav-links {
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
-    .nav-links a {
-      color: #fff;
-      text-decoration: none;
-      padding: 10px 16px;
-      font-weight: 500;
-      border-radius: 4px;
-      transition: 0.3s;
-    }
-    .nav-links a:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-2px);
-    }
-    .container-fluid {
-      display: flex;
-    }
-    .sidebar {
-      background: #fff;
-      border-right: 1px solid #ddd;
-      min-height: 100vh;
-      padding: 30px 20px;
-      max-width: 220px;
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-    }
-    .sidebar h4 {
-      font-family: 'Montserrat', sans-serif;
-      color: #304ffe;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-    .sidebar .nav-link, .sidebar button {
-      font-size: 1rem;
-      color: #304ffe;
-      margin-bottom: 15px;
-      text-decoration: none;
-      display: block;
-      padding: 6px 10px;
-      border-radius: 6px;
-      background: none;
-      border: none;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .sidebar .nav-link:hover, .sidebar button:hover {
-      background-color: rgba(48, 79, 254, 0.1);
-      color: #1a237e;
-    }
-    main {
-      flex: 1;
-      padding: 30px;
-    }
-    .content-wrapper {
-      background: #fff;
-      padding: 30px;
-      max-width: 850px;
+    .container {
+      max-width: 900px;
       margin: auto;
+      background: #fff;
+      padding: 40px;
       border-radius: 12px;
       box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 25px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
+      font-size: 0.95rem;
       margin-top: 20px;
     }
     th, td {
       padding: 12px 16px;
       border: 1px solid #ddd;
       text-align: left;
-      font-size: 0.95rem;
     }
     th {
       background-color: #5563DE;
@@ -114,124 +42,162 @@
     tr:nth-child(even) {
       background-color: #f9f9f9;
     }
-    .back-btn {
-      background: #304ffe;
-      color: #fff;
-      border: none;
-      padding: 12px 18px;
-      font-size: 16px;
-      font-weight: 500;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-bottom: 25px;
-      transition: background-color 0.3s ease;
-    }
-    .back-btn:hover {
-      background: #435ac9;
-    }
-
-    .message {
+    .nav {
+      margin-top: 20px;
       text-align: center;
-      font-size: 0.95rem;
-      margin-top: 10px;
+    }
+    .nav a {
+      color: #5563DE;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      text-decoration: underline;
+    }
+    .error {
+      text-align: center;
+      color: red;
+      margin-top: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #5563DE;
+      color: white;
+      border-radius: 12px 12px 0 0;
+    }
+    .header .logo {
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+    .notification-bell {
+      position: relative;
+    }
+    .notification-bell .fas {
+      font-size: 1.2rem;
     }
   </style>
 </head>
 <body>
   <header class="header">
-    <a class="logo" href="index.html">BuyMe – Seller</a>
+    <div class="logo">BuyMe</div>
     <nav class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="notifications.html" title="Notifications"><i class="fas fa-bell"></i></a>
+      <a href="sellers.html">Home</a>
+      <a href="notifications.html" class="notification-bell" title="Notifications">
+        <i class="fas fa-bell"></i>
+      </a>
       <a href="../login.html" onclick="localStorage.removeItem('token')">Logout</a>
     </nav>
   </header>
+  <div class="container">
+    <h1>📝 Auction Bids</h1>
+    <table id="bidsTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Bid ID</th>
+          <th>Bidder ID</th>
+          <th>Amount ($)</th>
+          <th>Action</th> <!-- Changed from Timestamp -->
+        </tr>
+      </thead>
+      <tbody id="bidsTableBody"></tbody>
+    </table>
+    <div id="errorMessage" class="error"></div>
 
-  <div class="container-fluid">
-    <aside class="sidebar">
-      <h4>Navigation</h4>
-      <nav class="nav flex-column">
-        <a class="nav-link" href="create_auction.html">Create Auction</a>
-        <a class="nav-link" href="questions.html">FAQs</a>
-        <a class="nav-link" href="contact_support.html">Contact Support</a>
-        <a class="nav-link" href="sellers.html">My Items</a>
-      </nav>
-      <button onclick="confirmDeleteAccount()">Delete Account</button>
-    </aside>
-
-    <main>
-      <button class="btn back-btn" onclick="window.location.href='sellers.html'">← Back</button>
-
-      <div class="content-wrapper">
-        <h2 class="text-center text-primary mb-4">💰 View Bids</h2>
-        <div id="message" class="message"></div>
-        <table id="bidsTable" style="display:none;">
-          <thead>
-            <tr>
-              <th>Bid ID</th>
-              <th>Amount ($)</th>
-              <th>Bidder</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody id="bidsTableBody"></tbody>
-        </table>
-      </div>
-    </main>
+    <div class="nav">
+      <a href="sellers.html">← Back to My Items</a>
+    </div>
   </div>
 
   <script>
-    const token = localStorage.getItem('token');
     const auctionId = new URLSearchParams(window.location.search).get('auction_id');
+    const token = localStorage.getItem('token');
 
-    if (!token) {
-      window.location.href = '../login.html';
+    if (!auctionId || !token) {
+      document.getElementById('errorMessage').textContent =
+         'Missing auction ID (received: ' + auctionId + ') or not logged in.';
+    } else {
+      fetch(`http://127.0.0.1:5000/buyer/bid-history/${auctionId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to fetch bids');
+        return response.json();
+      })
+      .then(data => {
+        if (data.bids && data.bids.length > 0) {
+          const tableBody = document.getElementById('bidsTableBody');
+          document.getElementById('bidsTable').style.display = 'table';
+
+          // Compute highest bid amount using the bids data
+          const maxBid = Math.max(...data.bids.map(bid => bid.amount));
+          const auctionClosed = data.auction_closed;  // flag from API
+          const reserveMet = data.reserve_met;        // flag from API
+
+          data.bids.forEach((bid, idx) => {
+            // Determine if the button should be enabled only for the highest bid
+            const isHighest = bid.amount === maxBid;
+            const buttonEnabled = isHighest; // changed logic
+            const actionButton = `<button onclick="acceptBid('${auctionId}')" ${buttonEnabled ? '' : 'disabled'}>Accept Bid</button>`;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${idx + 1}</td>
+              <td>${bid.bidder_name}</td>
+              <td>$${bid.amount.toFixed(2)}</td>
+              <td>${actionButton}</td>
+            `;
+            tableBody.appendChild(row);
+          });
+        } else {
+          document.getElementById('errorMessage').textContent =
+             'No bids found for auction id ' + auctionId;
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        document.getElementById('errorMessage').textContent =
+           'Error loading bid data for auction id ' + auctionId + ': ' + error.message;
+      });
     }
 
-    fetch(`http://127.0.0.1:5000/seller/view-bids/${auctionId}`, {
-      headers: {
-        'Authorization': 'Bearer ' + token
-      }
-    })
-    .then(res => res.json())
-    .then(data => {
-      if (!data.bids || data.bids.length === 0) {
-        document.getElementById('message').textContent = 'No bids yet.';
-      } else {
-        const table = document.getElementById('bidsTable');
-        const tbody = document.getElementById('bidsTableBody');
-        table.style.display = 'table';
-
-        data.bids.forEach(bid => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${bid.BidID}</td>
-            <td>$${parseFloat(bid.Amount).toFixed(2)}</td>
-            <td>${bid.BidderUsername}</td>
-            <td>${new Date(bid.Timestamp).toLocaleString()}</td>
-          `;
-          tbody.appendChild(row);
-        });
-      }
-    })
-    .catch(() => {
-      document.getElementById('message').textContent = 'Failed to load bids.';
-    });
-
-    function confirmDeleteAccount(){
-      if(!confirm("⚠️ This will permanently delete your account and all listings. Proceed?")) return;
-      fetch("http://127.0.0.1:5000/delete-account", {
-        method: "DELETE",
-        headers: { Authorization: "Bearer " + token }
+    // Function to call accept-bid API endpoint
+    function acceptBid(auctionId) {
+      fetch(`http://127.0.0.1:5000/seller/accept-bid`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ auction_id: auctionId })
       })
-      .then(r => r.json())
-      .then(d => {
-        alert(d.message || "Account deleted.");
-        localStorage.clear();
-        location.href = "../login.html";
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to accept bid');
+        return response.json();
       })
-      .catch(() => alert("Failed to delete account."));
+      .then(data => {
+        alert(data.message);
+        // ...optional: refresh page or update UI...
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
     }
   </script>
+
 </body>
 </html>
